@@ -7,20 +7,20 @@
  * Author(s): Horst Hummel (horst.hummel@de.ibm.com)
  */
 
-#include "disk.h"
-#include "tunedasd.h"
-#include "dasd_sys.h"
-
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include <ctype.h>
 #include <errno.h>
-#include <string.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <unistd.h>
 
+#include "lib/dasd_sys.h"
+
+#include "disk.h"
+#include "tunedasd.h"
 
 #define BUS_ID_SIZE 30
 
@@ -158,8 +158,7 @@ check_cache (char* cache)
 /*
  * Retrieve name of cache mode identified by number.
  */
-char *
-get_cache_name (int id)
+static char *get_cache_name(int id)
 {
 	unsigned int i;
 	
@@ -444,8 +443,7 @@ disk_query_reserve_status(char* device)
 	return 0;
 }
 
-int 
-disk_profile_summary (dasd_profile_info_t dasd_profile_info)
+static int disk_profile_summary(dasd_profile_info_t dasd_profile_info)
 {
 	int factor, i;
 
@@ -553,8 +551,8 @@ disk_profile_summary (dasd_profile_info_t dasd_profile_info)
 }
 
 
-int
-disk_profile_item (dasd_profile_info_t dasd_profile_info, char *prof_item)
+static int disk_profile_item(dasd_profile_info_t dasd_profile_info,
+			     char *prof_item)
 {
 	int i;
 

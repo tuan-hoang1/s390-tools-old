@@ -30,9 +30,11 @@
 #include <sys/file.h>
 #include <ctype.h>
 #include <linux/types.h>
-#include "zt_common.h"
+
+#include "lib/vmdump.h"
+#include "lib/zt_common.h"
+
 #include "vmur.h"
-#include "vmdump.h"
 
 /* Program name */
 static char *prog_name;

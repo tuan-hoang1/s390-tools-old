@@ -7,21 +7,25 @@
  * Author(s): Volker Sameske (sameske@de.ibm.com)
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <getopt.h>
-#include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
 #include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <ftw.h>
-#include <sys/utsname.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <getopt.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <sys/sysmacros.h>
-#include "zt_common.h"
+#include <sys/types.h>
+#include <sys/utsname.h>
+#include <unistd.h>
+
+#include "lib/util_base.h"
+#include "lib/util_opt.h"
+#include "lib/util_prg.h"
+#include "lib/zt_common.h"
 
 #define READCHUNK 80
 #define BLKSSZGET    _IO(0x12,104)
@@ -30,10 +34,60 @@
 #define BIODASDINFO2 _IOR(DASD_IOCTL_LETTER,3,struct dasd_information2)
 #define TEMP_DEV_MAX_RETRIES    1000
 
-#define MAX(x,y) ((x)<(y)?(y):(x))
+static const struct util_prg prg = {
+	.desc = "Display DASD volume serial number and ID information",
+	.args = "-i BUSID | -b BLOCKDEV | -d DEVNODE",
+	.copyright_vec = {
+		{
+			.owner = "IBM Corp.",
+			.pub_first = 2007,
+		},
+		UTIL_PRG_COPYRIGHT_END
+	}
+};
 
-static const char tool_name[] = "dasdinfo: zSeries DASD information program";
-static const char copyright_notice[] = "Copyright IBM Corp. 2007";
+static struct util_opt opt_vec[] = {
+	UTIL_OPT_SECTION("DEVICE"),
+	{
+		.option = { "block", required_argument, NULL, 'b' },
+		.argument = "BLOCKDEV",
+		.desc = "Block device name, e.g. dasdb",
+	},
+	{
+		.option = { "devnode", required_argument, NULL, 'd' },
+		.argument = "DEVNODE",
+		.desc = "Device node, e.g. /dev/dasda",
+	},
+	{
+		.option = { "busid", required_argument, NULL, 'i' },
+		.argument = "BUSID",
+		.desc = "Bus ID, e.g. 0.0.e910",
+	},
+	UTIL_OPT_SECTION("OPTIONS"),
+	{
+		.option = { "label", no_argument, NULL, 'l' },
+		.desc = "Print DASD volume label (volser)",
+	},
+	{
+		.option = { "uid", no_argument, NULL, 'u' },
+		.desc = "Print DASD uid (without z/VM minidisk token)",
+	},
+	{
+		.option = { "extended-uid", no_argument, NULL, 'x' },
+		.desc = "Print DASD uid (including z/VM minidisk token)",
+	},
+	{
+		.option = { "all", no_argument, NULL, 'a' },
+		.desc = "Same as -u -x -l",
+	},
+	{
+		.option = { "export", no_argument, NULL, 'e' },
+		.desc = "Export ID_BUS, ID_TYPE, ID_SERIAL for use in udev",
+	},
+	UTIL_OPT_HELP,
+	UTIL_OPT_VERSION,
+	UTIL_OPT_END
+};
 
 /* needed because ftw can not pass arbitrary arguments */
 static char *searchbusid;
@@ -103,47 +157,6 @@ struct dasd_data
 	int dasd_info_version;
 	int blksize;
 };
-
-static void dinfo_print_version (void)
-{
-	printf ("%s version %s\n", tool_name, RELEASE_STRING);
-	printf ("%s\n", copyright_notice);
-}
-
-static void dinfo_print_usage(char *cmd)
-{
-	printf(""
-	       "Display specific information about a specified DASD device.\n"
-	       "\n"
-	       "Usage: %s [-a] [-u] [-x] [-l] [-e]\n"
-	       "                {-i <busid> | -b <blockdev> | -d <devnode>}\n"
-	       "       %s [-h] [-v]\n"
-	       "\n"
-	       "where:\n"
-	       "    -a|--all\n"
-	       "             same as -u -x -l\n"
-	       "    -u|--uid\n"
-	       "             print DASD uid (without z/VM minidisk token)\n"
-	       "    -x|--extended-uid\n"
-	       "             print DASD uid (including z/VM minidisk token)\n"
-	       "    -l|--label\n"
-	       "             print DASD volume label (volser)\n"
-	       "    -i|--busid <busid>\n"
-	       "             bus ID, e.g. 0.0.e910\n"
-	       "    -b|--block <blockdev>\n"
-	       "             block device name, e.g. dasdb\n"
-	       "    -d|--devnode <devnode>\n"
-	       "             device node, e.g. /dev/dasda\n"
-	       "    -e|--export\n"
-	       "             print all values (ID_BUS, ID_TYPE, ID_SERIAL)\n"
-	       "    -h|--help\n"
-	       "             prints this usage text\n"
-	       "    -v|--version\n"
-	       "             prints the version number\n"
-	       "\n"
-	       "Example: %s -u -b dasda\n",
-	       cmd,cmd,cmd);
-}
 
 static char EBCtoASC[256] =
 {
@@ -645,24 +658,11 @@ int main(int argc, char * argv[])
 	char *srchuid;
 	int i, rc = 0;
 
-	while (1) {
-		int option_index = 0;
-		static struct option long_options[] = {
-			{"all",          0, 0, 'a'},
-			{"uid",          0, 0, 'u'},
-			{"extended-uid", 0, 0, 'x'},
-			{"label",        0, 0, 'l'},
-			{"busid",        1, 0, 'i'},
-			{"block",        1, 0, 'b'},
-			{"devnode",      1, 0, 'd'},
-			{"export",       0, 0, 'e'},
-			{"help",         0, 0, 'h'},
-			{"version",      0, 0, 'v'},
-			{0, 0, 0, 0}
-		};
+	util_prg_init(&prg);
+	util_opt_init(opt_vec, NULL);
 
-		c = getopt_long (argc, argv, "vhaeuxlb:i:d:",
-				 long_options, &option_index);
+	while (1) {
+		c = util_opt_getopt_long(argc, argv);
 		if (c == -1)
 			break;
 
@@ -694,11 +694,12 @@ int main(int argc, char * argv[])
 			export = 1;
 			break;
 		case 'h':
-			dinfo_print_usage(argv[0]);
-			exit(0);
+			util_prg_print_help();
+			util_opt_print_help();
+			exit(EXIT_SUCCESS);
 		case 'v':
-			dinfo_print_version();
-			exit(0);
+			util_prg_print_version();
+			exit(EXIT_SUCCESS);
 		default:
 			fprintf(stderr, "Try 'dasdinfo --help' for more "
 				"information.\n");

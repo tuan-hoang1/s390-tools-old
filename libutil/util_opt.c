@@ -12,11 +12,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util_base.h"
-#include "util_libc.h"
-#include "util_opt.h"
-#include "util_panic.h"
-#include "util_prg.h"
+#include "lib/util_base.h"
+#include "lib/util_libc.h"
+#include "lib/util_opt.h"
+#include "lib/util_panic.h"
+#include "lib/util_prg.h"
+
+#include "misc.h"
 
 /*
  * Private data
@@ -39,7 +41,6 @@ struct util_opt_l *util_opt_l = &l;
 #define util_opt_iterate(opt) \
 	for (opt = &l.opt_vec[0]; opt->desc != NULL; opt++)
 
-#define MAX(x, y) ((x) < (y) ? (y) : (x))
 #define MAX_OPTLEN	256
 
 static int opt_max_len(void);
@@ -82,8 +83,10 @@ void util_opt_init(struct util_opt *opt_vec, const char *opt_prefix)
 	for (i = 0, j = 0; i < count; i++) {
 		if (opt_vec[i].flags & UTIL_OPT_FLAG_SECTION)
 			continue;
-		memcpy(&l.option_vec[j++], &opt_vec[i].option,
-		       sizeof(struct option));
+		if (!(opt_vec[i].flags & UTIL_OPT_FLAG_NOLONG)) {
+			memcpy(&l.option_vec[j++], &opt_vec[i].option,
+			       sizeof(struct option));
+		}
 		if (opt_vec[i].flags & UTIL_OPT_FLAG_NOSHORT)
 			continue;
 		*str++ = opt_vec[i].option.val;
@@ -176,37 +179,6 @@ static int opt_max_len(void)
 	return max;
 }
 
-/*
- * Print option description with indentation
- */
-static void print_opt_description(const char *desc_in, int indent)
-{
-	char *word, *line, *desc, *desc_ptr;
-	int word_len, pos = indent;
-
-	desc = desc_ptr = util_strdup(desc_in);
-	line = strsep(&desc, "\n");
-	while (line) {
-		word = strsep(&line, " ");
-		pos = indent;
-		while (word) {
-			word_len = strlen(word);
-			if (pos + word_len + 1 > 80) {
-				printf("\n%*s", indent, " ");
-				pos = indent;
-			}
-			printf(" %s", word);
-			pos += word_len + 1;
-			word = strsep(&line, " ");
-		}
-		if (desc)
-			printf("\n%*s", indent, " ");
-		line = strsep(&desc, "\n");
-	}
-	printf("\n");
-	free(desc_ptr);
-}
-
 /**
  * Print an option name, followed by a description indented to fit the
  * longest option name
@@ -214,7 +186,7 @@ static void print_opt_description(const char *desc_in, int indent)
 void util_opt_print_indented(const char *opt, const char *desc)
 {
 	printf(" %-*s ", l.opt_max, opt);
-	print_opt_description(desc, 2 + l.opt_max);
+	misc_print_formatted(desc, 2 + l.opt_max);
 }
 
 /**

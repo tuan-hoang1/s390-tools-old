@@ -7,9 +7,10 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
+
 #include "nav_desc.h"
 #include "tbox.h"
 

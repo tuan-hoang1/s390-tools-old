@@ -8,7 +8,6 @@
  *            Hans-Joachim Picht <hans@linux.vnet.ibm.com>
  */
 
-#include "zt_common.h"
 #include "cpuplugd.h"
 
 const char *name = NAME;

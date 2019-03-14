@@ -11,10 +11,9 @@
 #ifndef BOOTMAP_H
 #define BOOTMAP_H
 
-#include "zipl.h"
-
-#include "job.h"
 #include "disk.h"
+#include "job.h"
+#include "zipl.h"
 
 
 int bootmap_create(struct job_data* job, disk_blockptr_t* program_table,

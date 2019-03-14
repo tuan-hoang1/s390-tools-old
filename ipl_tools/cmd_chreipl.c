@@ -10,8 +10,9 @@
 
 
 #include <ctype.h>
+#include "lib/zt_common.h"
+
 #include "ipl_tools.h"
-#include "zt_common.h"
 #include "proc.h"
 
 #define BOOTPARMS_NSS_MAX	56

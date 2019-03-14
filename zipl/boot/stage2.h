@@ -10,9 +10,9 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include "cio.h"
 #include "error.h"
 #include "libc.h"
-#include "cio.h"
 #include "s390.h"
 
 #define DESCR_PER_BLOCK         16

@@ -2,7 +2,7 @@
 #
 # dbginfo.sh - Tool to collect runtime, configuration, and trace information
 #
-# Copyright IBM Corp. 2002, 2016
+# Copyright IBM Corp. 2002, 2017
 #
 
 # Switching to neutral locale
@@ -18,7 +18,7 @@ readonly SCRIPTNAME="${0##*/}"
 print_version() {
     cat <<EOF
 ${SCRIPTNAME}: Debug information script version %S390_TOOLS_VERSION%
-Copyright IBM Corp. 2002, 2016
+Copyright IBM Corp. 2002, 2017
 EOF
 }
 
@@ -177,11 +177,14 @@ readonly OUTPUT_FILE_OVS="${WORKPATH}openvswitch"
 # File that includes the KVM domain xml file
 readonly OUTPUT_FILE_XML="${WORKPATH}domain_xml"
 
+# File that includes the docker inspect output
+readonly OUTPUT_FILE_DOCKER="${WORKPATH}docker_inspect.out"
+
 # Mount point of the debug file system
 readonly MOUNT_POINT_DEBUGFS="/sys/kernel/debug"
 
 # The amount of steps running the whole collections
-readonly COLLECTION_COUNT=10
+readonly COLLECTION_COUNT=11
 
 # The kernel version (e.g. '2' from 2.6.32 or '3' from 3.2.1)
 readonly KERNEL_VERSION=$(uname -r 2>/dev/null | cut -d'.' -f1)
@@ -302,6 +305,8 @@ LOGFILES="\
   /var/log/yum.log\
   /var/log/openvswitch/ovs-vswitchd.log\
   /var/log/openvswitch/ovsdb-server.log\
+  /var/run/docker/libcontainerd/containerd/events.log\
+  /run/containerd/events.log\
   "
 
 ########################################
@@ -344,6 +349,7 @@ CONFIGFILES="\
   /etc/resolv.*\
   /etc/rsyslog.d\
   /etc/ssl/openssl.conf\
+  /etc/ssl/openssl.cnf\
   /etc/sysconfig\
   /etc/sysctl.d\
   /etc/syslog*\
@@ -352,6 +358,10 @@ CONFIGFILES="\
   /etc/xinet.d\
   /etc/*release\
   $(find /lib/modules -name modules.dep 2>/dev/null)\
+  /etc/docker\
+  /lib/systemd/system/docker.service\
+  /usr/lib/systemd/system/docker.service\
+  /etc/apparmor.d\
   "
 
 ########################################
@@ -426,6 +436,7 @@ CMDS="uname -a\
   :lsof\
   :mount\
   :df -h\
+  :df -i\
   :pvpath -qa\
   :find /boot -print0 | sort -z | xargs -0 -n 10 ls -ld\
   :find /dev -print0 | sort -z | xargs -0 -n 10 ls -ld\
@@ -438,6 +449,13 @@ CMDS="uname -a\
   :systemctl --all --no-pager show\
   :systemctl --all --no-pager list-units\
   :systemctl --all --no-pager list-unit-files\
+  :docker info\
+  :docker images\
+  :docker network ls\
+  :docker ps -a\
+  :docker stats --no-stream\
+  :docker version\
+  :systemctl status docker.service\
   "
 
 ########################################
@@ -771,13 +789,43 @@ collect_domain_xml() {
 }
 
 ########################################
+collect_docker() {
+    local item_list
+    local item
+
+    # call docker inspect for all containers
+    item_list=$(docker ps -qa)
+    if test -n "${item_list}"; then
+        pr_syslog_stdout "10a of ${COLLECTION_COUNT}: Collecting docker container output"
+        for item in ${item_list}; do
+            call_run_command "docker inspect ${item}" "${OUTPUT_FILE_DOCKER}"
+        done
+    else
+        pr_syslog_stdout "10a of ${COLLECTION_COUNT}: Collecting docker container output skipped"
+    fi
+
+    # call docker inspect for all networks
+    item_list=$(docker network ls -q)
+    if test -n "${item_list}"; then
+        pr_syslog_stdout "10b of ${COLLECTION_COUNT}: Collecting docker network output"
+        for item in ${item_list}; do
+            call_run_command "docker network inspect ${item}" "${OUTPUT_FILE_DOCKER}"
+        done
+    else
+        pr_syslog_stdout "10b of ${COLLECTION_COUNT}: Collecting docker network output skipped"
+    fi
+
+    pr_log_stdout " "
+}
+
+########################################
 post_processing() {
     local file_mtime
     local file_mtime_epoche
     local tmp_file
     local file_name
 
-    pr_syslog_stdout "10 of ${COLLECTION_COUNT}: Postprocessing"
+    pr_syslog_stdout "11 of ${COLLECTION_COUNT}: Postprocessing"
 
     find "${WORKPATH}etc/libvirt/qemu/" -maxdepth 1 -name "*.xml" 2>/dev/null | while IFS= read -r file_name; do
 	file_mtime_epoche=$(stat --format=%Y "${file_name}")
@@ -1059,6 +1107,8 @@ collect_osaoat
 collect_ovs
 
 collect_domain_xml
+
+collect_docker
 
 post_processing
 

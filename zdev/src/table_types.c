@@ -4,12 +4,11 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "table_types.h"
-
 #include "devtype.h"
 #include "misc.h"
 #include "subtype.h"
 #include "table.h"
+#include "table_types.h"
 
 /* Column IDs for the types table. */
 enum table_types_id {

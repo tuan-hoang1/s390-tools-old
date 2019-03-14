@@ -4,16 +4,14 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "net.h"
-
 #include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
 
 #include "devnode.h"
 #include "misc.h"
+#include "net.h"
 #include "path.h"
-#include "util.h"
 
 struct add_linked_cb_data {
 	struct util_list *list;

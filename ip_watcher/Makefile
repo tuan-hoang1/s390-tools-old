@@ -1,6 +1,5 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include
 all: xcec-bridge
 
 xcec-bridge: xcec-bridge.o

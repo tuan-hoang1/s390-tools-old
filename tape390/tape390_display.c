@@ -10,15 +10,16 @@
  *
  */
 #include <ctype.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <libgen.h>
-#include <string.h>
-#include <stdlib.h>
 #include <getopt.h>
+#include <libgen.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
+
+#include "lib/zt_common.h"
 #include "tape390_common.h"
-#include "zt_common.h"
 
 #define TAPE390_DISPLAY _IOW('d', 1, struct display_struct)
 

@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "generic_ccw.h"
-
 #include <string.h>
 
 #include "attrib.h"
@@ -13,6 +11,7 @@
 #include "ccwgroup.h"
 #include "devnode.h"
 #include "devtype.h"
+#include "generic_ccw.h"
 #include "namespace.h"
 #include "path.h"
 #include "subtype.h"

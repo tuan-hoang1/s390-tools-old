@@ -4,14 +4,13 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "setting.h"
-
 #include <stdlib.h>
 #include <string.h>
 
 #include "attrib.h"
 #include "misc.h"
 #include "path.h"
+#include "setting.h"
 
 /* Create and initialize a new setting. */
 struct setting *setting_new(struct attrib *attrib, const char *name,

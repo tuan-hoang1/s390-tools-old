@@ -10,20 +10,19 @@
  * 2002-03-12 initial
  */
 
-#ifndef VTOC_H
-#define VTOC_H
+#ifndef LIB_VTOC_H
+#define LIB_VTOC_H
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
 #include <ctype.h>
-#include <time.h>
+#include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
-
-#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
 
 
 #define LINE_LENGTH 80
@@ -423,16 +422,4 @@ void vtoc_set_freespace(
 	u_int32_t cyl,
 	u_int32_t trk);
 
-
-#endif /* VTOC_H */
-
-
-
-
-
-
-
-
-
-
-
+#endif /* LIB_VTOC_H */

@@ -10,6 +10,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "lib/zt_common.h"
+
 #include "blkinfo.h"
 #include "ccw.h"
 #include "ctc.h"
@@ -26,7 +28,6 @@
 #include "subtype.h"
 #include "table.h"
 #include "table_types.h"
-#include "zt_common.h"
 
 /* Main program action. */
 typedef enum {

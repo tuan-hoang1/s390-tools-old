@@ -6,10 +6,10 @@
  * Copyright IBM Corp. 2013
  */
 
-#include "libc.h"
 #include "error.h"
-#include "menu.h"
 #include "kdump.h"
+#include "libc.h"
+#include "menu.h"
 #include "s390.h"
 
 void kdump_failed(unsigned long reason)

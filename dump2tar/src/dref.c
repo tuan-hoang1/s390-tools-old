@@ -6,12 +6,11 @@
  * Copyright IBM Corp. 2016
  */
 
-#include "dref.h"
-
 #include <dirent.h>
 #include <pthread.h>
 #include <sys/types.h>
 
+#include "dref.h"
 #include "global.h"
 #include "misc.h"
 

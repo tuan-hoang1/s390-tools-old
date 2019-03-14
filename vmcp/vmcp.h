@@ -13,7 +13,8 @@
 
 #include <getopt.h>
 #include <sys/ioctl.h>
-#include "../include/zt_common.h"
+
+#include "lib/zt_common.h"
 
 #define DEVICE_NODE "/dev/vmcp"
 

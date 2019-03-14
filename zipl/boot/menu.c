@@ -7,9 +7,9 @@
  * Author(s): Stefan Haberland <stefan.haberland@de.ibm.com>
  */
 
-#include "sclp.h"
-#include "menu.h"
 #include "libc.h"
+#include "menu.h"
+#include "sclp.h"
 
 static const char *msg_econfig = "Error: undefined configuration\n";
 

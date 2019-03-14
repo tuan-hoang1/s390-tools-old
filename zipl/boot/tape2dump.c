@@ -7,10 +7,10 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include "stage2dump.h"
-#include "libc.h"
 #include "cio.h"
 #include "error.h"
+#include "libc.h"
+#include "stage2dump.h"
 
 #define BLK_SIZE	0x8000 /* We write 32 KB at a time */
 #define ETAPE_WRITE	0x0003 /* Error code for failed write */

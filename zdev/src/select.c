@@ -4,22 +4,20 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "select.h"
-
 #include <stdlib.h>
 #include <string.h>
 
 #include "blkinfo.h"
 #include "ccw.h"
+#include "device.h"
+#include "devnode.h"
 #include "findmnt.h"
 #include "iscsi.h"
 #include "misc.h"
 #include "namespace.h"
 #include "net.h"
-#include "device.h"
-#include "devnode.h"
+#include "select.h"
 #include "udev.h"
-#include "util.h"
 
 /* Create and initialize selection options. */
 struct select_opts *select_opts_new(void)

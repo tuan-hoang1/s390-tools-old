@@ -1,7 +1,5 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include
-
 all: chreipl lsreipl chshut lsshut
 
 objects = main.o ccw.o fcp.o system.o shutdown.o \

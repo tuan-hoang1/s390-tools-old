@@ -9,27 +9,22 @@
  * Copyright IBM Corporation 2013
  */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <stdarg.h>
-
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-
-
-#include "vtoc.h"
-#include "libzds.h"
-
-#include "util.h"
-#include "u2s.h"
-
-#include <malloc.h>
 #include <linux/types.h>
+#include <malloc.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-
+#include "lib/libzds.h"
+#include "lib/u2s.h"
+#include "lib/util_base.h"
+#include "lib/util_list.h"
+#include "lib/vtoc.h"
 
 /** @cond PRIVATE */
 
@@ -376,8 +371,6 @@ struct dshandle {
 	/** @brief Detailed error messages in case of a problem */
 	struct errorlog *log;
 };
-
-#define min(x, y) ((x) > (y) ? (y) : (x))
 
 /** @endcond */
 
@@ -1279,7 +1272,7 @@ static int dasd_read_vlabel_to_buffer(struct dasd *dasd,
 		memcpy(vlabel, label, ecount->kl + ecount->dl);
 	} else if ((ecount->kl == 0) && (labelend <= trackend)) {
 		/* LNX1 / CMS1 label */
-		label_size = min(ecount->dl, sizeof(*vlabel) - 4);
+		label_size = MIN(ecount->dl, sizeof(*vlabel) - 4);
 		memcpy(&vlabel->vollbl, label, label_size);
 	} else {
 		free(trackdata);
@@ -3303,7 +3296,7 @@ static int dshandle_prepare_for_next_read_tracks(struct dshandle *dsh)
 		dsh->bufstarttrk = dsh->bufendtrk + 1;
 		dsh->bufendtrk = dsh->bufstarttrk +
 			(dsh->rawbufmax / RAWTRACKSIZE) - 1;
-		dsh->bufendtrk = min(dsh->bufendtrk, dsh->extendtrk);
+		dsh->bufendtrk = MIN(dsh->bufendtrk, dsh->extendtrk);
 		dsh->rawbufsize = (dsh->bufendtrk - dsh->bufstarttrk + 1)
 			* RAWTRACKSIZE;
 		dsh->databufoffset = dsh->databufoffset + dsh->databufsize;
@@ -3345,7 +3338,7 @@ static int dshandle_prepare_for_next_read_tracks(struct dshandle *dsh)
 			&dsh->extendtrk);
 	dsh->bufstarttrk = dsh->extstarttrk;
 	dsh->bufendtrk = dsh->bufstarttrk + (dsh->rawbufmax / RAWTRACKSIZE) - 1;
-	dsh->bufendtrk = min(dsh->bufendtrk, dsh->extendtrk);
+	dsh->bufendtrk = MIN(dsh->bufendtrk, dsh->extendtrk);
 	dsh->rawbufsize = (dsh->bufendtrk - dsh->bufstarttrk + 1)
 			   * RAWTRACKSIZE;
 	dsh->databufoffset = dsh->databufoffset + dsh->databufsize;
@@ -3483,7 +3476,7 @@ int lzds_dshandle_read(struct dshandle *dsh, char *buf,
 		/* if databuf has data to copy */
 		if (dsh->bufpos < dsh->databufsize) {
 			/*  copy data from databuf to buf */
-			copysize = min(((long long)size - *rcsize),
+			copysize = MIN(((long long)size - *rcsize),
 				       (dsh->databufsize - dsh->bufpos));
 			memcpy(buf, &dsh->databuffer[dsh->bufpos], copysize);
 			buf += copysize;

@@ -8,8 +8,8 @@
  */
 
 #include "error.h"
-#include "sclp.h"
 #include "s390.h"
+#include "sclp.h"
 
 /* Perform service call. Return 0 on success, non-zero otherwise. */
 static int sclp_service_call(unsigned int command, void *sccb)

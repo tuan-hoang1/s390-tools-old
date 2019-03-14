@@ -12,9 +12,10 @@
  * Copyright IBM Corp. 2002, 2007
  */
 
+#include "lib/zt_common.h"
+
 #include "ibmOSAMibUtil.h"
 #include "ibmOSAMib.h"
-#include "zt_common.h"
 
 /* ptr to OSA Express MIB information stored in linked lists */
 TABLE_OID* oid_list_head;

@@ -12,8 +12,8 @@
 #ifndef JOB_H
 #define JOB_H
 
-#include "zipl.h"
 #include "disk.h"
+#include "zipl.h"
 
 
 enum job_id {

@@ -10,31 +10,84 @@
 #include <getopt.h>
 #include <stdio.h>
 
-#include "zt_common.h"
-#include "vtoc.h"
+#include "lib/dasd_sys.h"
+#include "lib/util_opt.h"
+#include "lib/util_prg.h"
+#include "lib/vtoc.h"
+#include "lib/zt_common.h"
+
 #include "fdasd.h"
-#include "dasd_sys.h"
 
 /* global variables */
-struct hd_geometry geo;
-char line_buffer[LINE_LENGTH];
-char *line_ptr = line_buffer;
+static struct hd_geometry geo;
+static char line_buffer[LINE_LENGTH];
+static char *line_ptr = line_buffer;
 
-/* Full tool name */
-static const char tool_name[] = "fdasd: zSeries DASD partitioning program";
+static const struct util_prg prg = {
+	.desc = "Manage partitions on DASD volumes.\n"
+		"DEVICE is the node of the device (e.g. '/dev/dasda').",
+	.args = "DEVICE",
+	.copyright_vec = {
+		{
+			.owner = "IBM Corp.",
+			.pub_first = 2001,
+			.pub_last = 2011,
+		},
+		UTIL_PRG_COPYRIGHT_END
+	}
+};
 
-/* Copyright notice */
-static const char copyright_notice[] = "Copyright IBM Corp. 2001, 2011";
-
-/*
- * Print version information.
- */
-static void
-print_version (void)
-{
-	printf ("%s version %s\n", tool_name, RELEASE_STRING);
-	printf ("%s\n", copyright_notice);
-}
+static struct util_opt opt_vec[] = {
+	UTIL_OPT_SECTION("NON-INTERACTIVE MODE"),
+	{
+		.option = { "auto", no_argument, NULL, 'a' },
+		.desc = "Create a single partition spanning the entire disk",
+	},
+	{
+		.option = { "config", required_argument, NULL, 'c' },
+		.argument = "FILE",
+		.desc = "Create partitions(s) based on content of FILE",
+	},
+	{
+		.option = { "keep_volser", no_argument, NULL, 'k' },
+		.desc = "Do not change the current volume serial",
+	},
+	{
+		.option = { "label", required_argument, NULL, 'l' },
+		.argument = "VOLSER",
+		.desc = "Set the volume serial to VOLSER",
+	},
+	UTIL_OPT_SECTION("MISC"),
+	{
+		.option = { "check_host_count", no_argument, NULL, 'C' },
+		.desc = "Check if device is in use by other hosts",
+	},
+	{
+		.option = { "force", optional_argument, NULL, 'f' },
+		.argument = "TYPE,SIZE",
+		.desc = "Force fdasd to work on non DASD devices with assumed "
+			"TYPE (3390, 3380, or 9345) and blocksize SIZE",
+	},
+	{
+		.option = { "volser", no_argument, NULL, 'i' },
+		.desc = "Print volume serial",
+	},
+	{
+		.option = { "table", no_argument, NULL, 'p' },
+		.desc = "Print partition table",
+	},
+	{
+		.option = { "verbose", no_argument, NULL, 'r' },
+		.desc = "Provide more verbose output",
+	},
+	{
+		.option = { "silent", no_argument, NULL, 's' },
+		.desc = "Suppress messages",
+	},
+	UTIL_OPT_HELP,
+	UTIL_OPT_VERSION,
+	UTIL_OPT_END
+};
 
 static int
 getpos (fdasd_anchor_t *anc, int dsn)
@@ -335,44 +388,6 @@ fdasd_partition_type (char *str)
 	return str;
 }
 
-
-/*
- * prints out the usage text
- */
-static void
-fdasd_usage (void) 
-{
-	printf ("\nUsage: fdasd [OPTIONS] [DEVICE]\n"
-		"\n"
-		"Partition a DASD device either in interactive mode or "
-		"automatically.\n"
-		"DEVICE is the node of the device (e.g. '/dev/dasda')\n"
-		"\n"
-		"-h, --help               Print this help, then exit\n"
-		"-v, --version            Print version information, "
-		                          "then exit\n"
-		"-s, --silent             Suppress messages\n"
-		"-r, --verbose            Provide more verbose output\n"
-		"-a, --auto               Automatically create a partition "
-		                          "using the entire disk\n"
-		"-k, --keep_volser        Keep current volume serial when "
-		                          "performing automatic\n"
-		"                         partitioning\n"
-		"-l, --label VOLSER       Set the volume serial to VOLSER "
-		                          "when performing\n"
-		"                         automatic partitioning\n"
-		"-c, --config CONFIGFILE  Automatically create partition(s) "
-		                          "using information\n"
-                "                         found in CONFIGFILE\n"
-		"-i, --volser             Print volume serial\n"
-		"-p, --table              Print partition table\n"
-		"-f, --force              Force fdasd to work on non DASD devices\n"
-		"-C, --check_host_count   Force fdasd to check the host access\n"
-		"                         open count to ensure the device is not\n"
-		"                         online on another operating system instance\n");
-}
-
-
 /*
  * prints the menu
  */
@@ -523,17 +538,20 @@ static void
 fdasd_parse_options (fdasd_anchor_t *anc, struct fdasd_options *options, 
 		     int argc, char *argv[]) 
 {
-	int opt, index;
+	int opt;
+
+	util_prg_init(&prg);
+	util_opt_init(opt_vec, NULL);
 
 	do {
-		opt = getopt_long(argc, argv, option_string, 
-				  fdasd_long_options, &index);
+		opt = util_opt_getopt_long(argc, argv);
 		switch (opt) {
 		case 'v':
-			print_version();
+			util_prg_print_version();
 			fdasd_exit(anc, 0);
 		case 'h':
-			fdasd_usage ();
+			util_prg_print_help();
+			util_opt_print_help();
 			fdasd_exit(anc, 0);
 		case 'l':
 			if (options->volser)
@@ -595,7 +613,7 @@ fdasd_parse_options (fdasd_anchor_t *anc, struct fdasd_options *options,
 	options->device = argv[optind]; 	
 }
 
-int gettoken(char *str, char *ch, char *token[], int max)
+static int gettoken(char *str, char *ch, char *token[], int max)
 {
 	int i;
 

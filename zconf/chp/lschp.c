@@ -10,14 +10,14 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "util_base.h"
-#include "util_path.h"
-#include "util_file.h"
-#include "util_opt.h"
-#include "util_prg.h"
-#include "util_rec.h"
-#include "util_scandir.h"
-#include "zt_common.h"
+#include "lib/util_base.h"
+#include "lib/util_file.h"
+#include "lib/util_opt.h"
+#include "lib/util_path.h"
+#include "lib/util_prg.h"
+#include "lib/util_rec.h"
+#include "lib/util_scandir.h"
+#include "lib/zt_common.h"
 
 /*
  * Program configuration

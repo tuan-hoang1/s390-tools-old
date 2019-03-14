@@ -1,7 +1,5 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include
-
 all: mon_fsstatd mon_procd
 
 mon_fsstatd: mon_fsstatd.o

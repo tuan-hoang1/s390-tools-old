@@ -12,14 +12,13 @@
 #ifndef ZGETDUMP_H
 #define ZGETDUMP_H
 
-#include "util.h"
-#include "zg.h"
-#include "dfo.h"
-#include "dfi.h"
-#include "dt.h"
-#include "df_s390.h"
 #include "df_elf.h"
 #include "df_lkcd.h"
+#include "df_s390.h"
+#include "dfi.h"
+#include "dfo.h"
+#include "dt.h"
+#include "zg.h"
 
 /*
  * zgetdump options

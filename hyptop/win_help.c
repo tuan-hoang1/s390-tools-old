@@ -8,10 +8,10 @@
  */
 
 #include "helper.h"
-#include "table.h"
 #include "hyptop.h"
-#include "win_help.h"
 #include "sd.h"
+#include "table.h"
+#include "win_help.h"
 
 /*
  * Print help text to screen

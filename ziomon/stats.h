@@ -11,10 +11,10 @@
 #ifndef STATS_H
 #define STATS_H
 
-#include <linux/types.h>
 #include <endian.h>
-#include <stdio.h>
+#include <linux/types.h>
 #include <math.h>
+#include <stdio.h>
 
 struct minmax {
 	__u64 min;

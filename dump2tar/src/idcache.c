@@ -6,8 +6,6 @@
  * Copyright IBM Corp. 2016
  */
 
-#include "idcache.h"
-
 #include <grp.h>
 #include <pthread.h>
 #include <pwd.h>
@@ -15,6 +13,7 @@
 #include <string.h>
 
 #include "global.h"
+#include "idcache.h"
 #include "misc.h"
 
 /* Maximum user and group name lengths as defined in tar header */

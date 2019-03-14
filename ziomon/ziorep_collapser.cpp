@@ -14,8 +14,8 @@
 #include "ziorep_collapser.hpp"
 
 extern "C" {
+	#include "lib/zt_common.h"
 	#include "ziomon_tools.h"
-	#include "zt_common.h"
 }
 
 extern const char *toolname;

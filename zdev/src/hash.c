@@ -4,12 +4,10 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "hash.h"
-
 #include <string.h>
 
+#include "hash.h"
 #include "misc.h"
-#include "util.h"
 
 /* Initialize hash. */
 void _hash_init(struct hash *hash, int buckets, hash_id_fn_t get_id,

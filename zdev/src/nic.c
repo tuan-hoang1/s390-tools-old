@@ -4,12 +4,11 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "nic.h"
-
 #include <stdlib.h>
 #include <string.h>
 
 #include "misc.h"
+#include "nic.h"
 #include "path.h"
 
 /* Determine NIC data for the specified NIC. */

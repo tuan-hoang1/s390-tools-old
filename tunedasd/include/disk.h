@@ -10,9 +10,9 @@
 #ifndef DISK_H
 #define DISK_H
 
+#include <linux/hdreg.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include <linux/hdreg.h>
 
 
 int check_cache (char* cache);

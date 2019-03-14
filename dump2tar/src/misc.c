@@ -6,8 +6,6 @@
  * Copyright IBM Corp. 2016
  */
 
-#include "misc.h"
-
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -20,6 +18,7 @@
 
 #include "dref.h"
 #include "global.h"
+#include "misc.h"
 
 struct timespec main_start_ts;
 

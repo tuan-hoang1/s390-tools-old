@@ -7,8 +7,8 @@
 #ifndef UDEV_H
 #define UDEV_H
 
+#include "lib/util_list.h"
 #include "exit_code.h"
-#include "util.h"
 
 extern int udev_need_settle;
 

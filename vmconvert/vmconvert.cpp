@@ -14,8 +14,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include "vmdump.h"
-#include "zt_common.h"
+
+#include "lib/vmdump.h"
+#include "lib/zt_common.h"
 
 static struct option longopts[] = {
 	{"file",required_argument,0,'f'},

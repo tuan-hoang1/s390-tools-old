@@ -8,21 +8,22 @@
  *            Christian Borntraeger <borntraeger@de.ibm.com>
  */
 
+#include <assert.h>
+#include <ctype.h>
+#include <errno.h>
+#include <iconv.h>
+#include <limits.h>
+#include <mntent.h>
 #include <mntent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <iconv.h>
-#include <limits.h>
-#include <time.h>
-#include <sys/time.h>
-#include <mntent.h>
-#include <errno.h>
-#include <assert.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "helper.h"
 #include "hyptop.h"
 #include "sd.h"

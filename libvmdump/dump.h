@@ -9,12 +9,11 @@
 #ifndef DUMP_H
 #define DUMP_H
 
-#include <sys/time.h>
-
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 
 extern int debug;
 

@@ -10,7 +10,7 @@
 #ifndef TBOX_H
 #define TBOX_H
 
-#include "util.h"
+#include "lib/util_list.h"
 
 #define TBOX_MAX_STR	120
 

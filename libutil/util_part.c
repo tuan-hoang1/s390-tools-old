@@ -6,16 +6,17 @@
  * Copyright IBM Corp. 2013
  */
 
+#include <endian.h>
+#include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <endian.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-#include "util.h"
+#include <sys/types.h>
+#include <unistd.h>
+
+#include "lib/util_part.h"
 
 #define GPT_SIGNATURE		0x4546492050415254ULL /* EFI PART */
 #define MBR_SIGNATURE		0x55aa

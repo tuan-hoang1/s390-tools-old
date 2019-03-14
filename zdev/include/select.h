@@ -7,9 +7,10 @@
 #ifndef SELECT_H
 #define SELECT_H
 
+#include "lib/util_list.h"
+
 #include "exit_code.h"
 #include "misc.h"
-#include "util.h"
 
 struct device;
 struct devtype;

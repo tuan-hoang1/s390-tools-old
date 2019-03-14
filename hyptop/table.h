@@ -10,9 +10,10 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#include <string.h>
 #include <assert.h>
-#include "util.h"
+#include <string.h>
+
+#include "lib/util_list.h"
 #include "helper.h"
 
 #define TABLE_STR_MAX		64

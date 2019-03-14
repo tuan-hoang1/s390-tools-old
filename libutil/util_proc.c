@@ -7,15 +7,15 @@
  * Author(s): Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
  */
 
-#include "util_proc.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
+#include <unistd.h>
+
+#include "lib/util_proc.h"
 
 static const char util_proc_part_filename[] = "/proc/partitions";
 static const char util_proc_dev_filename[] = "/proc/devices";
@@ -54,8 +54,7 @@ util_proc_read_special_file(const char *filename, char **buffer, size_t *size,
 	count = 0;
 	data = (char *) malloc(current_size);
 	if (data == NULL) {
-		printf("Could not allocate %lld bytes of memory",
-		       (unsigned long long) size);
+		printf("Could not allocate %zu bytes of memory", current_size);
 		fclose(file);
 		return -1;
 	}
@@ -69,8 +68,8 @@ util_proc_read_special_file(const char *filename, char **buffer, size_t *size,
 		if (count >= current_size) {
 			new_data = (char *) malloc(current_size * 2);
 			if (new_data == NULL) {
-				printf("Could not allocate %lld bytes of memory",
-				       (unsigned long long) size);
+				printf("Could not allocate %zu bytes of memory",
+				       current_size * 2);
 				free(data);
 				fclose(file);
 				return -1;

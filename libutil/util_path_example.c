@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util_path.h"
-#include "util_prg.h"
+#include "lib/util_path.h"
+#include "lib/util_prg.h"
 
 /*
  * Define program description

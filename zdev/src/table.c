@@ -4,13 +4,13 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "table.h"
-
 #include <stdlib.h>
 #include <string.h>
 
+#include "lib/util_base.h"
+
 #include "misc.h"
-#include "util.h"
+#include "table.h"
 
 /* Search for a column in @columns which matches the specified @name. Return
  * corresponding struct column on success, NULL otherwise. */

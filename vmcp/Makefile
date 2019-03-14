@@ -1,7 +1,5 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include
-
 all: vmcp
 
 vmcp: vmcp.o

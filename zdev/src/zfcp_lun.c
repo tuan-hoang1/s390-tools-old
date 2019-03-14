@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "zfcp_lun.h"
-
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -26,6 +24,7 @@
 #include "udev_zfcp_lun.h"
 #include "zfcp.h"
 #include "zfcp_host.h"
+#include "zfcp_lun.h"
 
 #define DEVNAME			"zFCP LUN"
 

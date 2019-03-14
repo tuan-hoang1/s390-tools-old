@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "udev_ccw.h"
-
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -13,13 +11,13 @@
 #include <string.h>
 
 #include "attrib.h"
-#include "misc.h"
 #include "ccw.h"
 #include "device.h"
+#include "misc.h"
 #include "path.h"
 #include "setting.h"
 #include "udev.h"
-#include "util.h"
+#include "udev_ccw.h"
 
 /* Check if a udev rule for the specified ccw device exists. */
 bool udev_ccw_exists(const char *type, const char *id)

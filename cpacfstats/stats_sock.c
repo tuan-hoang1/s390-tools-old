@@ -9,17 +9,17 @@
  *   Harald Freudenberger <freude@de.ibm.com>
  */
 
-#include <endian.h>
-#include <sys/socket.h>
 #include <arpa/inet.h>
-#include <sys/un.h>
-#include <stdio.h>
+#include <endian.h>
 #include <errno.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <grp.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <unistd.h>
 
 #include "cpacfstats.h"
 

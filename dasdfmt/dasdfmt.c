@@ -9,89 +9,145 @@
  * Copyright IBM Corp. 1999, 2013
  */
 
-#include <sys/utsname.h>
 #include <linux/version.h>
 #include <sys/time.h>
+#include <sys/utsname.h>
 
-#include "zt_common.h"
+#include "lib/dasd_sys.h"
+#include "lib/util_opt.h"
+#include "lib/util_prg.h"
+#include "lib/util_proc.h"
+#include "lib/vtoc.h"
+#include "lib/zt_common.h"
+
 #include "dasdfmt.h"
-#include "vtoc.h"
-#include "util_proc.h"
-#include "dasd_sys.h"
 
 #define BUSIDSIZE  8
 #define SEC_PER_DAY (60 * 60 * 24)
 #define SEC_PER_HOUR (60 * 60)
 
-/* Full tool name */
-static const char tool_name[] = "dasdfmt: zSeries DASD format program";
-
-/* Copyright notice */
-static const char copyright_notice[] = "Copyright IBM Corp. 1999, 2006";
-
 static int filedes;
 static int disk_disabled;
 static format_data_t format_params;
 static format_mode_t mode;
-char *prog_name;
-volatile sig_atomic_t program_interrupt_in_progress;
-int reqsize;
+static char *prog_name;
+static volatile sig_atomic_t program_interrupt_in_progress;
+static int reqsize;
 
-/*
- * Print version information.
- */
-static void print_version(void)
-{
-	printf("%s version %s\n", tool_name, RELEASE_STRING);
-	printf("%s\n", copyright_notice);
-}
 
-/*
- * print the usage text and exit
- */
-static void exit_usage(int exitcode)
-{
-	printf("Usage: %s [-htvypPLVFkC]\n"
-	       "	       [-l <volser>      | --label=<volser>]\n"
-	       "               [-b <blocksize>   | --blocksize=<blocksize>]\n"
-	       "               [-d <disk layout> | --disk_layout=<disk layout>]\n"
-	       "               [-r <cylinder>    | --requestsize=<cylinder>]\n"
-	       "               [-M <mode>	 | --mode=<mode>]\n"
-	       "               <device>\n\n", prog_name);
+static const struct util_prg prg = {
+	.desc = "Use dasdfmt to format a DASD ECKD device for use by Linux.\n"
+		"DEVICE is the node of the device (e.g. '/dev/dasda').",
+	.args = "DEVICE",
+	.copyright_vec = {
+		{
+			.owner = "IBM Corp.",
+			.pub_first = 1999,
+			.pub_last = 2016,
+		},
+		UTIL_PRG_COPYRIGHT_END
+	}
+};
 
-	printf("       -t or --test     means testmode\n"
-	       "       -V or --version  means print version\n"
-	       "       -L or --no_label means don't write disk label\n"
-	       "       -p or --progressbar means show a progress bar\n"
-	       "       -P or --percentage means show a progress in percent\n"
-	       "       -m x or --hashmarks=x means show a hashmark every x "
-	       "cylinders\n"
-	       "       -r x or --requestsize=x means use x cylinders in one "
-	       "format step\n"
-	       "       -v means verbose mode\n"
-	       "       -F means format without performing sanity checking\n"
-	       "       -k means keep volume serial\n"
-	       "       -C or --check_host_count means force dasdfmt to check\n"
-	       "          the host access open count to ensure the device\n"
-	       "          is not online on another operating system instance\n"
-	       "       --norecordzero prevent storage server from modifying"
-	       " record 0\n"
-	       "       --check perform complete format check on device\n\n"
-	       "       <volser> is the volume identifier, which is converted\n"
-	       "                to EBCDIC and written to disk.\n"
-	       "                (6 characters, e.g. LNX001\n"
-	       "       <blocksize> has to be power of 2 and at least 512\n"
-	       "       <disk layout> is either\n"
-	       "           'cdl' for compatible disk layout (default) or\n"
-	       "           'ldl' for linux disk layout\n"
-	       "       <device> device node of the device to format\n"
-	       "       <mode> is either\n"
-	       "           'full' to fully format the device (default)\n"
-	       "           'quick' to format only the first two tracks\n"
-	       "           'expand' to format only the unformatted end"
-	       " of a device\n");
-	exit(exitcode);
-}
+/* Defines for options with no short command */
+#define OPT_CHECK	128
+#define OPT_NOZERO	129
+
+static struct util_opt opt_vec[] = {
+	UTIL_OPT_SECTION("FORMAT ACTIONS"),
+	{
+		.option = { "mode", required_argument, NULL, 'M' },
+		.argument = "MODE",
+		.desc = "Specify scope of operation using MODE:\n"
+			"  full: Full device (default)\n"
+			"  quick: Only the first two tracks\n"
+			"  expand: Unformatted tracks at device end",
+	},
+	{
+		.option = { "check", no_argument, NULL, OPT_CHECK },
+		.desc = "Perform complete format check on device",
+		.flags = UTIL_OPT_FLAG_NOSHORT,
+	},
+	UTIL_OPT_SECTION("FORMAT OPTIONS"),
+	{
+		.option = { "blocksize", required_argument, NULL, 'b' },
+		.argument = "SIZE",
+		.desc = "Format blocks to SIZE bytes (default 4096)",
+	},
+	{
+		.option = { "disk_layout", required_argument, NULL, 'd' },
+		.argument = "LAYOUT",
+		.desc = "Specify the disk layout:\n"
+			"  cdl: Compatible Disk Layout (default)\n"
+			"  ldl: Linux Disk Layout",
+	},
+	{
+		.option = { "keep_volser", no_argument, NULL, 'k' },
+		.desc = "Do not change the current volume serial",
+	},
+	{
+		.option = { "label", required_argument, NULL, 'l' },
+		.argument = "VOLSER",
+		.desc = "Specify volume serial number",
+	},
+	{
+		.option = { "no_label", no_argument, NULL, 'L' },
+		.desc = "Don't write a disk label",
+	},
+	{
+		.option = { "requestsize", required_argument, NULL, 'r' },
+		.argument = "NUM",
+		.desc = "Process NUM cylinders in one formatting step",
+	},
+	{
+		.option = { "norecordzero", no_argument, NULL, OPT_NOZERO },
+		.desc = "Prevent storage server from modifying record 0",
+		.flags = UTIL_OPT_FLAG_NOSHORT,
+	},
+	{
+		.option = { NULL, no_argument, NULL, 'y' },
+		.desc = "Start formatting without further user-confirmation",
+		.flags = UTIL_OPT_FLAG_NOLONG,
+	},
+	UTIL_OPT_SECTION("DISPLAY PROGRESS"),
+	{
+		.option = { "hashmarks", required_argument, NULL, 'm' },
+		.argument = "NUM",
+		.desc = "Show a hashmark every NUM cylinders",
+	},
+	{
+		.option = { "progressbar", no_argument, NULL, 'p' },
+		.desc = "Show a progressbar",
+	},
+	{
+		.option = { "percentage", no_argument, NULL, 'P' },
+		.desc = "Show progress in percent",
+	},
+	UTIL_OPT_SECTION("MISC"),
+	{
+		.option = { "check_host_count", no_argument, NULL, 'C' },
+		.desc = "Check if device is in use by other hosts",
+	},
+	{
+		.option = { "force", no_argument, NULL, 'F' },
+		.desc = "Format without performing sanity checking",
+	},
+	{
+		.option = { "test", no_argument, NULL, 't' },
+		.desc = "Run in dry-run mode without modifying the DASD",
+	},
+	{
+		.option = { NULL, no_argument, NULL, 'v' },
+		.desc = "Print verbose messages when executing",
+		.flags = UTIL_OPT_FLAG_NOLONG,
+	},
+	UTIL_OPT_HELP,
+	{
+		.option = { "version", no_argument, NULL, 'V' },
+		.desc = "Print version information, then exit",
+	},
+	UTIL_OPT_END
+};
 
 /*
  * Helper function to calculate the days, hours, minutes, and seconds
@@ -108,9 +164,9 @@ static void calc_time(time_t time, int *d, int *h, int *m, int *s)
 }
 
 /*
- * This function calculates and prints the estimated time remaining.
+ * This function calculates and prints the estimated time of accomplishment.
  */
-static void print_etr(int p_new, int started)
+static void print_eta(int p_new, int started)
 {
 	static struct timeval start;
 	struct timeval now;
@@ -189,7 +245,7 @@ static void draw_progress(dasdfmt_info_t *info, int cyl, unsigned int cylinders,
 			printf("|%3d%%", p_new);
 			if (aborted)
 				p_new = 100;
-			print_etr(p_new, started);
+			print_eta(p_new, started);
 			started = 1;
 		}
 		printf("\r");
@@ -407,11 +463,11 @@ static void get_device_name(dasdfmt_info_t *info, char *name, int argc,
 	struct util_proc_dev_entry dev_entry;
 	struct stat dev_stat;
 
-	if (info->node_specified && (info->device_id < argc))
+	if (info->device_id + 1 < argc)
 		ERRMSG_EXIT(EXIT_MISUSE,
-			    "%s: Device can only specified once!\n", prog_name);
+			    "%s: More than one device specified!\n", prog_name);
 
-	if (!info->node_specified && (info->device_id >= argc))
+	if (info->device_id >= argc)
 		ERRMSG_EXIT(EXIT_MISUSE, "%s: No device specified!\n",
 			    prog_name);
 
@@ -1184,11 +1240,11 @@ static void dasdfmt_prepare_and_format(dasdfmt_info_t *info,
 				       unsigned int heads, format_data_t *p)
 {
 	format_data_t temp = {
-		start_unit: 0,
-		stop_unit:  0,
-		blksize:    p->blksize,
-		intensity: ((p->intensity & ~DASD_FMT_INT_FMT_NOR0)
-			    | DASD_FMT_INT_INVAL)
+		.start_unit = 0,
+		.stop_unit = 0,
+		.blksize = p->blksize,
+		.intensity = ((p->intensity & ~DASD_FMT_INT_FMT_NOR0)
+			      | DASD_FMT_INT_INVAL)
 	};
 
 	if (!((info->withoutprompt) && (info->verbosity < 1)))
@@ -1438,7 +1494,7 @@ int main(int argc, char *argv[])
 	char *reqsize_param_str = NULL;
 	char *hashstep_str      = NULL;
 
-	int rc, index;
+	int rc;
 	unsigned int cylinders, heads;
 
 	/* Establish a handler for interrupt signals. */
@@ -1448,6 +1504,9 @@ int main(int argc, char *argv[])
 
 	/******************* initialization ********************/
 	prog_name = argv[0];
+
+	util_prg_init(&prg);
+	util_opt_init(opt_vec, NULL);
 
 	/* set default values */
 	vtoc_volume_label_init(&vlabel);
@@ -1460,8 +1519,7 @@ int main(int argc, char *argv[])
 	/*************** parse parameters **********************/
 
 	while (1) {
-		rc = getopt_long(argc, argv, dasdfmt_getopt_string,
-				 dasdfmt_getopt_long_options, &index);
+		rc = util_opt_getopt_long(argc, argv);
 
 		switch (rc) {
 		case 'F':
@@ -1488,7 +1546,7 @@ int main(int argc, char *argv[])
 		case 'y':
 			info.withoutprompt = 1;
 			break;
-		case 'z':
+		case OPT_NOZERO:
 			format_params.intensity |= DASD_FMT_INT_FMT_NOR0;
 			break;
 		case 't':
@@ -1512,10 +1570,12 @@ int main(int argc, char *argv[])
 			info.verbosity = 1;
 			break;
 		case 'h':
-			exit_usage(0);
+			util_prg_print_help();
+			util_opt_print_help();
+			exit(EXIT_SUCCESS);
 		case 'V':
-			print_version();
-			exit(0);
+			util_prg_print_version();
+			exit(EXIT_SUCCESS);
 		case 'l':
 			strncpy(buf, optarg, 6);
 			if (check_volser(buf, 0) < 0)
@@ -1539,10 +1599,6 @@ int main(int argc, char *argv[])
 		case 'r':
 			reqsize_param_str = optarg;
 			info.reqsize_specified = 1;
-			break;
-		case 'f':
-			strncpy(dev_filename, optarg, PATH_MAX);
-			info.node_specified = 1;
 			break;
 		case 'k':
 			info.keep_volser = 1;

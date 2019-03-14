@@ -7,10 +7,10 @@
  * Author(s): Hendrik Brueckner <brueckner@linux.vnet.ibm.com>
  */
 #include <errno.h>
+#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <regex.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -18,8 +18,8 @@
 
 #include "af_iucv.h"
 #include "iucvterm/config.h"
-#include "iucvterm/gettext.h"
 #include "iucvterm/functions.h"
+#include "iucvterm/gettext.h"
 #include "iucvterm/proto.h"
 
 
@@ -147,7 +147,7 @@ int iucvtty_rx_termenv(int fd, void *buf, size_t len)
 	iucvtty_skip_msg_residual(fd, &skip);
 	if (!rc) {
 		if (msg->datalen == 0)
-			memset(buf, 0, min(1, len));
+			memset(buf, 0, MIN(1u, len));
 		else
 			msg_cpy_to(msg, buf, len);
 	}
@@ -303,7 +303,7 @@ int iucvtty_read_msg(int fd, struct iucvtty_msg *msg,
 	ssize_t r;		/* number of bytes read from fd */
 
 	if (*residual)
-		len = min(len - MSG_DATA_OFFSET, *residual);
+		len = MIN(len - MSG_DATA_OFFSET, *residual);
 
 	while (1) {
 		if (*residual) {

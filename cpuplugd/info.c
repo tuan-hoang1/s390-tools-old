@@ -8,8 +8,9 @@
  *            Hans-Joachim Picht <hans@linux.vnet.ibm.com>
  */
 
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+
 #include "cpuplugd.h"
 
 /*

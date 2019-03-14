@@ -7,22 +7,23 @@
  * Copyright IBM Corp. 2001,2011
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <getopt.h>
+#include <netdb.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <errno.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <getopt.h>
+
+#include "lib/zt_common.h"
 #include "qetharp.h"
-#include "zt_common.h"
 
 #ifndef QETH_QARP_WITH_IPV6
 #define IP_TYPE() ipaddr_type

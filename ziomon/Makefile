@@ -1,6 +1,6 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include -DNDEBUG
+ALL_CPPFLAGS += -DNDEBUG
 ALL_CFLAGS   += -Wundef -Wstrict-prototypes -Wno-trigraphs
 ALL_CXXFLAGS += -Wundef -Wno-trigraphs
 

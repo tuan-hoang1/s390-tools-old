@@ -7,10 +7,11 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
+#include "lib/util_list.h"
+
 #include "exit_code.h"
 #include "hash.h"
 #include "misc.h"
-#include "util.h"
 
 struct subtype;
 struct setting_list;

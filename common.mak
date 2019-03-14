@@ -6,7 +6,7 @@ COMMON_INCLUDED = true
 # "make DISTRELEASE=%{release}" and "make install DISTRELEASE=%{release}"
 VERSION            = 1
 RELEASE            = 37
-PATCHLEVEL         = 0
+PATCHLEVEL         = 1
 DISTRELEASE        = build-$(shell date +%Y%m%d)
 S390_TOOLS_RELEASE = $(VERSION).$(RELEASE).$(PATCHLEVEL)-$(DISTRELEASE)
 export S390_TOOLS_RELEASE
@@ -199,7 +199,7 @@ ALL_CXXFLAGS	= -DS390_TOOLS_RELEASE=$(S390_TOOLS_RELEASE) \
 			-DS390_TOOLS_DATADIR=$(TOOLS_DATADIR) \
 			-DS390_TOOLS_SYSCONFDIR=$(SYSCONFDIR) \
 			$(CXXFLAGS)
-ALL_CPPFLAGS	= $(CPPFLAGS)
+ALL_CPPFLAGS	= -I $(rootdir)include $(CPPFLAGS)
 ALL_LDFLAGS	= $(LDFLAGS)
 
 # make G=1
@@ -232,19 +232,23 @@ endif
 all:
 
 help:
-	@echo '   Targets:'
-	@echo '     all        - Build all tools (default target)'
-	@echo '     install    - Install tools'
-	@echo '     clean      - Delete all generated files'
+	@echo 'Usage: make [TARGETS] [OPTIONS]'
 	@echo ''
-	@echo '   Flags:'
-	@echo '     D=1        - Build with debugging option "-Og"'
-	@echo '     G=1        - Build with gcov to collect code coverage data'
-	@echo '     V=1        - Generate verbose build output'
-	@echo '     W=1        - Build with higher warning level'
+	@echo 'TARGETS'
+	@echo '  all      Build all tools (default target)'
+	@echo '  install  Install tools'
+	@echo '  clean    Delete all generated files'
 	@echo ''
-	@echo '   Example:'
-	@echo '     # make clean all D=1 W=1 -j'
+	@echo 'OPTIONS'
+	@echo '  D=1      Build with debugging option "-Og"'
+	@echo '  C=1      Build with check tool defined with "CHECK=" (default=sparse)'
+	@echo '  G=1      Build with gcov to collect code coverage data'
+	@echo '  V=1      Generate verbose build output'
+	@echo '  W=1      Build with higher warning level'
+	@echo ''
+	@echo 'EXAMPLES'
+	@echo '  # make clean all D=1 W=1 -j'
+	@echo '  # make C=1 CHECK=smatch'
 .PHONY: help
 
 # Automatic dependency generation
@@ -258,10 +262,17 @@ help:
 # Use -MM instead of -M to *not* mention system header files. We expect
 # "make clean all" in case of system header updates.
 
+# We consider header files in three possible directories
+sources_h = \
+	$(wildcard *.h) \
+	$(wildcard ../include/*.h) \
+	$(wildcard $(rootdir)/include/lib/*.h)
+
 # Rules to create ".o.d" files out of ".c" or ".cpp" files:
-.%.o.d: %.c
+
+.%.o.d: %.c $(sources_h)
 	$(CC_SILENT) -MM $(ALL_CPPFLAGS) $(ALL_CFLAGS) $< > $@
-.%.o.d: %.cpp
+.%.o.d: %.cpp $(sources_h)
 	$(CXX_SILENT) -MM $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) $< > $@
 # The sources_c/cpp variable contains a list of all ".c" or ".cpp" files in
 # in the current directory.

@@ -4,11 +4,10 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "opts.h"
-
 #include <getopt.h>
 
 #include "misc.h"
+#include "opts.h"
 
 static const char *get_name(const struct option *opt_list, int op)
 {

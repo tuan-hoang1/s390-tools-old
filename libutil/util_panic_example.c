@@ -5,15 +5,14 @@
  */
 
 //! [code]
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/resource.h>
 #include <sys/time.h>
 
-#include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "util_panic.h"
+#include "lib/util_panic.h"
 
 /* Make functions noinline to have a nice backtrace */
 #define __noinline __attribute__((noinline))

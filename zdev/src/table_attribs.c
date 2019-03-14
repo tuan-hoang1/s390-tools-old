@@ -4,14 +4,13 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "table_attribs.h"
-
 #include "attrib.h"
 #include "ccw.h"
 #include "devtype.h"
 #include "misc.h"
 #include "subtype.h"
 #include "table.h"
+#include "table_attribs.h"
 
 /* Column IDs for the types table. */
 enum table_attribs_id {

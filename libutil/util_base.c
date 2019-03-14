@@ -6,7 +6,7 @@
  * Copyright IBM Corp. 2013
  */
 
-#include "util.h"
+#include "lib/util_base.h"
 
 /*
  * Print hexdump for buffer with variable group parameter

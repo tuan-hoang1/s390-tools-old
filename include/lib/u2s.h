@@ -8,8 +8,8 @@
  * 2004-07-02 initial
  */
 
-#ifndef U2S_H
-#define U2S_H
+#ifndef LIB_U2S_H
+#define LIB_U2S_H
 
 #define U2S_BUS_ID_SIZE    32
 
@@ -17,4 +17,4 @@ int u2s_getbusid(char *, char *);
 int u2s_read_attribute(char *, char *, char *, size_t);
 int u2s_get_host_access_count(char *);
 
-#endif /* U2S_H */
+#endif /* LIB_U2S_H */

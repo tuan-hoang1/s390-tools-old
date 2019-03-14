@@ -10,8 +10,8 @@
 #ifndef WIN_FIELDS_H
 #define WIN_FIELDS_H
 
-#include "table.h"
 #include "hyptop.h"
+#include "table.h"
 #include "win_help.h"
 
 struct win_fields {

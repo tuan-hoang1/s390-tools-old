@@ -7,11 +7,11 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include "eckd2dump.h"
-#include "stage2dump.h"
-#include "s390.h"
 #include "cio.h"
+#include "eckd2dump.h"
 #include "error.h"
+#include "s390.h"
+#include "stage2dump.h"
 
 #define ECKD_CCW_LOCATE_RECORD		0x47
 #define ECKD_CCW_LOCATE_RECORD_EXT	0x4b

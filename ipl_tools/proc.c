@@ -8,16 +8,16 @@
  *            Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include "proc.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
+#include <unistd.h>
+
 #include "ipl_tools.h"
+#include "proc.h"
 
 static const char proc_part_filename[] = "/proc/partitions";
 static const char proc_dev_filename[] = "/proc/devices";

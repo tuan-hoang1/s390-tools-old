@@ -1,11 +1,11 @@
 # Common definitions
 include ../../common.mak
 
-ALL_CPPFLAGS += -I ../../include -I../include -std=gnu99 -Wno-unused-parameter
-ALL_LDFLAGS  += -lpthread -lrt
+ALL_CPPFLAGS += -I../include -std=gnu99 -Wno-unused-parameter
+LDLIBS  += -lpthread -lrt
 ifneq ($(HAVE_ZLIB),0)
 ALL_CPPFLAGS += -DHAVE_ZLIB
-ALL_LDFLAGS  += -lz
+LDLIBS  += -lz
 endif
 
 core_objects = buffer.o dref.o global.o dump.o idcache.o misc.o strarray.o tar.o

@@ -6,23 +6,22 @@
  * Copyright IBM Corp. 2016
  */
 
-#include <linux/limits.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include <errno.h>
 #include <limits.h>
+#include <linux/limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
-#include "util_base.h"
-#include "util_file.h"
-#include "util_panic.h"
-#include "util_libc.h"
-#include "util_prg.h"
+#include "lib/util_base.h"
+#include "lib/util_file.h"
+#include "lib/util_libc.h"
+#include "lib/util_panic.h"
+#include "lib/util_prg.h"
 
 /*
  * Read the first line of a file into given buffer

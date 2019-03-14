@@ -8,20 +8,17 @@
  *            Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
  */
 
-#include "boot.h"
-
+#include <stdarg.h>
 #include <stdint.h>
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
+#include <string.h>
 
+#include "../boot/data.h"
+#include "boot.h"
+#include "bootmap.h"
 #include "error.h"
 #include "misc.h"
-#include "bootmap.h"
-
-/* Include declarations for boot_data symbols. */
-#include "../boot/data.h"
 
 #define DATA_SIZE(x)	((size_t) (&_binary_##x##_bin_size))
 #define DATA_ADDR(x)	(&_binary_##x##_bin_start)

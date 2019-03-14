@@ -7,8 +7,8 @@
  * Author(s): Gerhard Tonn (ton@de.ibm.com)
  */
 
-#ifndef ZT_COMMON_H
-#define ZT_COMMON_H
+#ifndef LIB_ZT_COMMON_H
+#define LIB_ZT_COMMON_H
 
 #define STRINGIFY_1(x)			#x
 #define STRINGIFY(x)			STRINGIFY_1(x)
@@ -38,4 +38,4 @@ typedef signed short int	s16;
 typedef unsigned char		u8;
 typedef signed char		s8;
 
-#endif /* ZT_COMMON_H */
+#endif /* LIB_ZT_COMMON_H */

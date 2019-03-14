@@ -7,12 +7,13 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
+#include <assert.h>
 #include <elf.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
-#include <assert.h>
+
 #include "zgetdump.h"
 
 /*

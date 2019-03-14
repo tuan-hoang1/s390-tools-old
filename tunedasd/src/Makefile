@@ -1,11 +1,13 @@
 include ../../common.mak
 
-ALL_CPPFLAGS += -I../include -I../boot -I../../include
+ALL_CPPFLAGS += -I../include -I../boot
 
 libs =	$(rootdir)/libdasd/libdasd.a \
-	$(rootdir)/libu2s/libu2s.a
+	$(rootdir)/libu2s/libu2s.a \
+	$(rootdir)/libutil/libutil.a
 
 all: tunedasd
+
 
 objects = tunedasd.o disk.o
 

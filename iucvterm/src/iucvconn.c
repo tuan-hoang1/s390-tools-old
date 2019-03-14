@@ -9,19 +9,20 @@
 #include <errno.h>
 #include <pwd.h>
 #include <signal.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <syslog.h>
 #include <termios.h>
 #include <unistd.h>
 
-#include "iucvterm/gettext.h"
+#include "lib/util_base.h"
+
 #include "iucvterm/config.h"
 #include "iucvterm/functions.h"
-
+#include "iucvterm/gettext.h"
 
 #define SYSLOG_IDENT		"iucvconn"
 #define PRG_COMPONENT		SYSLOG_IDENT
@@ -164,8 +165,8 @@ static int iucvtty_worker(int terminal, const struct iucvterm_cfg *cfg)
 		FD_SET(terminal, &set);
 		FD_SET(STDIN_FILENO, &set);
 
-		if (select(max(STDIN_FILENO, terminal) + 1, &set,
-				 NULL, NULL, NULL) == -1) {
+		if (select(MAX(STDIN_FILENO, terminal) + 1, &set,
+			   NULL, NULL, NULL) == -1) {
 			if (errno == EINTR)
 				continue;
 			break;

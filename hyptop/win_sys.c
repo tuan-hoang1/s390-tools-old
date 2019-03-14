@@ -8,13 +8,14 @@
  */
 
 #include <errno.h>
+
 #include "helper.h"
-#include "table.h"
 #include "hyptop.h"
+#include "opts.h"
 #include "sd.h"
+#include "table.h"
 #include "win_fields.h"
 #include "win_help.h"
-#include "opts.h"
 
 /*
  * Globals for sys_list window

@@ -4,13 +4,12 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "attrib.h"
-
 #include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
+#include "attrib.h"
 #include "misc.h"
 
 /* Parse the string in VAL as a number of notation N. If NUM is non-null

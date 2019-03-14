@@ -8,27 +8,24 @@
  * Copyright IBM Corp. 2002, 2007
  */
 
-/* standard includes */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
-#include <errno.h>
-#include <string.h>
-#include <math.h>
-
-/* include socket & ioctl library */
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <linux/if.h>
-#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stddef.h> 
+#include <limits.h>
+#include <math.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <linux/if.h>
 #include <netinet/in.h> /* included because of "parse error before `get_myaddr'" */
-                        /* in version 4.2.1 this headerfile was included from    */
+			/* in version 4.2.1 this headerfile was included from    */
 			/* ucd-snmp-includes.h                                   */ 
 
 /* include local defintions of data structures for OSA Express subagent */

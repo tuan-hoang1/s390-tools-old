@@ -6,8 +6,8 @@
  * Copyright IBM Corp. 2016
  */
 
-#ifndef DASD_SYS_H
-#define DASD_SYS_H
+#ifndef LIB_DASD_SYS_H
+#define LIB_DASD_SYS_H
 
 #include <stdio.h>
 #include "u2s.h"
@@ -15,4 +15,4 @@
 int dasd_sys_raw_track_access(char *);
 int dasd_reset_chpid(char *, char *);
 
-#endif /* DASD_SYS_H */
+#endif /* LIB_DASD_SYS_H */

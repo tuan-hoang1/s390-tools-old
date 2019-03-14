@@ -7,15 +7,16 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <ncurses.h>
-#include <string.h>
-#include <errno.h>
 #include <ctype.h>
-#include "table.h"
-#include "hyptop.h"
+#include <errno.h>
+#include <ncurses.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "helper.h"
+#include "hyptop.h"
+#include "table.h"
 
 #define L_ROWS_EXTRA			2 /* head + last */
 

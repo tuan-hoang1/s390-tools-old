@@ -4,17 +4,16 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "lcs.h"
-
 #include <stdlib.h>
 #include <string.h>
 
 #include "attrib.h"
 #include "ccw.h"
 #include "ccwgroup.h"
-#include "lcs_auto.h"
 #include "device.h"
 #include "devtype.h"
+#include "lcs.h"
+#include "lcs_auto.h"
 #include "misc.h"
 #include "namespace.h"
 #include "setting.h"

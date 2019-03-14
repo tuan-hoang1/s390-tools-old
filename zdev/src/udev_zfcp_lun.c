@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "udev_zfcp_lun.h"
-
 #include <ctype.h>
 #include <errno.h>
 #include <inttypes.h>
@@ -14,13 +12,13 @@
 #include <string.h>
 
 #include "attrib.h"
-#include "misc.h"
 #include "device.h"
+#include "misc.h"
 #include "path.h"
 #include "scsi.h"
 #include "setting.h"
 #include "udev.h"
-#include "util.h"
+#include "udev_zfcp_lun.h"
 #include "zfcp_lun.h"
 
 #define LABEL_START	"start_zfcp_lun_"

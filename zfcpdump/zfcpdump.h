@@ -66,13 +66,6 @@ struct globals {
 
 extern struct globals g;
 
-#ifndef MIN
-#define MIN(x, y) ((x) < (y) ? (x) : (y))
-#endif
-#ifndef MAX
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
-#endif
-
 #define PROC_CMDLINE	"/proc/cmdline"
 #define DEV_ZCORE	"/sys/kernel/debug/zcore/mem"
 #define DEV_ZCORE_MAP	"/sys/kernel/debug/zcore/memmap"

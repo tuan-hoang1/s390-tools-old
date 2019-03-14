@@ -6,16 +6,15 @@
  * Copyright IBM Corp. 2016
  */
 
-#include <sys/resource.h>
-#include <sys/time.h>
-
 #include <execinfo.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 
-#include "util_base.h"
-#include "util_panic.h"
+#include "lib/util_base.h"
+#include "lib/util_panic.h"
 
 /*
  * Obtain a backtrace and print it to stderr
@@ -106,7 +105,7 @@ void __util_assert(const char *assertion_str,
 /*
  * Do panic processing
  */
-void __util_panic(const char *func, const char *file, int line,
+void __noreturn __util_panic(const char *func, const char *file, int line,
 		  const char *fmt, ...)
 {
 	va_list ap;

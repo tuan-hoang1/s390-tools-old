@@ -1,12 +1,10 @@
 include ../../common.mak
 
-CPPFLAGS += -I../../include
-
 all: chchp lschp
 
 libs =	$(rootdir)/libutil/libutil.a
 
-chchp: chchp.o misc.o $(libs)
+chchp: chchp.o $(libs)
 lschp: lschp.o $(libs)
 
 install: all

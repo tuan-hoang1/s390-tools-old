@@ -244,7 +244,7 @@ function newoutput()
 		printf "%s:%s:%-8s   offline\n" \
 			"$SORTKEYLEN" "$SORTKEY" \
 			"$BUSID" ;
-		continue
+		return
 	fi
 
 	if [[ "$ALIAS" == 1 ]]; then
@@ -253,10 +253,8 @@ function newoutput()
 				"$SORTKEYLEN" "$SORTKEY" \
 				"$BUSID" \
 				"$DISCIPLINE"
-			continue
-		else
-			continue
-			fi
+		fi
+		return
 	fi
 
 	if [[ "$READONLY" == 0 ]]; then
@@ -311,7 +309,7 @@ function oldoutput()
 			"$BUSID" \
 			"$DISCIPLINE" \
 			"$FORMATTED_UID"
-		continue
+		return
 	fi
 
 	if [[ "$ALIAS" == 1 ]]; then
@@ -321,10 +319,8 @@ function oldoutput()
 				"$BUSID" \
 				"$DISCIPLINE" \
 				"$FORMATTED_UID"
-			continue
-		else
-			continue
-			fi
+		fi
+		return
 	fi
 
 	if [[ "$READONLY" == 0 ]]; then
@@ -371,14 +367,14 @@ function extended()
 	IFCCPM=0
 
 	# additional information
-	read DIAG 2> /dev/null < $DEVPATH/use_diag || continue
-	read EER 2> /dev/null < $DEVPATH/eer_enabled || continue
-	read ERP 2> /dev/null < $DEVPATH/erplog || continue
+	read DIAG 2> /dev/null < $DEVPATH/use_diag
+	read EER 2> /dev/null < $DEVPATH/eer_enabled
+	read ERP 2> /dev/null < $DEVPATH/erplog
 	read HPF 2> /dev/null < $DEVPATH/hpf
         # in case the path_masks do not exist simply ignore it
 	read OPM NPPM CABLEPM CUIRPM HPFPM IFCCPM 2> /dev/null < $DEVPATH/path_masks
-	read -a C 2> /dev/null < $DEVPATH/../chpids || continue
-	read PIM PAM POM 2> /dev/null < $DEVPATH/../pimpampom || continue
+	read -a C 2> /dev/null < $DEVPATH/../chpids
+	read PIM PAM POM 2> /dev/null < $DEVPATH/../pimpampom
 
 	# convert to hexadecimal values
 	PIM=0x$PIM
@@ -509,7 +505,7 @@ function extended()
 		        "${CUIR_PATHS[@]}" \
 		        "${HPF_PATHS[@]}" \
 		        "${IFCC_PATHS[@]}" ;
-		continue
+		return
 	elif [[ "$ALIAS" == 1 ]]; then
 		if [[ "$BASEONLY" == "false" ]]; then
 			ACTIVE="alias"
@@ -531,10 +527,8 @@ function extended()
 			        "${CUIR_PATHS[@]}" \
 			        "${HPF_PATHS[@]}" \
 		                "${IFCC_PATHS[@]}" ;
-			continue
-		else
-			continue
 		fi
+		return
 	elif [[ -z "$BLOCKNAME" ]] || [[ -z "$SIZE" ]]; then
 		ACTIVE="active"
 		COLON=""
@@ -688,7 +682,7 @@ function uid()
 		BLOCKNAME="offline"
 	elif [[ "$ALIAS" == 1 ]]; then
 		if [[ "$BASEONLY" == "true" ]]; then
-			continue
+			return
 		else
 			BLOCKNAME="alias"
 		fi

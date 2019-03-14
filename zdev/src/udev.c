@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "udev.h"
-
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -13,12 +11,12 @@
 #include <string.h>
 
 #include "attrib.h"
-#include "misc.h"
 #include "ccw.h"
 #include "device.h"
+#include "misc.h"
 #include "path.h"
 #include "setting.h"
-#include "util.h"
+#include "udev.h"
 
 int udev_need_settle = 0;
 

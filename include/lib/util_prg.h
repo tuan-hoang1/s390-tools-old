@@ -6,8 +6,8 @@
  * Copyright IBM Corp. 2016
  */
 
-#ifndef UTIL_PRG_H
-#define UTIL_PRG_H
+#ifndef LIB_UTIL_PRG_H
+#define LIB_UTIL_PRG_H
 
 #include <err.h>
 #include <limits.h>
@@ -52,4 +52,4 @@ void util_prg_print_arg_error(const char *arg_name);
 void util_prg_print_version(void);
 void util_prg_print_help(void);
 
-#endif /** UTIL_PRG_H @} */
+#endif /** LIB_UTIL_PRG_H @} */

@@ -9,9 +9,10 @@
  */
 
 #include <stdarg.h>
+
+#include "error.h"
 #include "libc.h"
 #include "sclp.h"
-#include "error.h"
 
 extern char __heap_start[];
 extern char __heap_stop[];

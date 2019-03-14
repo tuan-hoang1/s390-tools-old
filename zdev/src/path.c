@@ -4,20 +4,19 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "path.h"
-
 #include <dirent.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
-#include "misc.h"
 #include "devtype.h"
+#include "misc.h"
+#include "path.h"
 #include "zfcp.h"
 #include "zfcp_lun.h"
 

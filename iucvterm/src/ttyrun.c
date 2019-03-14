@@ -26,18 +26,18 @@
  * Author(s): Hendrik Brueckner <brueckner@linux.vnet.ibm.com>
  */
 #include <errno.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <limits.h>
 #include <signal.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <syslog.h>
-#include <fcntl.h>
 #include <unistd.h>
 
-#include "zt_common.h"
+#include "lib/zt_common.h"
 
 
 #define TTY_ESCAPE_STR		"%t"

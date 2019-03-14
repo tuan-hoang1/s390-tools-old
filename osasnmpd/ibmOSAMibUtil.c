@@ -7,13 +7,14 @@
  * Copyright IBM Corp. 2002, 2007
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stddef.h>
-#include <signal.h>
-#include <time.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <stddef.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+
 #include "ibmOSAMibUtil.h"
 #include "ibmOSAMib.h"
 

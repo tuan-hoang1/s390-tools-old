@@ -58,7 +58,7 @@ This makes only sense for the 'ldl' disk layout.
 The '-L' option has to be specified after the '-d ldl' option. 
 .br
 
-e.g. dasdfmt -d ldl -L -f /dev/...
+e.g. dasdfmt -d ldl -L /dev/...
 
 
 .TP
@@ -185,14 +185,6 @@ e.g. -l 'a@b\\$c#' to get A@B$C#
 Keeps the Volume Serial Number, when writing the Volume Label. This is
 useful, if the Serial Number has been written with a VM Tool and should not
 be overwritten.
-.br
- 
-.TP
-\fB-f\fR \fInode\fR or \fB--device=\fR\fInode\fR
-NOTE: This option is deprecated. Use the required parameter \fIdevice\fR
-instead.  
-.br
-Specify the device using the device node. \fInode\fR is the complete path to the device.
 .br
 
 .SH SEE ALSO

@@ -4,19 +4,20 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "ccwgroup.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "lib/util_base.h"
+
 #include "attrib.h"
 #include "ccw.h"
-#include "devnode.h"
-#include "misc.h"
+#include "ccwgroup.h"
 #include "device.h"
+#include "devnode.h"
 #include "devtype.h"
 #include "iscsi.h"
+#include "misc.h"
 #include "module.h"
 #include "namespace.h"
 #include "path.h"
@@ -25,7 +26,6 @@
 #include "subtype.h"
 #include "udev.h"
 #include "udev_ccwgroup.h"
-#include "util.h"
 
 #define DEVNAME		"CCWGROUP device"
 

@@ -4,18 +4,16 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "lcs_auto.h"
-
 #include <string.h>
 
 #include "ccw.h"
 #include "ccwgroup.h"
 #include "ctc.h"
-#include "lcs.h"
 #include "device.h"
+#include "lcs.h"
+#include "lcs_auto.h"
 #include "module.h"
 #include "path.h"
-#include "util.h"
 
 struct cutype {
 	unsigned int cutype:16;

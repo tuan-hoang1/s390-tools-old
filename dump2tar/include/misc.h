@@ -14,9 +14,9 @@
 #include <sys/stat.h>
 #include <time.h>
 
+#include "lib/util_libc.h"
 #include "global.h"
 
-#include "util_libc.h"
 
 #define MSG_LEN	256
 

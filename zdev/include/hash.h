@@ -7,7 +7,7 @@
 #ifndef HASH_H
 #define HASH_H
 
-#include "util.h"
+#include "lib/util_list.h"
 
 /* A hash is a list of entries. Each entry provides an ID. A hashing function
  * maps the ID to an integer bucket number. When adding entries to a hash, the

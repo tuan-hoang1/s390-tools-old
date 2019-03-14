@@ -8,11 +8,12 @@
  *
  *************************************************************************/
 
-#include <sys/stat.h>
-#include <stdio.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+
 #include "tape390_common.h"
 
 #define PROC_DEVICES_FILE "/proc/devices"

@@ -1,7 +1,6 @@
 include ../common.mak
 LDLIBS = `net-snmp-config --agent-libs`
 CFLAGS += `net-snmp-config --cflags`
-CPPFLAGS += -I../include
 
 OBJS = ibmOSAMib.o ibmOSAMibUtil.o osasnmpd.o
 

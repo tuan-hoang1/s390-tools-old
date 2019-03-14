@@ -11,10 +11,10 @@
 #ifndef MISC_H
 #define MISC_H
 
-#include "zipl.h"
-
-#include <unistd.h>
 #include <sys/types.h>
+#include <unistd.h>
+
+#include "zipl.h"
 
 
 struct misc_file_buffer {
@@ -51,7 +51,6 @@ int misc_check_writable_device(const char* devno, int blockdev, int chardev);
 void misc_ebcdic_to_ascii(unsigned char *from, unsigned char *to);
 void misc_ascii_to_ebcdic(unsigned char *from, unsigned char *to);
 
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define ROUNDUP(x, y) ((((x) + ((y) - 1)) / (y)) * (y))
 #define DIV_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
 #endif /* not MISC_H */

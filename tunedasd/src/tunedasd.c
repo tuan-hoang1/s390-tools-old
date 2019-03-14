@@ -7,54 +7,104 @@
  * Author(s): Horst Hummel (horst.hummel@de.ibm.com)
  */
 
-#include "tunedasd.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
-#include <unistd.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "lib/util_opt.h"
+#include "lib/util_prg.h"
+#include "lib/zt_common.h"
 
 #include "disk.h"
 #include "error.h"
-#include "zt_common.h"
+#include "tunedasd.h"
 
-/* Full tool name */
-static const char tool_name[] = "tunedasd: zSeries DASD tuning program";
+static const struct util_prg prg = {
+	.desc = "Adjust tunable DASD parameters. More than one DEVICE node can "
+		"be specified, but at least one (e.g. /dev/dasda)",
+	.args = "DEVICE1 [DEVICE2...]",
+	.copyright_vec = {
+		{
+			.owner = "IBM Corp.",
+			.pub_first = 1999,
+			.pub_last = 2006,
+		},
+		UTIL_PRG_COPYRIGHT_END
+	}
+};
 
-/* Copyright notice */
-static const char copyright_notice[] = "Copyright IBM Corp. 2004, 2006";
+/* Defines for options with no short command */
+#define OPT_PATH_RESET_ALL	128
 
-/* Usage information */
-static const char* usage_text[] = {
-	"Usage: tunedasd [OPTION] COMMAND device",
-	"",
-	"Adjust tunable DASD parameters. The DEVICE is the node of the device "
-	"(e.g. '/dev/dasda') or a list of devices separated by a space "
-	"character.",
-	"",
-	"-h, --help                Print this help, then exit",
-	"-v, --version             Print version information, then exit",
-	"-g, --get_cache           Get current storage server caching behaviour",
-	"-c, --cache <behavior>    Define caching behavior on storage server",
-	"                          (normal/bypass/inhibit/sequential/prestage/"
-	                           "record)",
-	"-n, --no_cyl <n>          Number of cylinders to be cached ",
-	"                          (only valid together with --cache)",
-	"-S, --reserve             Reserve device",
-	"-L, --release             Release device",
-	"-O, --slock               Unconditional reserve device",
-	"                          Note: Use with care, this breaks an existing "
-	                           "lock",
-	"-Q, --query_reserve       Print reserve status of device ",
-	"-P, --profile             Print profile info of device",
-	"-I, --prof_item           Print single profile item",
-	"                          (reqs/sects/sizes/total/totsect/start/irq/",
-	"                          irqsect/end/queue)",
-	"-R, --reset_prof          Reset profile info of device",
-	"-p, --path_reset <chpid>  Reset channel path <chpid> of a device",
-	"    --path_reset_all      Reset all channel paths of a device"
+static struct util_opt opt_vec[] = {
+	UTIL_OPT_SECTION("CACHING MODES (ECKD ONLY)"),
+	{
+		.option = { "cache", required_argument, NULL, 'c' },
+		.argument = "BEHAVIOUR",
+		.desc = "Specify caching behaviour on storage server: "
+			"normal, bypass, inhibit, sequential, prestage, or record",
+	},
+	{
+		.option = { "no_cyl", required_argument, NULL, 'n' },
+		.argument = "NUM",
+		.desc = "NUM cylinders to be cached (only valid with -c/--cache)",
+	},
+	{
+		.option = { "get_cache", no_argument, NULL, 'g' },
+		.desc = "Get current storage server caching behaviour",
+	},
+	UTIL_OPT_SECTION("RESERVE / RELEASE"),
+	{
+		.option = { "release", no_argument, NULL, 'L' },
+		.desc = "Release device",
+	},
+	{
+		.option = { "slock", no_argument, NULL, 'O' },
+		.desc = "Unconditional reservce device\n"
+			"NOTE: Use with care, this breaks an existing lock",
+	},
+	{
+		.option = { "query_reserve", no_argument, NULL, 'Q' },
+		.desc = "Print reserve status of device",
+	},
+	{
+		.option = { "reserve", no_argument, NULL, 'S' },
+		.desc = "Reserve device",
+	},
+	UTIL_OPT_SECTION("PERFORMANCE STATISTICS"),
+	{
+		.option = { "prof_item", required_argument, NULL, 'I' },
+		.argument = "ROW",
+		.desc = "Print single profile item: reqs, sects, sizes, total, "
+			"totsect, start, irq, irqsect, end, or queue",
+	},
+	{
+		.option = { "profile", no_argument, NULL, 'P' },
+		.desc = "Print profile info of device",
+	},
+	{
+		.option = { "reset_prof", no_argument, NULL, 'R' },
+		.desc = "Reset profile info of device",
+	},
+	UTIL_OPT_SECTION("MISC"),
+	{
+		.option = { "path_reset", required_argument, NULL, 'p' },
+		.argument = "CHPID",
+		.desc = "Reset channel path CHPID of a device",
+	},
+	{
+		.option = {
+			"path_reset_all", no_argument, NULL, OPT_PATH_RESET_ALL
+		},
+		.desc = "Reset all channel paths of a device",
+		.flags = UTIL_OPT_FLAG_NOSHORT,
+	},
+	UTIL_OPT_HELP,
+	UTIL_OPT_VERSION,
+	UTIL_OPT_END
 };
 
 #define CMD_KEYWORD_NUM		14
@@ -108,7 +158,7 @@ enum cmd_key_state {
 
 
 /* Determines which combination of keywords are valid */
-enum cmd_key_state cmd_key_table[CMD_KEYWORD_NUM][CMD_KEYWORD_NUM] = {
+static enum cmd_key_state cmd_key_table[CMD_KEYWORD_NUM][CMD_KEYWORD_NUM] = {
 	/*		      help vers get_ cach no_c rese rele sloc prof prof rese quer path path
 	 *		           ion  cach e    yl   rve  ase  k    ile  _ite t_pr y_re      _all
 	 *		               	e                                  m    of  serv
@@ -140,29 +190,6 @@ struct command_line {
 	int device_id;
 };
 
-
-static struct option options[] = {
-	{ "help",		no_argument,		NULL, 'h'},
-	{ "version",		no_argument,		NULL, 'v'},
-	{ "get_cache",		no_argument,	        NULL, 'g'},
-	{ "cache",		required_argument,	NULL, 'c'},
-	{ "no_cyl",		required_argument,	NULL, 'n'},
-	{ "reserve",		no_argument,	        NULL, 'S'},
-	{ "release",		no_argument,	        NULL, 'L'},
-	{ "slock",		no_argument,	        NULL, 'O'},
-	{ "profile",		no_argument,	        NULL, 'P'},
-	{ "prof_item",		required_argument,      NULL, 'I'},
-	{ "reset_prof",		no_argument,	        NULL, 'R'},
-	{ "query_reserve",	no_argument,	        NULL, 'Q'},
-	{ "path_reset",		required_argument,      NULL, 'p'},
-	{ "path_reset_all",	no_argument,            NULL, 'A'},
-	{ NULL,			0,			NULL, 0 }
-};
-
-/* Command line option abbreviations */
-static const char option_string[] = "hvgc:n:SLOPI:RQp:";
-
-
 /* Error message string */
 #define ERROR_STRING_SIZE	1024
 static char error_string[ERROR_STRING_SIZE];
@@ -185,30 +212,14 @@ error_print (const char* fmt, ...)
 }
 
 
-/* 
+/*
  * Print usage information.
  */
-static void
-print_usage (void)
+static void print_usage(void)
 {
-	unsigned int i;
-
-	for (i = 0; i < sizeof (usage_text) / sizeof (usage_text[0]); i++) {
-		printf ("%s\n", usage_text[i]);
-	}
+	util_prg_print_help();
+	util_opt_print_help();
 }
-
-
-/* 
- * Print version information.
- */
-static void
-print_version (void)
-{
-	printf ("%s version %s\n", tool_name, RELEASE_STRING);
-	printf ("%s\n", copyright_notice);
-}
-
 
 /* 
  * Check whether calling user is root. Return 0 if user is root, non-zero
@@ -229,8 +240,7 @@ check_for_root (void)
 /* 
  * Retrieve name of keyword identified by ID.
  */
-char *
-get_keyword_name (enum cmd_keyword_id id)
+static char *get_keyword_name(enum cmd_keyword_id id)
 {
 	unsigned int i;
 
@@ -248,8 +258,7 @@ get_keyword_name (enum cmd_keyword_id id)
  * Check the given function for given options and valid combinations of 
  * options
  */
-int
-check_key_state (struct command_line *cmdline)
+static int check_key_state(struct command_line *cmdline)
 {
 	int i,j;
 
@@ -316,19 +325,21 @@ store_option (struct command_line* cmdline, enum cmd_keyword_id keyword,
 /*
  * Parse the command line for valid parameters.
  */
-int
-get_command_line (int argc, char* argv[], struct command_line* line)
+static int get_command_line(int argc, char *argv[], struct command_line *line)
 {
 	struct command_line cmdline;
 	int opt;
 	int rc;
-	
+
+	util_prg_init(&prg);
+	util_opt_init(opt_vec, NULL);
+
 	memset ((void *) &cmdline, 0, sizeof (struct command_line));
 
 	/* Process options */
 	do {
-		opt = getopt_long (argc, argv, option_string, options, NULL);
-		
+		opt = util_opt_getopt_long(argc, argv);
+
 		rc = 0;
 		switch (opt) {
 		case 'h':
@@ -359,10 +370,9 @@ get_command_line (int argc, char* argv[], struct command_line* line)
 			}
 			break;
 		case 'p':
-			rc = store_option(&cmdline, cmd_keyword_path,
-					  optarg);
+			rc = store_option(&cmdline, cmd_keyword_path, optarg);
 			break;
-		case 'A':
+		case OPT_PATH_RESET_ALL:
 			rc = store_option(&cmdline, cmd_keyword_path_all,
 					  optarg);
 			break;
@@ -421,8 +431,7 @@ get_command_line (int argc, char* argv[], struct command_line* line)
 /*
  * Execute the command.
  */
-int
-do_command (char* device, struct command_line cmdline)
+static int do_command(char *device, struct command_line cmdline)
 {
 	int i, rc;
 
@@ -503,7 +512,7 @@ main (int argc, char* argv[])
 		print_usage ();
 		return 0;
 	} else if (cmdline.parm[cmd_keyword_version].kw_given) {
-		print_version ();
+		util_prg_print_version();
 		return 0;
 	}
 

@@ -6,27 +6,28 @@
  *
  * Daemon that writes process data to the z/VM monitor stream.
  */
-#include <unistd.h>
-#include <sys/vfs.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
-#include <syslog.h>
-#include <errno.h>
-#include <time.h>
-#include <stdarg.h>
-#include <linux/types.h>
-#include <sys/statvfs.h>
-#include <sys/stat.h>
-#include <sys/dir.h>
-#include <getopt.h>
-#include <signal.h>
-#include <utmp.h>
-#include <pwd.h>
-#include <grp.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <getopt.h>
+#include <grp.h>
+#include <linux/types.h>
+#include <pwd.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/dir.h>
+#include <sys/stat.h>
+#include <sys/statvfs.h>
+#include <sys/vfs.h>
+#include <syslog.h>
+#include <time.h>
+#include <unistd.h>
+#include <utmp.h>
+
 #include "mon_procd.h"
 
 struct name_lens_t {
@@ -197,7 +198,7 @@ static void procd_write_ent(void *entry, int size, char flag)
 }
 
 /*
- * Open and read a file into a buffer
+ * Open and read a file into a buffer, terminated with buf[size/num] = '\0'
 */
 static int read_file(char *fname, char *buf, int size)
 {
@@ -212,6 +213,7 @@ static int read_file(char *fname, char *buf, int size)
 		close(fp);
 		return -1;
 	}
+	buf[num] = '\0';
 
 	close(fp);
 	return num;
@@ -328,9 +330,13 @@ static void read_cpu(void)
 	if (read_file("/proc/stat", buf, sizeof(buf) - 1) <= 0)
 		return;
 
+	u = n = s = i = w = x = y = z = 0;
 	temp = strstr(buf, "cpu");
-	sscanf(temp, "cpu %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu",
-		&u, &n, &s, &i, &w, &x, &y, &z);
+	if (temp)
+		sscanf(temp, "cpu %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu",
+			&u, &n, &s, &i, &w, &x, &y, &z);
+	else
+		syslog(LOG_ERR, "no cpu in /proc/stat\n");
 	cpudata.usr = (__u64)u;
 	cpudata.nice = (__u64)n;
 	cpudata.sys = (__u64)s;
@@ -354,18 +360,37 @@ static void read_mem(void)
 	if (read_file("/proc/meminfo", buf, sizeof(buf) - 1) <= 0)
 		return;
 
+	mtotal = mfree = mbuf = stotal = sfree = scached = 0;
 	temp = strstr(buf, "MemTotal");
-	sscanf(temp, "MemTotal: %Lu kB", &mtotal);
+	if (temp)
+		sscanf(temp, "MemTotal: %Lu kB", &mtotal);
+	else
+		syslog(LOG_ERR, "no MemTotal in /proc/meminfo\n");
 	temp = strstr(buf, "MemFree");
-	sscanf(temp, "MemFree: %Lu kB", &mfree);
+	if (temp)
+		sscanf(temp, "MemFree: %Lu kB", &mfree);
+	else
+		syslog(LOG_ERR, "no MemFree in /proc/meminfo\n");
 	temp = strstr(buf, "Buffers");
-	sscanf(temp, "Buffers: %Lu kB", &mbuf);
+	if (temp)
+		sscanf(temp, "Buffers: %Lu kB", &mbuf);
+	else
+		syslog(LOG_ERR, "no Buffers in /proc/meminfo\n");
 	temp = strstr(buf, "SwapTotal");
-	sscanf(temp, "SwapTotal: %Lu kB", &stotal);
+	if (temp)
+		sscanf(temp, "SwapTotal: %Lu kB", &stotal);
+	else
+		syslog(LOG_ERR, "no SwapTotal in /proc/meminfo\n");
 	temp = strstr(buf, "SwapFree");
-	sscanf(temp, "SwapFree: %Lu kB", &sfree);
+	if (temp)
+		sscanf(temp, "SwapFree: %Lu kB", &sfree);
+	else
+		syslog(LOG_ERR, "no SwapFree in /proc/meminfo\n");
 	temp = strstr(buf, "Cached");
-	sscanf(temp, "Cached: %Lu kB", &scached);
+	if (temp)
+		sscanf(temp, "Cached: %Lu kB", &scached);
+	else
+		syslog(LOG_ERR, "no Cached in /proc/meminfo\n");
 
 	proc_sum.mem.total = (__u64)mtotal;
 	proc_sum.mem.free = (__u64)mfree;
@@ -387,14 +412,27 @@ static void read_vmem(void)
 	if (read_file("/proc/vmstat", buf, sizeof(buf) - 1) <= 0)
 		return;
 
+	pgin = pgout = swpin = swpout = 0;
 	temp = strstr(buf, "pgpgin");
-	sscanf(temp, "pgpgin %Lu", &pgin);
+	if (temp)
+		sscanf(temp, "pgpgin %Lu", &pgin);
+	else
+		syslog(LOG_ERR, "no pgpgin in /proc/vmstat\n");
 	temp = strstr(buf, "pgpgout");
-	sscanf(temp, "pgpgout %Lu", &pgout);
+	if (temp)
+		sscanf(temp, "pgpgout %Lu", &pgout);
+	else
+		syslog(LOG_ERR, "no pgpgout in /proc/vmstat\n");
 	temp = strstr(buf, "pswpin");
-	sscanf(temp, "pswpin %Lu", &swpin);
+	if (temp)
+		sscanf(temp, "pswpin %Lu", &swpin);
+	else
+		syslog(LOG_ERR, "no pswpin in /proc/vmstat\n");
 	temp = strstr(buf, "pswpout");
-	sscanf(temp, "pswpout %Lu", &swpout);
+	if (temp)
+		sscanf(temp, "pswpout %Lu", &swpout);
+	else
+		syslog(LOG_ERR, "no pswpout in /proc/vmstat\n");
 
 	proc_sum.mem.pgpgin = (__u64)(pgin << pg_to_kb_shift);
 	proc_sum.mem.pgpgout = (__u64)(pgout << pg_to_kb_shift);
@@ -454,10 +492,17 @@ static int read_status(struct task_t *task)
 	if (read_file(fname, buf, sizeof(buf) - 1) == -1)
 		return 0;
 
+	ruid = euid = egid = 0;
 	temp = strstr(buf, "Uid");
-	sscanf(temp, "Uid: %d %d", &ruid, &euid);
+	if (temp)
+		sscanf(temp, "Uid: %d %d", &ruid, &euid);
+	else
+		syslog(LOG_ERR, "no Uid in /proc/%u/status\n", task->pid);
 	temp = strstr(buf, "Gid");
-	sscanf(temp, "Gid: %*d %d", &egid);
+	if (temp)
+		sscanf(temp, "Gid: %*d %d", &egid);
+	else
+		syslog(LOG_ERR, "no Gid in /proc/%u/status\n", task->pid);
 	task->euid = (__u16)euid;
 
 	lenp = mon_record + sizeof(struct monwrite_hdr);

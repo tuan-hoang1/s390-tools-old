@@ -4,13 +4,12 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "device.h"
-
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "attrib.h"
+#include "device.h"
 #include "devtype.h"
 #include "misc.h"
 #include "namespace.h"

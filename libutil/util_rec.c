@@ -6,18 +6,18 @@
  * Copyright IBM Corp. 2016
  */
 
-#include <stdbool.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "util_base.h"
-#include "util_list.h"
-#include "util_libc.h"
-#include "util_panic.h"
-#include "util_prg.h"
-#include "util_rec.h"
+#include "lib/util_base.h"
+#include "lib/util_libc.h"
+#include "lib/util_list.h"
+#include "lib/util_panic.h"
+#include "lib/util_prg.h"
+#include "lib/util_rec.h"
 
 /*
  * Field structure containing the string value and secondary information

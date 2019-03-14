@@ -17,8 +17,6 @@ check_dep:
 		"ncurses-devel", \
 		"HAVE_NCURSES=0")
 
-ALL_CPPFLAGS += -I../include
-
 LDLIBS += -lncurses
 
 all: check_dep hyptop

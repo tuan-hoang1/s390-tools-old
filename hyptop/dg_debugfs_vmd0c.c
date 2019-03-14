@@ -7,14 +7,15 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include <stdlib.h>
-#include <unistd.h>
 #include <errno.h>
 #include <linux/types.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include "dg_debugfs.h"
+#include "helper.h"
 #include "hyptop.h"
 #include "sd.h"
-#include "helper.h"
-#include "dg_debugfs.h"
 
 #define DEBUGFS_FILE	"diag_0c"
 

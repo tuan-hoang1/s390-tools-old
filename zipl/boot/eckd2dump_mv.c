@@ -7,9 +7,9 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include "stage2dump.h"
 #include "eckd2dump.h"
 #include "error.h"
+#include "stage2dump.h"
 
 #define MVDUMP_SIZE		0x3000	/* Size of dump record */
 #define MAX_DUMP_VOLUMES	32	/* Up to 32 dump volumes possible */

@@ -8,7 +8,6 @@
  *            Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
  */
 
-#include "scan.h"
 
 /* Need ISOC99 function isblank() in ctype.h */
 #ifndef __USE_ISOC99
@@ -16,15 +15,18 @@
 #endif
 
 #include <ctype.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "misc.h"
-#include "error.h"
+#include "lib/util_base.h"
+
 #include "boot.h"
+#include "error.h"
+#include "misc.h"
+#include "scan.h"
 
 
 /* Determines which keyword may be present in which section */

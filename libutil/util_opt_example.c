@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "util_opt.h"
+#include "lib/util_opt.h"
 
 #define OPT_NOSHORT	256
 

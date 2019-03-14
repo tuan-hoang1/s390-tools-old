@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "devtype.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -15,14 +13,15 @@
 #include "dasd.h"
 #include "device.h"
 #include "devnode.h"
+#include "devtype.h"
 #include "generic_ccw.h"
 #include "lcs.h"
 #include "misc.h"
 #include "module.h"
 #include "namespace.h"
 #include "qeth.h"
-#include "setting.h"
 #include "select.h"
+#include "setting.h"
 #include "subtype.h"
 #include "zfcp.h"
 

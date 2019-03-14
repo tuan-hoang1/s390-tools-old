@@ -1,7 +1,7 @@
 # Common definitions
 include ../../common.mak
 
-ALL_CPPFLAGS += -I../../include -I ../include -std=gnu99 -Wno-unused-parameter \
+ALL_CPPFLAGS += -I ../include -std=gnu99 -Wno-unused-parameter \
 	-Wno-missing-field-initializers
 
 # Core

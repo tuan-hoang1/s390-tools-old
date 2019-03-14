@@ -6,8 +6,8 @@
  * Author(s): Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
  */
 
-#ifndef PROC_H
-#define PROC_H
+#ifndef LIB_UTIL_PROC_H
+#define LIB_UTIL_PROC_H
 
 #include <ctype.h>
 #include <sys/types.h>
@@ -46,4 +46,4 @@ int util_proc_mnt_get_entry(const char *file_name, const char *spec,
 			    struct util_proc_mnt_entry *entry);
 void util_proc_mnt_free_entry(struct util_proc_mnt_entry *entry);
 
-#endif /* not PROC_H */
+#endif /* LIB_UTIL_PROC_H */

@@ -7,9 +7,10 @@
 #ifndef PATH_H
 #define PATH_H PATH_H
 
+#include "lib/zt_common.h"
+
 #include "exit_code.h"
 #include "misc.h"
-#include "zt_common.h"
 
 #define	MODPROBE_PREFIX		"s390x"
 #define UDEV_PREFIX		"41"

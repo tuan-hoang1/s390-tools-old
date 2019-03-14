@@ -54,10 +54,10 @@
 #include <iconv.h>
 #include <string.h>
 
-#include "zt_common.h"
+#include "lib/zt_common.h"
 
-#include "register_content.h"
 #include "dump.h"
+#include "register_content.h"
 
 class VMDump : public Dump
 {

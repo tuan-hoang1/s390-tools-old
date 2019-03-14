@@ -10,8 +10,8 @@
 #ifndef ZIOMON_UTIL_H
 #define ZIOMON_UTIL_H
 
-#include <linux/types.h>
 #include <endian.h>
+#include <linux/types.h>
 
 #include "ziomon_tools.h"
 

@@ -9,16 +9,17 @@
 
 #define FUSE_USE_VERSION 25
 
-#include <fuse.h>
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <time.h>
+#include <fuse.h>
 #include <limits.h>
-#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "zgetdump.h"
 
 #define DUMP_PATH_MAX	100

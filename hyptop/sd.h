@@ -10,6 +10,8 @@
 #ifndef SD_H
 #define SD_H
 
+#include "lib/util_list.h"
+
 #include "helper.h"
 #include "table.h"
 

@@ -1,7 +1,5 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include
-
 all: dasdfmt
 
 libs =	$(rootdir)/libdasd/libdasd.a \

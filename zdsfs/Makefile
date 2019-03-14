@@ -29,7 +29,7 @@ else
 FUSE_CFLAGS = -D_FILE_OFFSET_BITS=64 -I/usr/include/fuse
 FUSE_LDLIBS = -lfuse
 endif
-ALL_CPPFLAGS += -I../include -DSYSFS
+ALL_CPPFLAGS += -DSYSFS
 ALL_CFLAGS += -DHAVE_SETXATTR -pthread $(FUSE_CFLAGS)
 LDLIBS += $(FUSE_LDLIBS) -lpthread -lrt -lm
 

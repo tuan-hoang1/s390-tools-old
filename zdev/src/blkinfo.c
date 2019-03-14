@@ -4,15 +4,13 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "blkinfo.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "misc.h"
+#include "blkinfo.h"
 #include "devnode.h"
-#include "util.h"
+#include "misc.h"
 
 #define LSBLK_CMDLINE	"lsblk -P -o NAME,MAJ:MIN,FSTYPE,UUID,MOUNTPOINT,PKNAME 2>/dev/null"
 

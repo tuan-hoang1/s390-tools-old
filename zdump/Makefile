@@ -59,7 +59,7 @@ FUSE_CFLAGS = -DHAVE_FUSE=1 -D_FILE_OFFSET_BITS=64 -I/usr/include/fuse
 FUSE_LDLIBS = -lfuse
 endif
 LDLIBS += -lz $(FUSE_LDLIBS)
-ALL_CFLAGS += -I../include $(FUSE_CFLAGS)
+ALL_CFLAGS += $(FUSE_CFLAGS)
 
 ifneq ("$(HAVE_FUSE)","0")
 OBJECTS += zfuse.o

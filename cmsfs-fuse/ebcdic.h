@@ -10,8 +10,8 @@
 #ifndef _EBCDIC_H
 #define _EBCDIC_H
 
-#include <sys/types.h>
 #include <stdlib.h>
+#include <sys/types.h>
 
 /*
  * EBCDIC 037 -> ISO8859-1

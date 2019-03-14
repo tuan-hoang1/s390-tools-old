@@ -6,16 +6,18 @@
  * Author(s): Jan Glauber <jang@linux.vnet.ibm.com>
  */
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
 #include <errno.h>
-#include <sys/types.h>
 #include <stdint.h>
-#include "zt_common.h"
-#include "helper.h"
-#include "edf.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include "lib/zt_common.h"
+
 #include "cmsfs-fuse.h"
+#include "edf.h"
+#include "helper.h"
 
 /*
  * Hint where to look for the next free block (level 0 only).

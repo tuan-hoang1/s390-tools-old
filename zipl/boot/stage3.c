@@ -7,9 +7,9 @@
  * Author(s): Stefan Haberland <stefan.haberland@de.ibm.com>
  */
 
-#include "stage3.h"
 #include "libc.h"
 #include "s390.h"
+#include "stage3.h"
 
 /*
  * 48 Byte dummy space for external symbols

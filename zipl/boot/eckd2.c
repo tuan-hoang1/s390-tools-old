@@ -7,9 +7,9 @@
  * Author(s): Stefan Haberland <stefan.haberland@de.ibm.com>
  */
 
-#include "stage2.h"
 #include "eckd.h"
 #include "s390.h"
+#include "stage2.h"
 
 int extract_length(void *data)
 {

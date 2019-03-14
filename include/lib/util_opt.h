@@ -6,8 +6,8 @@
  * Copyright IBM Corp. 2016
  */
 
-#ifndef UTIL_OPT_H
-#define UTIL_OPT_H
+#ifndef LIB_UTIL_OPT_H
+#define LIB_UTIL_OPT_H
 
 #include <getopt.h>
 #include <unistd.h>
@@ -79,4 +79,4 @@ void util_opt_print_help(void);
 void util_opt_print_indented(const char *opt, const char *desc);
 void util_opt_print_parse_error(char opt, char *argv[]);
 
-#endif /** UTIL_OPT_H @} */
+#endif /** LIB_UTIL_OPT_H @} */

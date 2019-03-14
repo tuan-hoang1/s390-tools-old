@@ -4,12 +4,12 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "subtype.h"
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+
+#include "lib/util_base.h"
 
 #include "attrib.h"
 #include "device.h"
@@ -18,6 +18,7 @@
 #include "misc.h"
 #include "namespace.h"
 #include "setting.h"
+#include "subtype.h"
 #include "udev.h"
 
 /*

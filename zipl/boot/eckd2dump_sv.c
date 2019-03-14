@@ -7,9 +7,9 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include "stage2dump.h"
 #include "eckd2dump.h"
 #include "error.h"
+#include "stage2dump.h"
 
 /*
  * Magic number at start of dump record

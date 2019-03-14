@@ -4,18 +4,16 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "root.h"
-
 #include <stdlib.h>
 
 #include "device.h"
 #include "devtype.h"
 #include "misc.h"
 #include "path.h"
+#include "root.h"
 #include "select.h"
 #include "setting.h"
 #include "subtype.h"
-#include "util.h"
 
 /* Determine if the root device was modified. If it was modified, run the
  * corresponding root-install scripts. */

@@ -1,4 +1,4 @@
-.TH DBGINFO.SH  1 "February 2015" "s390-tools"
+.TH DBGINFO.SH  1 "February 2017" "s390-tools"
 
 .SH NAME
 dbginfo.sh \- collect runtime, configuration and trace information
@@ -52,7 +52,7 @@ Sample invocation:
 .br
 dbginfo.sh: Debug information script version %S390_TOOLS_VERSION%
 .br
-Copyright IBM Corp. 2002, 2016
+Copyright IBM Corp. 2002, 2017
 .PP
 Hardware platform     = s390x
 .br
@@ -60,25 +60,28 @@ Kernel version        = <kernel\-version>
 .br
 Runtime environment   = z/VM
 .PP
-1 of 10: Collecting command output
+1 of 11: Collecting command output
 .PP
-2 of 10: Collecting z/VM command output
+2 of 11: Collecting z/VM command output
 .PP
-3 of 10: Collecting procfs
+3 of 11: Collecting procfs
 .PP
-4 of 10: Collecting sysfs
+4 of 11: Collecting sysfs
 .PP
-5 of 10: Collecting log files
+5 of 11: Collecting log files
 .PP
-6 of 10: Collecting config files
+6 of 11: Collecting config files
 .PP
-7 of 10: Collecting osa oat output skipped \- not available
+7 of 11: Collecting osa oat output skipped \- not available
 .PP
-8 of 10: Collecting OpenVSwitch output
+8 of 11: Collecting OpenVSwitch output
 .PP
-9 of 10: Collecting domain xml files
+9 of 11: Collecting domain xml files
 .PP
-10 of 10: Postprocessing
+10a of 11: Collecting docker container output
+10b of 11: Collecting docker network output
+.PP
+11 of 11: Postprocessing
 .PP
 Finalizing: Creating archive with collected data
 .PP

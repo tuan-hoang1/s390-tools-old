@@ -18,7 +18,8 @@
 
 #include <list>
 
-#include "zt_common.h"
+#include "lib/zt_common.h"
+
 #include "ziorep_collapser.hpp"
 #include "ziorep_utils.hpp"
 

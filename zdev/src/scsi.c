@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "scsi.h"
-
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +11,7 @@
 
 #include "misc.h"
 #include "path.h"
-#include "util.h"
+#include "scsi.h"
 #include "zfcp_lun.h"
 
 struct scsi_hctl_devid {

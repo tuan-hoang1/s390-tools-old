@@ -11,10 +11,10 @@
 #ifndef DISK_H
 #define DISK_H
 
-#include "zipl.h"
-
 #include <stdint.h>
 #include <sys/types.h>
+
+#include "zipl.h"
 
 
 /* Type for representing disk block numbers */

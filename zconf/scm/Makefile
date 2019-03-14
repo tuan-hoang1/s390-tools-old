@@ -1,7 +1,5 @@
 include ../../common.mak
 
-CPPFLAGS += -I../../include
-
 all: lsscm
 
 libs = $(rootdir)/libutil/libutil.a

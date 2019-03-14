@@ -156,32 +156,13 @@ struct dasd_eckd_characteristics {
 #define PARTITION_LVM 4
 #define PARTITION_GPFS 5
 
-static struct option fdasd_long_options[] = {
-	{ "version",          no_argument,       NULL, 'v'},
-	{ "auto",             no_argument,       NULL, 'a'},
-	{ "silent",           no_argument,       NULL, 's'},
-	{ "verbose",          no_argument,       NULL, 'r'},
-	{ "label",            required_argument, NULL, 'l'},
-	{ "config",           required_argument, NULL, 'c'},
-	{ "help",             no_argument,       NULL, 'h'},
-	{ "table",            no_argument,       NULL, 'p'},
-	{ "volser",           no_argument,       NULL, 'i'},
-	{ "keep_volser",      no_argument,       NULL, 'k'},
-	{ "force",            optional_argument, NULL, 'f'},
-	{ "check_host_count", no_argument,       NULL, 'C'},
-	{ 0,                  0,                 0,    0  }
-};
-
-/* Command line option abbreviations */
-static const char option_string[] = "vasrl:c:hpikf::C";
-
 struct fdasd_options {
 	char *device;
 	char *volser;
 	char *conffile;
 };
 
-struct fdasd_options options = {
+static struct fdasd_options options = {
 	NULL,		/* device   */
 	NULL,		/* volser   */
 	NULL,		/* conffile */

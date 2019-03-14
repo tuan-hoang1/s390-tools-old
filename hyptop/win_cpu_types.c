@@ -9,10 +9,10 @@
 
 #include "helper.h"
 #include "hyptop.h"
+#include "nav_desc.h"
+#include "sd.h"
 #include "table.h"
 #include "win_cpu_types.h"
-#include "sd.h"
-#include "nav_desc.h"
 
 /*
  * Globals for cpu_types window

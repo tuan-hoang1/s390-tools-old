@@ -9,8 +9,10 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "util_prg.h"
-#include "zt_common.h"
+#include "lib/util_prg.h"
+#include "lib/zt_common.h"
+
+#include "misc.h"
 
 /*
  * Private data
@@ -26,10 +28,14 @@ struct util_prg_l *util_prg_l = &l;
  */
 void util_prg_print_help(void)
 {
+	/* Print usage */
 	printf("Usage: %s [OPTIONS]", program_invocation_short_name);
 	if (l.prg->args)
 		printf(" %s", l.prg->args);
-	printf("\n\n%s\n\n", l.prg->desc);
+	/* Print usage description */
+	printf("\n\n");
+	misc_print_formatted(l.prg->desc, 0);
+	printf("\n");
 }
 
 /**

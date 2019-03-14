@@ -11,12 +11,11 @@
 #ifndef BOOT_H
 #define BOOT_H
 
-#include "zipl.h"
-
 #include <sys/types.h>
 
 #include "disk.h"
 #include "job.h"
+#include "zipl.h"
 
 #define STAGE2_BLK_CNT_MAX	24 /* Stage 1b can load up to 24 blocks */
 #define STAGE1B_BLK_CNT_MAX	2  /* Stage 1 can load up to 2 blocks */

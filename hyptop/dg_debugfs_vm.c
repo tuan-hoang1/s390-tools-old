@@ -7,13 +7,14 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
+
+#include "dg_debugfs.h"
+#include "helper.h"
 #include "hyptop.h"
 #include "sd.h"
-#include "helper.h"
-#include "dg_debugfs.h"
 
 #define VM_CPU_TYPE	"UN"
 #define VM_CPU_ID	"ALL"

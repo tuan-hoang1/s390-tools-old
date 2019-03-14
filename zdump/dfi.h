@@ -11,6 +11,7 @@
 #define DFI_H
 
 #include <linux/utsname.h>
+#include "lib/util_list.h"
 #include "zg.h"
 
 /*

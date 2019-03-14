@@ -8,19 +8,20 @@
  */
 
 #include <errno.h>
-#include <stdlib.h>
 #include <ncurses.h>
-#include <time.h>
 #include <signal.h>
+#include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "helper.h"
-#include "sd.h"
-#include "hyptop.h"
-#include "win_cpu_types.h"
-#include "opts.h"
+#include <time.h>
+
 #include "dg_debugfs.h"
+#include "helper.h"
+#include "hyptop.h"
+#include "opts.h"
+#include "sd.h"
+#include "win_cpu_types.h"
 
 #ifdef WITH_HYPFS
 #include "dg_hypfs.h"

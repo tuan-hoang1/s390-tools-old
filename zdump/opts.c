@@ -9,10 +9,11 @@
 
 #include <getopt.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "lib/zt_common.h"
 #include "zgetdump.h"
-#include "zt_common.h"
 
 /*
  * Text for --help option

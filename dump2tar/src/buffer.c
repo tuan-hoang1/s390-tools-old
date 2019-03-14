@@ -6,14 +6,13 @@
  * Copyright IBM Corp. 2016
  */
 
-#include "buffer.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "buffer.h"
 #include "misc.h"
 
 void buffer_print(struct buffer *buffer)

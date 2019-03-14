@@ -9,7 +9,8 @@
 
 #include <linux/fs.h>
 #include <stdio.h>
-#include "util_part.h"
+
+#include "lib/util_part.h"
 #include "zgetdump.h"
 
 /*

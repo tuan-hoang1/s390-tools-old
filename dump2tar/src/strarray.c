@@ -6,13 +6,12 @@
  * Copyright IBM Corp. 2016
  */
 
-#include "strarray.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "misc.h"
+#include "strarray.h"
 
 /* Release resources associated with string array @array */
 void free_strarray(struct strarray *array)

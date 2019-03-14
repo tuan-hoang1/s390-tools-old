@@ -19,8 +19,6 @@ check_dep:
 		"fuse-devel", \
 		"HAVE_FUSE=0")
 
-ALL_CPPFLAGS += -I../include
-
 all: check_dep cmsfs-fuse
 
 ifneq ($(shell sh -c 'command -v pkg-config'),)

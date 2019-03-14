@@ -8,28 +8,28 @@
  *            Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
  */
 
-#include "install.h"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <sys/time.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
-#include <unistd.h>
-#include <stdlib.h>
+#include <fcntl.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
 #include <sys/mtio.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <syslog.h>
+#include <unistd.h>
+
+#include "lib/u2s.h"
 
 #include "boot.h"
 #include "bootmap.h"
 #include "disk.h"
 #include "error.h"
+#include "install.h"
 #include "misc.h"
-#include "u2s.h"
 
 #define ECKD_CDL_DUMP_REC 3 /* Start record (0 based) for stage 2 and 1b */
 /* CDL record 2 = 148 byte, independent from bs, bootinfo is last structure */

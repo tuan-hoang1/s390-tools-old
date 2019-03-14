@@ -9,18 +9,17 @@
  *            Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
  */
 
-#include "job.h"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <errno.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
 #include <string.h>
-#include <errno.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "error.h"
+#include "job.h"
 #include "misc.h"
 #include "scan.h"
 

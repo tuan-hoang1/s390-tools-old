@@ -7,14 +7,15 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include <unistd.h>
-#include <string.h>
-#include <iconv.h>
 #include <errno.h>
+#include <iconv.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "dg_debugfs.h"
+#include "helper.h"
 #include "hyptop.h"
 #include "sd.h"
-#include "helper.h"
-#include "dg_debugfs.h"
 
 #define MTID_MASK	0x1f
 #define LPAR_NAME_LEN	8

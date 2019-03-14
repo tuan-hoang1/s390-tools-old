@@ -6,8 +6,8 @@
  * Copyright IBM Corp. 2016
  */
 
-#ifndef UTIL_REC_H
-#define UTIL_REC_H
+#ifndef LIB_UTIL_REC_H
+#define LIB_UTIL_REC_H
 
 /**
  * Opaque handle for a record
@@ -44,4 +44,4 @@ const char *util_rec_get(struct util_rec *rec, const char *key);
 void util_rec_print_hdr(struct util_rec *rec);
 void util_rec_print(struct util_rec *rec);
 
-#endif /** UTIL_REC_H @} */
+#endif /** LIB_UTIL_REC_H @} */

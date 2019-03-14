@@ -13,14 +13,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "lib/util_base.h"
 
 /* Standard macros      */
-#ifndef max
-#	define max(a, b)       ((a) > (b) ? (a) : (b))
-#endif
-#ifndef min
-#	define min(a, b)       ((a) < (b) ? (a) : (b))
-#endif
 #ifndef offsetof
 #	define offsetof(type, member) ((size_t) &((type *)0)->member)
 #endif
@@ -73,7 +68,7 @@ static inline void msg_cpy_from(struct iucvtty_msg *msg, const void *src,
 static inline void msg_cpy_to(const struct iucvtty_msg *msg, void *dst,
 				size_t len)
 {
-	memcpy(dst, msg->data, min(msg->datalen, len));
+	memcpy(dst, msg->data, MIN(msg->datalen, len));
 }
 
 /**

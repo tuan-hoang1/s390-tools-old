@@ -11,16 +11,15 @@
  * Copyright IBM Corp. 2002, 2007
  */
 
-/* basic includes */
+#include <getopt.h>
+#include <linux/version.h>
+#include <signal.h>
+#include <sys/utsname.h>
+
+#include "lib/zt_common.h"
+
 #include "ibmOSAMibUtil.h"
 #include "ibmOSAMib.h"
-#include <zt_common.h>
-
-#include <signal.h>
-#include <getopt.h>
-
-#include <sys/utsname.h>
-#include <linux/version.h>
 
 /* osasnmpd version */
 #define COPYRIGHT "Copyright IBM Corp. 2003, 2009"

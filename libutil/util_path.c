@@ -6,19 +6,18 @@
  * Copyright IBM Corp. 2016
  */
 
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include <err.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
-#include "util_base.h"
-#include "util_libc.h"
-#include "util_path.h"
-#include "util_prg.h"
-#include "util_proc.h"
+#include "lib/util_base.h"
+#include "lib/util_libc.h"
+#include "lib/util_path.h"
+#include "lib/util_prg.h"
+#include "lib/util_proc.h"
 
 /*
  * Verify that directory exists

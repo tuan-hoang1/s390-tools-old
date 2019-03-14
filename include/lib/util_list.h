@@ -6,8 +6,8 @@
  * Copyright IBM Corp. 2013
  */
 
-#ifndef UTIL_LIST_H
-#define UTIL_LIST_H
+#ifndef LIB_UTIL_LIST_H
+#define LIB_UTIL_LIST_H
 
 #include <stddef.h>
 
@@ -59,4 +59,4 @@ void util_list_sort(struct util_list *list, util_list_cmp_fn fn, void *data);
 	     i != NULL;							\
 	     i = n, n = util_list_next(list, i))			\
 
-#endif /* UTIL_LIST_H */
+#endif /* LIB_UTIL_LIST_H */

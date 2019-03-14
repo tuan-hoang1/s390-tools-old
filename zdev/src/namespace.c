@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "namespace.h"
-
 #include <stddef.h>
 #include <stdlib.h>
 
@@ -13,6 +11,7 @@
 #include "ctc.h"
 #include "devtype.h"
 #include "lcs.h"
+#include "namespace.h"
 #include "qeth.h"
 #include "zfcp_lun.h"
 

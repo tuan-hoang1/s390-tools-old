@@ -6,22 +6,23 @@
  *
  * Daemon that writes filesystem utilization data to the z/VM monitor stream.
  */
-#include <unistd.h>
-#include <mntent.h>
-#include <sys/vfs.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
-#include <syslog.h>
 #include <errno.h>
-#include <time.h>
-#include <stdarg.h>
-#include <linux/types.h>
-#include <sys/statvfs.h>
-#include <sys/stat.h>
+#include <fcntl.h>
 #include <getopt.h>
+#include <linux/types.h>
+#include <mntent.h>
 #include <signal.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/statvfs.h>
+#include <sys/vfs.h>
+#include <syslog.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "mon_fsstatd.h"
 
 static int attach;
@@ -323,16 +324,31 @@ static int fsstatd_do_work(void)
 			     strncmp(ent->mnt_type, "none", 4) == 0 ||
 			     strncmp(ent->mnt_type, "proc", 4) == 0 ||
 			     strncmp(ent->mnt_type, "subfs", 5) == 0 ||
+			     strncmp(ent->mnt_type, "nfsd", 4) == 0 ||
+			     strncmp(ent->mnt_type, "tmpfs", 5) == 0 ||
+			     strncmp(ent->mnt_type, "sysfs", 5) == 0 ||
+			     strncmp(ent->mnt_type, "pstore", 6) == 0 ||
+			     strncmp(ent->mnt_type, "cgroup", 6) == 0 ||
+			     strncmp(ent->mnt_type, "mqueue", 6) == 0 ||
+			     strncmp(ent->mnt_type, "devpts", 6) == 0 ||
+			     strncmp(ent->mnt_type, "debugfs", 7) == 0 ||
+			     strncmp(ent->mnt_type, "devtmpfs", 8) == 0 ||
+			     strncmp(ent->mnt_type, "configfs", 8) == 0 ||
+			     strncmp(ent->mnt_type, "selinuxfs", 9) == 0 ||
+			     strncmp(ent->mnt_type, "hugetlbfs", 9) == 0 ||
+			     strncmp(ent->mnt_type, "securityfs", 10) == 0 ||
+			     strncmp(ent->mnt_type, "rpc_pipefs", 10) == 0 ||
+			     strncmp(ent->mnt_type, "binfmt_misc", 11) == 0 ||
 			     strncmp(ent->mnt_type, "ignore", 6) == 0)) {
 				ent = getmntent(mnttab);
 				continue;
 			}
 			result = statvfs(ent->mnt_dir, &buf);
 			if (result != 0) {
-				fclose(mnttab);
 				syslog(LOG_ERR, "statvfs error on %s: %s\n",
 					ent->mnt_dir, strerror(errno));
-				break;
+				ent = getmntent(mnttab);
+				continue;
 			}
 
 			if (buf.f_blocks > 0)

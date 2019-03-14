@@ -13,8 +13,9 @@
 #include <sys/ioctl.h>
 #include <termio.h>
 #include <unistd.h>
-#include "iucvterm/proto.h"
+
 #include "iucvterm/functions.h"
+#include "iucvterm/proto.h"
 #include "test.h"
 
 
@@ -188,7 +189,7 @@ static int __testTermEnvVar(int sv[2])
 		assert(0 == iucvtty_tx_termenv(sv[0], NULL));
 		assert(0 == iucvtty_rx_termenv(sv[1], buf, __BUF_SIZE));
 		assert(0 == strncmp(orig_term, buf,
-				    min(__BUF_SIZE, strlen(orig_term))));
+				    MIN(__BUF_SIZE, strlen(orig_term))));
 	}
 
 	unsetenv("TERM");	/* clear term */

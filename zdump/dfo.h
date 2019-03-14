@@ -10,7 +10,7 @@
 #ifndef DFO_H
 #define DFO_H
 
-#include "util.h"
+#include "lib/util_list.h"
 #include "zg.h"
 
 struct dfo_chunk;

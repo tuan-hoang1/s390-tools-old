@@ -7,11 +7,11 @@
  * Author(s): Stefan Haberland <stefan.haberland@de.ibm.com>
  */
 
-#include "stage2.h"
 #include "error.h"
 #include "libc.h"
-#include "s390.h"
 #include "menu.h"
+#include "s390.h"
+#include "stage2.h"
 
 static int is_null_descriptor(disk_blockptr_t *address)
 {

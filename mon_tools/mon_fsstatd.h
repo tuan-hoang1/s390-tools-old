@@ -14,7 +14,8 @@
 #include <getopt.h>
 #include <linux/types.h>
 #include <sys/ioctl.h>
-#include "../include/zt_common.h"
+
+#include "lib/zt_common.h"
 
 /* mon_function values */
 #define MONWRITE_START_INTERVAL 0x00	/* start interval recording */

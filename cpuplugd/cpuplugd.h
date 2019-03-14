@@ -11,16 +11,18 @@
 #ifndef __USE_ISOC99
 #define __USE_ISOC99
 #endif
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <signal.h>
 #include <ctype.h>
-#include <syslog.h>
+#include <errno.h>
 #include <setjmp.h>
-#include "zt_common.h"
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <syslog.h>
+#include <unistd.h>
+
+#include "lib/util_base.h"
+#include "lib/zt_common.h"
 
 #define NAME		"cpuplugd"
 #define MAX_HISTORY	100
@@ -205,8 +207,6 @@ int check_lpar();
 int cpu_is_configured(int cpuid);
 void setup_history(void);
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) < (b) ? (b) : (a))
 
 #define cpuplugd_info(fmt, ...) ({			\
 	if (foreground == 1)				\

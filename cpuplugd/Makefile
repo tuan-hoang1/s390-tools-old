@@ -1,7 +1,5 @@
 include ../common.mak
 
-ALL_CFLAGS += -I../include
-
 all: cpuplugd
 
 LDLIBS += -lm

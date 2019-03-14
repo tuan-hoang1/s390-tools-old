@@ -10,22 +10,23 @@
 #include <fcntl.h>
 #include <pty.h>
 #include <signal.h>
-#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/wait.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <syslog.h>
 #include <unistd.h>
 #include <utmp.h>
 
-#include "iucvterm/config.h"
-#include "iucvterm/gettext.h"
-#include "iucvterm/functions.h"
-#include "af_iucv.h"
+#include "lib/util_base.h"
 
+#include "af_iucv.h"
+#include "iucvterm/config.h"
+#include "iucvterm/functions.h"
+#include "iucvterm/gettext.h"
 
 #define SYSLOG_IDENT		"iucvtty"
 #define PRG_COMPONENT           SYSLOG_IDENT
@@ -126,7 +127,7 @@ static int iucvtty_worker(int client, int master, int slave,
 		FD_SET(client, &set);
 		FD_SET(master, &set);
 
-		if (select(max(master, client) + 1, &set,
+		if (select(MAX(master, client) + 1, &set,
 			   NULL, NULL, NULL) == -1) {
 			if (errno == EINTR)
 				continue;

@@ -1,7 +1,7 @@
 # Common definitions
 include ../../common.mak
 
-ALL_CPPFLAGS += -I../include -I../boot -I../../include \
+ALL_CPPFLAGS += -I../include -I../boot \
 	    -DZFCPDUMP_DIR=$(ZFCPDUMP_DIR) \
 	    -DZFCPDUMP_FS_IMAGE=$(ZFCPDUMP_FS_IMAGE) \
 	    -DZFCPDUMP_FS_RD=$(ZFCPDUMP_FS_RD) \

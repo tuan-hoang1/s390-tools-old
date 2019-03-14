@@ -10,8 +10,8 @@
 #ifndef WIN_HELP_H
 #define WIN_HELP_H
 
-#include "tbox.h"
 #include "hyptop.h"
+#include "tbox.h"
 
 struct win_help {
 	struct hyptop_win	win;

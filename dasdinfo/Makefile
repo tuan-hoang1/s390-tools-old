@@ -1,8 +1,7 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include
-
-libs = $(rootdir)/libu2s/libu2s.a
+libs = $(rootdir)/libu2s/libu2s.a \
+       $(rootdir)/libutil/libutil.a
 
 all: dasdinfo
 

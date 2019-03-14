@@ -10,10 +10,11 @@
 #ifndef DF_ELF_H
 #define DF_ELF_H
 
-#include <linux/types.h>
 #include <elf.h>
-#include "zg.h"
+#include <linux/types.h>
+
 #include "dfo.h"
+#include "zg.h"
 
 /*
  * S390 CPU timer note (u64)

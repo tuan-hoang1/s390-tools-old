@@ -12,30 +12,32 @@
  *            Jan Willeke <willeke@de.ibm.com>
  */
 
-#include <errno.h>
-#include <string.h>
-#include <dirent.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <time.h>
-#include <fcntl.h>
+#include <asm/types.h>
 #include <ctype.h>
+#include <dirent.h>
+#include <elf.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <linux/hdreg.h>
+#include <linux/reboot.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/mount.h>
 #include <sys/reboot.h>
+#include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/stat.h>
-#include <sys/mount.h>
-#include <sys/time.h>
-#include <linux/reboot.h>
-#include <asm/types.h>
-#include <elf.h>
-#include <sys/mman.h>
-#include <linux/hdreg.h>
+#include <time.h>
+#include <unistd.h>
 
-#include "zt_common.h"
+#include "lib/util_base.h"
+#include "lib/zt_common.h"
+
 #include "zfcpdump.h"
 
-#define COPY_BUF_SIZE		0x10000
+#define COPY_BUF_SIZE		0x10000UL
 #define COPY_TABLE_ENTRY_COUNT	4
 
 /*

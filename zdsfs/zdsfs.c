@@ -6,26 +6,24 @@
 /* The fuse version define tells fuse that we want to use the new API */
 #define FUSE_USE_VERSION 26
 
-#include <fuse.h>
-#include <fuse_opt.h>
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stddef.h>
-#include <stdlib.h>
+#include <fuse.h>
+#include <fuse_opt.h>
 #include <limits.h>
 #include <malloc.h>
 #include <pthread.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef HAVE_SETXATTR
 #include <linux/xattr.h>
 #endif
 
-
-#include "zt_common.h"
-
-#include "libzds.h"
+#include "lib/libzds.h"
+#include "lib/zt_common.h"
 
 #define COMP "zdsfs: "
 #define METADATAFILE "metadata.txt"

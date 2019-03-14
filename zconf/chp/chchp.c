@@ -6,24 +6,21 @@
  * Copyright IBM Corp. 2016
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include <err.h>
 #include <stdbool.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
-#include "util_base.h"
-#include "util_path.h"
-#include "util_file.h"
-#include "util_libc.h"
-#include "util_opt.h"
-#include "util_panic.h"
-#include "util_prg.h"
-#include "zt_common.h"
-
-#include "misc.h"
+#include "lib/util_base.h"
+#include "lib/util_file.h"
+#include "lib/util_libc.h"
+#include "lib/util_opt.h"
+#include "lib/util_panic.h"
+#include "lib/util_path.h"
+#include "lib/util_prg.h"
+#include "lib/zt_common.h"
 
 #define CIO_SETTLE "/proc/cio_settle"
 #define MAX_CHPID_CSS 255
@@ -409,8 +406,8 @@ int main(int argc, char *argv[])
 	/* Append each argument with comma to distinguish blank-separators */
 	for (i = optind; i < argc; i++) {
 		if (i > optind)
-			misc_strcat_realloc(&chpid_list, ",");
-		misc_strcat_realloc(&chpid_list, argv[i]);
+			chpid_list = util_strcat_realloc(chpid_list, ",");
+		chpid_list = util_strcat_realloc(chpid_list, argv[i]);
 	}
 
 	/* Loop over comma-separated list */

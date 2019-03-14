@@ -6,18 +6,19 @@
  * Author(s): Jan Glauber <jang@linux.vnet.ibm.com>
  */
 
-#include <stdlib.h>
-#include <unistd.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <errno.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
-#include "helper.h"
-#include "edf.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "cmsfs-fuse.h"
+#include "edf.h"
+#include "helper.h"
 
 #define BLKSSZGET	_IO(0x12, 104)
 

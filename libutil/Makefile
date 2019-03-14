@@ -1,7 +1,5 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include
-
 lib = libutil.a
 
 examples =	util_panic_example \
@@ -26,7 +24,8 @@ objects =	util_base.o \
 		util_part.o \
 		util_prg.o \
 		util_proc.o \
-		util_rec.o
+		util_rec.o \
+		misc.o
 
 util_panic_example: util_panic_example.o $(rootdir)/libutil/libutil.a
 util_path_example: util_path_example.o $(rootdir)/libutil/libutil.a

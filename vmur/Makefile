@@ -1,6 +1,6 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -D_FILE_OFFSET_BITS=64 -I../include -I../vmconvert
+ALL_CPPFLAGS += -D_FILE_OFFSET_BITS=64
 LDLIBS += -lz
 
 all: vmur

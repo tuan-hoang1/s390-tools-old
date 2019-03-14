@@ -8,7 +8,7 @@
  * 2003-01-30 changed DS4VTOCI from 0x20 to 0xa0
  */
 
-#include "vtoc.h"
+#include "lib/vtoc.h"
 
 static unsigned char EBCtoASC[256] =
 {

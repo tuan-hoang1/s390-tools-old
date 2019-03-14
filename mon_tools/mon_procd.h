@@ -12,7 +12,7 @@
 #define __mon_procd_h__
 
 #include <linux/types.h>
-#include "../include/zt_common.h"
+#include "lib/zt_common.h"
 
 /* mon_function values */
 #define MONWRITE_START_INTERVAL 0x00	/* start interval recording */
@@ -25,7 +25,7 @@
 
 #define SUM_FLAG 0x00
 #define TASK_FLAG 0x01
-#define	BUF_SIZE 1024
+#define	BUF_SIZE 4096
 #define MAX_NAME_LEN 64
 #define MAX_CMD_LEN 1024
 #define MAX_TASK_REC 100

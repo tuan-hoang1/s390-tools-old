@@ -7,9 +7,10 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include <stdlib.h>
 #include <limits.h>
+#include <stdlib.h>
 #include <sys/time.h>
+
 #include "zgetdump.h"
 
 #define MAX_EXIT_FN	10
@@ -76,7 +77,7 @@ void zg_atexit(zg_atexit_fn_t fn)
 /*
  * Exit function (For having exit gdb break point)
  */
-void zg_exit(int rc)
+void __noreturn zg_exit(int rc)
 {
 	exit(rc);
 }

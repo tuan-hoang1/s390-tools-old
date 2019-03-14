@@ -9,13 +9,13 @@
  */
 
 #include "helper.h"
-#include "table.h"
 #include "hyptop.h"
-#include "win_fields.h"
-#include "win_help.h"
-#include "sd.h"
 #include "nav_desc.h"
 #include "opts.h"
+#include "sd.h"
+#include "table.h"
+#include "win_fields.h"
+#include "win_help.h"
 
 /*
  * Globals for sys_list window

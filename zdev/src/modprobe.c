@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "modprobe.h"
-
 #include <ctype.h>
 #include <errno.h>
 #include <stddef.h>
@@ -15,9 +13,9 @@
 
 #include "attrib.h"
 #include "misc.h"
+#include "modprobe.h"
 #include "path.h"
 #include "setting.h"
-#include "util.h"
 
 /**
  * struct modprobe_line - Representation of a line in a modprobe.conf file

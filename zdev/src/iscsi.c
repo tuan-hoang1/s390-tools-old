@@ -4,12 +4,11 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "iscsi.h"
-
 #include <ctype.h>
 #include <string.h>
 
 #include "devnode.h"
+#include "iscsi.h"
 #include "misc.h"
 #include "path.h"
 

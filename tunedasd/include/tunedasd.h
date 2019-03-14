@@ -10,9 +10,9 @@
 #ifndef TUNEDASD_H
 #define TUNEDASD_H
 
+#include <getopt.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <getopt.h>
 
 void error_print (const char* fmt, ...);
 

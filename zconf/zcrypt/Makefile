@@ -1,7 +1,5 @@
 include ../../common.mak
 
-CPPFLAGS += -I../../include
-
 all: chzcrypt lszcrypt
 
 libs = $(rootdir)/libutil/libutil.a

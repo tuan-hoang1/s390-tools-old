@@ -11,17 +11,17 @@
 #ifndef IPL_TOOLS_H
 #define IPL_TOOLS_H
 
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <ctype.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <errno.h>
-#include <ctype.h>
-#include <limits.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define IPL_TYPE_LEN_MAX	100
 #define NSS_NAME_LEN_MAX	8

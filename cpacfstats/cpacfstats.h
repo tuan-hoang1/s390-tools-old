@@ -12,7 +12,7 @@
 #ifndef CPACFSTATS_H
 #define CPACFSTATS_H
 
-#include "zt_common.h"
+#include "lib/zt_common.h"
 
 #define COPYRIGHT "Copyright IBM Corp. 2015"
 

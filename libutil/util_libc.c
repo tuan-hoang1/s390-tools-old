@@ -12,9 +12,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util_base.h"
-#include "util_panic.h"
-#include "util_libc.h"
+#include "lib/util_base.h"
+#include "lib/util_libc.h"
+#include "lib/util_panic.h"
 
 /*
  * Return size as string of largest unit, e.g. 1025 = "1 KiB"
@@ -104,6 +104,34 @@ void *__util_strdup(const char *func, const char *file, int line,
 	if (buf == NULL)
 		__util_oom(func, file, line, strlen(str) + 1);
 
+	return buf;
+}
+
+/**
+  * Concatenate two strings or exit in case of failure
+  *
+  * The first string \a str1 is resized and a copy of the second
+  * string \a str2 is appended to it.
+  *
+  * Therefore the first string \a str1 must either have been allocated
+  * using malloc(), calloc(), or realloc() or must be NULL.
+  *
+  * @param[in] str1 Pointer to first string to concatenate, which
+  *                 becomes invalid
+  * @param[in] str2 Constant pointer to second string to concatenate
+  *
+  * @returns Pointer to concatenated string
+  */
+char *util_strcat_realloc(char *str1, const char *str2)
+{
+	char *buf;
+
+	if (str1) {
+		buf = util_realloc(str1, strlen(str1) + strlen(str2) + 1);
+		strcat(buf, str2);
+	} else {
+		buf = util_strdup(str2);
+	}
 	return buf;
 }
 

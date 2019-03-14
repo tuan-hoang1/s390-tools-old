@@ -9,9 +9,10 @@
 
 #include <assert.h>
 #include <ncurses.h>
+
+#include "helper.h"
 #include "hyptop.h"
 #include "tbox.h"
-#include "helper.h"
 
 /*
  * Delete one line

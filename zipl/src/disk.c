@@ -8,26 +8,26 @@
  *            Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
  */
 
-#include "disk.h"
-#include "job.h"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <sys/vfs.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include <dirent.h>
 #include <errno.h>
-#include <string.h>
+#include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <dirent.h>
-#include <limits.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/vfs.h>
+#include <unistd.h>
 
+#include "lib/util_proc.h"
+
+#include "disk.h"
 #include "error.h"
-#include "misc.h"
-#include "util_proc.h"
 #include "install.h"
+#include "job.h"
+#include "misc.h"
 
 /* from linux/fs.h */
 #define FIBMAP			_IO(0x00,1)

@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "module.h"
-
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +11,7 @@
 
 #include "attrib.h"
 #include "misc.h"
+#include "module.h"
 #include "path.h"
 #include "setting.h"
 #include "udev.h"

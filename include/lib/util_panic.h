@@ -6,8 +6,8 @@
  * Copyright IBM Corp. 2016
  */
 
-#ifndef UTIL_PANIC_H
-#define UTIL_PANIC_H
+#ifndef LIB_UTIL_PANIC_H
+#define LIB_UTIL_PANIC_H
 
 #include "zt_common.h"
 
@@ -19,8 +19,8 @@
 #define util_panic(...) \
 	__util_panic(__func__, __FILE__, __LINE__, ##__VA_ARGS__)
 
-void __util_panic(const char *func, const char *file, int line,
-		  const char *fmt, ...) __noreturn;
+void __noreturn __util_panic(const char *func, const char *file, int line,
+		  const char *fmt, ...);
 
 /**
  * Ensure that assumption is not true, otherwise panic
@@ -38,4 +38,4 @@ void __util_assert(const char *assertion_string,
 		   const char *func, const char *file, int line,
 		   int assumption, const char *fmt, ...);
 
-#endif /** UTIL_PANIC_H @} */
+#endif /** LIB_UTIL_PANIC_H @} */

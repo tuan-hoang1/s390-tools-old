@@ -11,12 +11,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "lib/zt_common.h"
+
 #include "iucvterm/config.h"
-#include "iucvterm/gettext.h"
 #include "iucvterm/functions.h"
-
-#include "zt_common.h"
-
+#include "iucvterm/gettext.h"
 
 static const char iucvtty_usage[] = N_(
 "Usage: %s [-h|--help] [-v|--version]\n"

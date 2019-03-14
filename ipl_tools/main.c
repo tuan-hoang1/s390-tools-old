@@ -8,7 +8,7 @@
  *            Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include "zt_common.h"
+#include "lib/zt_common.h"
 #include "ipl_tools.h"
 
 struct globals g;

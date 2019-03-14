@@ -6,27 +6,27 @@
  *
  */
 
-#include <fuse.h>
-
-#include <limits.h>
-#include <inttypes.h>
-#include <stddef.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <strings.h>
-#include <locale.h>
-#include <langinfo.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <time.h>
+#include <fuse.h>
+#include <inttypes.h>
+#include <langinfo.h>
 #include <libgen.h>
-#include <syslog.h>
+#include <limits.h>
+#include <locale.h>
 #include <pthread.h>
-#include "zt_common.h"
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <syslog.h>
+#include <time.h>
+#include <unistd.h>
+
+#include "lib/zt_common.h"
 
 #define HMCDRV_FUSE_LOGNAME	"hmcdrvfs" /* log prefix */
 #define HMCDRV_FUSE_LOGHEAD	HMCDRV_FUSE_LOGNAME ": " /* log header */

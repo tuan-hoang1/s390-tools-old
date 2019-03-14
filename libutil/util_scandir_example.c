@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "util_scandir.h"
+#include "lib/util_scandir.h"
 
 /*
  * Print real sysfs cpu directory contents

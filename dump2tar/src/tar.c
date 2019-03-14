@@ -6,14 +6,13 @@
  * Copyright IBM Corp. 2016
  */
 
-#include "tar.h"
-
 #include <stdio.h>
 #include <string.h>
 
 #include "buffer.h"
 #include "idcache.h"
 #include "misc.h"
+#include "tar.h"
 
 #define LONGLINK	"././@LongLink"
 #define TYPE_LONGLINK	'K'

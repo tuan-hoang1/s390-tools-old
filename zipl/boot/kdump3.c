@@ -6,11 +6,11 @@
  * Copyright IBM Corp. 2013
  */
 
-#include "sclp_stage3.h"
-#include "stage3.h"
 #include "error.h"
 #include "kdump.h"
 #include "libc.h"
+#include "sclp_stage3.h"
+#include "stage3.h"
 
 static struct os_info **lc_os_info = (struct os_info **)&S390_lowcore.os_info;
 

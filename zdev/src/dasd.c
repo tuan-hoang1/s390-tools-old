@@ -4,17 +4,16 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "dasd.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "attrib.h"
 #include "ccw.h"
-#include "misc.h"
+#include "dasd.h"
 #include "device.h"
 #include "devtype.h"
+#include "misc.h"
 #include "modprobe.h"
 #include "module.h"
 #include "path.h"

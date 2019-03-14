@@ -6,10 +6,11 @@
  * Copyright IBM Corp. 2013
  */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "util.h"
+
+#include "lib/util_list.h"
 
 /*
  * Node to entry

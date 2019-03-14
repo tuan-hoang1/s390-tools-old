@@ -1,6 +1,6 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -D_FILE_OFFSET_BITS=64 -I../include
+ALL_CPPFLAGS += -D_FILE_OFFSET_BITS=64
 
 all: tape390_display tape390_crypt
 

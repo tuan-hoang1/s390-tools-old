@@ -8,11 +8,12 @@
  *            Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
 #include <string.h>
+#include <unistd.h>
+
 #include "ipl_tools.h"
 
 /*

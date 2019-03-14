@@ -6,11 +6,11 @@
  * Copyright IBM Corp. 2013
  */
 
-#include "libc.h"
-#include "stage2.h"
 #include "error.h"
-#include "menu.h"
 #include "kdump.h"
+#include "libc.h"
+#include "menu.h"
+#include "stage2.h"
 
 static struct os_info **lc_os_info = ((struct os_info **)&S390_lowcore.os_info);
 

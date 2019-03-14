@@ -9,8 +9,8 @@
 
 #include "cio.h"
 #include "error.h"
-#include "s390.h"
 #include "libc.h"
+#include "s390.h"
 
 static unsigned long initial_lpm = 0x00;
 static const char *msg_essch = "Start subchannel failed";

@@ -14,13 +14,14 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "lib/util_opt.h"
+#include "lib/util_prg.h"
+
 #include "dump.h"
 #include "global.h"
 #include "idcache.h"
 #include "misc.h"
 #include "strarray.h"
-#include "util_opt.h"
-#include "util_prg.h"
 
 #define MIN_BUFFER_SIZE		4096
 

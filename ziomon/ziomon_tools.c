@@ -7,10 +7,10 @@
  * Author(s): Stefan Raspl <raspl@linux.vnet.ibm.com>
  */
 
-#include <stdio.h>
-#include <stdint.h>
 #include <assert.h>
 #include <math.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #include "ziomon_tools.h"
 

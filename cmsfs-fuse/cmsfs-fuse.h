@@ -9,9 +9,10 @@
 #ifndef _CMSFS_H
 #define _CMSFS_H
 
-#include <search.h>
 #include <iconv.h>
-#include "util.h"
+#include <search.h>
+
+#include "lib/util_list.h"
 
 #define COMP "cmsfs-fuse: "
 extern struct cmsfs cmsfs;

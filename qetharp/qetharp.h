@@ -10,8 +10,9 @@
 #ifndef __QETHARP_H__
 #define __QETHARP_H__
 
-#include <linux/types.h>
 #include <linux/if.h>
+#include <linux/types.h>
+
 #include "qeth26.h"
 
 #define ifr_name	ifr_ifrn.ifrn_name	/* interface name 	*/

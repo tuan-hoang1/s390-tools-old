@@ -61,7 +61,7 @@ SUBCHANNEL_TYPE_IO=0
 SUBCHANNEL_TYPE_CHSC=1
 SUBCHANNEL_TYPE_EADM=3
 
-IDFORMAT=[[:xdigit:]]*.[0-3].[[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]]
+IDFORMAT=[[:xdigit:]]*.[[:xdigit:]].[[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]]
 
 unset SCH_IO SCH_CHSC SCH_EADM SHOW_AVAIL UPPERCASE SHORTID DEVTYPES DEVRANGE
 unset RANGE SHOW_VPM
@@ -81,7 +81,7 @@ function check_id() #return 0 if $1 has a valid format
 	    fi
 	    ;;
 	3)
-	    if [ ${#__ID[2]} != 4 -o ${#__ID[1]} != 1 -o "${__ID[1]//[012]/}" \
+	    if [ ${#__ID[2]} != 4 -o ${#__ID[1]} != 1 \
 		-o \( ${#__ID[0]} != 2 -a ${#__ID[0]} != 1 \) ] ;then
 		return 1
 	    fi

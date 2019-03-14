@@ -8,7 +8,7 @@
 #define DASDVIEW_H
 
 #include <limits.h>
-#include "u2s.h"
+#include "lib/u2s.h"
 
 /********************************************************************************
  * SECTION: Definitions needed for DASD-API (see dasd.h)
@@ -195,7 +195,7 @@ struct dasd_eckd_characteristics {
 #define DUMP_STRING_SIZE 1024LL
 
 #define ERROR_STRING_SIZE 1024
-char error_str[ERROR_STRING_SIZE];
+static char error_str[ERROR_STRING_SIZE];
 
 enum dasdview_failure {
 	open_error,
@@ -222,7 +222,6 @@ typedef struct dasdview_info
 	int format2;
 
 	int action_specified;
-	int node_specified;
 	int begin_specified;
 	int size_specified;
 	int characteristic_specified;
@@ -263,26 +262,5 @@ typedef struct dasdview_info
 	struct dasd *dasd;
 
 } dasdview_info_t;
-
-
-#define dasdview_getopt_string "t:n:f:b:s:vhixjl12c"
-
-/* struct options for getopt */
-static struct option dasdview_getopt_long_options[]=
-{
-	{ "devnode",     1, 0, 'f'},
-	{ "version",     0, 0, 'v'},
-	{ "begin",       1, 0, 'b'},
-	{ "size",        1, 0, 's'},
-	{ "help",        0, 0, 'h'},
-	{ "info",        0, 0, 'i'},
-	{ "extended",    0, 0, 'x'},
-	{ "volser",      0, 0, 'j'},
-	{ "vtoc",        1, 0, 't'},
-	{ "label",       0, 0, 'l'},
-	{ "characteristic", 0, 0, 'c'},
-	{0, 0, 0, 0}
-};
-
 
 #endif /* DASDVIEW_H */

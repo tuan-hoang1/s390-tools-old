@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "zfcp_host.h"
-
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -14,12 +12,13 @@
 
 #include "attrib.h"
 #include "ccw.h"
-#include "misc.h"
 #include "device.h"
 #include "devtype.h"
+#include "misc.h"
 #include "path.h"
 #include "setting.h"
 #include "zfcp.h"
+#include "zfcp_host.h"
 
 /*
  * zfcp host attributes.

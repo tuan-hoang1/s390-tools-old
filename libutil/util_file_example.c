@@ -10,7 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "util_file.h"
+#include "lib/util_file.h"
 
 /*
  * Write buffer to file and read it back again

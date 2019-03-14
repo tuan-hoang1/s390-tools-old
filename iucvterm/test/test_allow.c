@@ -8,10 +8,10 @@
  */
 #include <stdio.h>
 #include <unistd.h>
-#include "test.h"
 
 #include "iucvterm/config.h"
 #include "iucvterm/functions.h"
+#include "test.h"
 
 
 static int test_userid_cpy(char padded[9])

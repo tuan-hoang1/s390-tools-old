@@ -4,27 +4,27 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "ccw.h"
-
 #include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "lib/util_base.h"
+
 #include "attrib.h"
+#include "ccw.h"
 #include "ccwgroup.h"
-#include "devnode.h"
-#include "misc.h"
 #include "device.h"
+#include "devnode.h"
 #include "devtype.h"
+#include "misc.h"
 #include "module.h"
 #include "namespace.h"
 #include "path.h"
 #include "setting.h"
 #include "udev.h"
 #include "udev_ccw.h"
-#include "util.h"
 
 #define DEVNAME			"CCW device"
 #define CSSID_MAX		255

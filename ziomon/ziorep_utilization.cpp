@@ -18,7 +18,8 @@
 
 #include <list>
 
-#include "zt_common.h"
+#include "lib/zt_common.h"
+
 #include "ziorep_framer.hpp"
 #include "ziorep_printers.hpp"
 #include "ziorep_frameset.hpp"

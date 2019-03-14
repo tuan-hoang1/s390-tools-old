@@ -8,22 +8,22 @@
 #ifndef DASDFMT_H
 #define DASDFMT_H
 
-#include <unistd.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
+#include <ctype.h>
+#include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <limits.h>
+#include <limits.h>
+#include <mntent.h>
+#include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
-#include <mntent.h>
-#include <ctype.h>
-#include <signal.h>
-#include <limits.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 /****************************************************************************
  * SECTION: Definition needed for DASD-API (see dasd.h)                     *
@@ -277,32 +277,6 @@ typedef struct format_check_t {
 	if (*endptr) ERRMSG_EXIT(EXIT_MISUSE,"%s: " str " "    \
 	"is in invalid format\n",prog_name);}
 
-#define OPT_CHECK 128
-#define dasdfmt_getopt_string "b:n:l:f:d:m:M:r:hpPLtyvVFkC"
-
-static struct option dasdfmt_getopt_long_options[]=
-{
-        { "disk_layout", 1, 0, 'd'},
-        { "test",        0, 0, 't'},
-        { "version",     0, 0, 'V'},
-        { "no_label",    0, 0, 'L'},
-        { "force",       0, 0, 'F'},
-        { "progressbar", 0, 0, 'p'},
-        { "hashmarks",   1, 0, 'm'},
-	{ "percentage",  0, 0, 'P'},
-        { "label",       1, 0, 'l'},
-        { "device",      1, 0, 'f'},
-        { "blocksize",   1, 0, 'b'},
-	{ "requestsize", 1, 0, 'r'},
-        { "help",        0, 0, 'h'},
-        { "keep_volser", 0, 0, 'k'},
-        { "norecordzero",  0, 0, 'z'},
-	{ "check_host_count",  0, 0, 'C'},
-	{ "mode",	 1, 0, 'M'},
-	{ "check",	 0, 0, OPT_CHECK},
-        {0, 0, 0, 0}
-};
-
 typedef struct bootstrap1 {
         u_int32_t key;
         u_int32_t data[6];
@@ -328,7 +302,6 @@ typedef struct dasdfmt_info {
         int   cdl_format;
         int   blksize_specified;
 	int   reqsize_specified;
-        int   node_specified;
         int   device_id;
         int   keep_volser;
 	int   force_host;
@@ -340,7 +313,7 @@ typedef struct dasdfmt_info {
 /*
 C9D7D3F1 000A0000 0000000F 03000000  00000001 00000000 00000000
 */
-bootstrap1_t ipl1 = {
+static bootstrap1_t ipl1 = {
         0xC9D7D3F1, {
                 0x000A0000, 0x0000000F, 0x03000000,
                 0x00000001, 0x00000000, 0x00000000
@@ -354,7 +327,7 @@ C9D7D3F2 07003AB8 40000006 31003ABE  40000005 08003AA0 00000000 06000000
 00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000
 00000000 00000000 00000000 00000000  00000000
 */
-bootstrap2_t ipl2 = {
+static bootstrap2_t ipl2 = {
         0xC9D7D3F2, {
                 0x07003AB8, 0x40000006, 0x31003ABE,
                 0x40000005, 0x08003AA0, 0x00000000,

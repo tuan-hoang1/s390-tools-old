@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "qeth.h"
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -17,6 +15,7 @@
 #include "misc.h"
 #include "namespace.h"
 #include "nic.h"
+#include "qeth.h"
 #include "qeth_auto.h"
 #include "setting.h"
 #include "udev_ccwgroup.h"

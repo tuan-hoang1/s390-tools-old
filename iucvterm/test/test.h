@@ -12,8 +12,9 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include "iucvterm/proto.h"
 
+#include "lib/util_base.h"
+#include "iucvterm/proto.h"
 
 #define __fail()	assert(0);
 

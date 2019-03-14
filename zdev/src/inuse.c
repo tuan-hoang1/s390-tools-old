@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "inuse.h"
-
 #include <mntent.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -14,11 +12,11 @@
 #include "blkinfo.h"
 #include "device.h"
 #include "devnode.h"
+#include "inuse.h"
 #include "misc.h"
 #include "path.h"
 #include "select.h"
 #include "subtype.h"
-#include "util.h"
 
 /* struct resource - A resource that is currently in use
  * @st: Subtype of device providing resource

@@ -7,9 +7,9 @@
  * Author(s): Stefan Raspl <raspl@linux.vnet.ibm.com>
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include "ziomon_msg_tools.h"
 #include "ziomon_util.h"

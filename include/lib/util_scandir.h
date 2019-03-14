@@ -6,8 +6,8 @@
  * Copyright IBM Corp. 2016
  */
 
-#ifndef UTIL_SCANDIR_H
-#define UTIL_SCANDIR_H
+#ifndef LIB_UTIL_SCANDIR_H
+#define LIB_UTIL_SCANDIR_H
 
 #include <dirent.h>
 
@@ -18,4 +18,4 @@ int util_scandir(struct dirent ***namelist,
 			const char *path, ...);
 void util_scandir_free(struct dirent **de_vec, int count);
 
-#endif /** UTIL_SCANDIR_H @} */
+#endif /** LIB_UTIL_SCANDIR_H @} */

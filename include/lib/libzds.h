@@ -103,11 +103,11 @@
  */
 
 
-#ifndef LIBZDS_H
+#ifndef LIB_LIBZDS_H
 /**
  * @brief Watchdog for libzds.h inclusion.
  */
-#define LIBZDS_H
+#define LIB_LIBZDS_H
 
 #include "vtoc.h"
 
@@ -810,4 +810,4 @@ int lzds_analyse_open_count(struct zdsroot *root, int warn);
 
 
 
-#endif /* LIBZDS_H */
+#endif /* LIB_LIBZDS_H */

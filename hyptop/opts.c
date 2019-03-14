@@ -7,12 +7,14 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include <stdio.h>
 #include <ctype.h>
-#include "zt_common.h"
+#include <stdio.h>
+
+#include "lib/zt_common.h"
+
+#include "getopt.h"
 #include "helper.h"
 #include "hyptop.h"
-#include "getopt.h"
 #include "opts.h"
 #include "sd.h"
 

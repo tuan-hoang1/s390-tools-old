@@ -8,23 +8,23 @@
  *            Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
  */
 
-#include "bootmap.h"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <fcntl.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
-#include "util_part.h"
+#include "lib/util_part.h"
+
 #include "boot.h"
+#include "bootmap.h"
 #include "disk.h"
 #include "error.h"
-#include "misc.h"
 #include "install.h"
+#include "misc.h"
 
 /* Header text of the bootmap file */
 static const char header_text[] = "zSeries bootmap file\n"

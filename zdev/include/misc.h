@@ -12,8 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "lib/util_list.h"
 #include "exit_code.h"
-#include "util.h"
 
 #define ARRAY_SIZE(x)	(sizeof(x) / sizeof((x)[0]))
 #define	SCOPE_ACTIVE(x)		(((x) == config_active) || ((x) == config_all))
@@ -23,8 +23,6 @@
 #define DELAY_INDENT	4
 
 #define RANGE_LIMIT	256
-#define MIN(x, y)	((x) < (y) ? (x) : (y))
-#define MAX(x, y)	((x) > (y) ? (x) : (y))
 
 /* Define a NULL-terminated list of strings. */
 #define STRING_ARRAY(...)	((const char *[]) { __VA_ARGS__, NULL })

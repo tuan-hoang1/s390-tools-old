@@ -5,8 +5,7 @@
  */
 
 #include <string.h>
-
-#include "misc.h"
+#include "lib/util_base.h"
 
 /*
  * Helper function that copies a string safely

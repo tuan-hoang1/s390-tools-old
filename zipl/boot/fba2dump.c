@@ -7,9 +7,9 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include "stage2dump.h"
 #include "error.h"
 #include "fba.h"
+#include "stage2dump.h"
 
 #define BLK_PWRT	64	/* Blocks per write */
 #define BLK_SIZE	0x200	/* FBA block size */

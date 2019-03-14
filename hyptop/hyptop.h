@@ -10,14 +10,14 @@
 #ifndef HYPTOP_H
 #define HYPTOP_H
 
+#include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ncurses.h>
 #include <termios.h>
-#include "util.h"
+
 #include "helper.h"
-#include "table.h"
 #include "nav_desc.h"
+#include "table.h"
 
 #define HYPTOP_OPT_DEFAULT_DELAY	2
 #define HYPTOP_MAX_WIN_DEPTH		4

@@ -1,7 +1,5 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include
-
 lib = libvtoc.a
 
 all: $(lib)

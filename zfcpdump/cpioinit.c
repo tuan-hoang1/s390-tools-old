@@ -10,13 +10,13 @@
  * Author(s): Jan Willeke
  */
 
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <errno.h>
+#include <unistd.h>
 
 /*
  * Cpio archive new header structure

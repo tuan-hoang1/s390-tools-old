@@ -10,18 +10,20 @@
 #ifndef ZG_H
 #define ZG_H
 
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <fcntl.h>
 #include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/mtio.h>
-#include "zt_common.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include "lib/util_base.h"
+#include "lib/zt_common.h"
 
 #define U64_MAX	((u64) -1)
 #define U32_MAX	((u32) -1)
@@ -51,7 +53,7 @@ extern char *zg_strdup(const char *str);
  */
 typedef void (*zg_atexit_fn_t)(void);
 extern void zg_atexit(zg_atexit_fn_t fn);
-extern void zg_exit(int rc) __attribute__ ((__noreturn__));
+extern void __noreturn zg_exit(int rc);
 
 /*
  * Temporary device node functions
@@ -117,12 +119,10 @@ do { \
 /*
  * Misc
  */
-#define PAGE_SIZE 4096
+#define PAGE_SIZE 4096UL
 #define ALIGN(x, a) __ALIGN_MASK(x, (typeof(x))(a)-1)
 #define __ALIGN_MASK(x, mask) (((x) + (mask)) & ~(mask))
 #define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
-#define MIN(x, y) ((x) < (y) ? (x) : (y))
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define ARRAY_ELEMENT_CNT(x) (sizeof(x) / sizeof(x[0]))
 #define ROUNDUP(x, y)	((((x) + ((y) - 1)) / (y)) * (y))
 

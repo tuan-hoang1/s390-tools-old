@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "export.h"
-
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -14,9 +12,10 @@
 #include <sys/utsname.h>
 
 #include "attrib.h"
-#include "setting.h"
 #include "device.h"
 #include "devtype.h"
+#include "export.h"
+#include "setting.h"
 #include "subtype.h"
 
 struct export_header {

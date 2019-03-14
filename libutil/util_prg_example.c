@@ -8,7 +8,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 
-#include "util_prg.h"
+#include "lib/util_prg.h"
 
 /*
  * Program description

@@ -11,10 +11,9 @@
 #ifndef INSTALL_H
 #define INSTALL_H
 
-#include "zipl.h"
-
 #include "disk.h"
 #include "job.h"
+#include "zipl.h"
 
 
 int install_bootloader(const char* device, disk_blockptr_t* program_table,

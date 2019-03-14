@@ -7,9 +7,10 @@
 #ifndef SETTING_H
 #define SETTING_H
 
+#include "lib/util_list.h"
+
 #include "exit_code.h"
 #include "misc.h"
-#include "util.h"
 
 struct attrib;
 

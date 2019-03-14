@@ -4,14 +4,13 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "ctc.h"
-
 #include <stdlib.h>
 #include <string.h>
 
 #include "attrib.h"
 #include "ccw.h"
 #include "ccwgroup.h"
+#include "ctc.h"
 #include "ctc_auto.h"
 #include "device.h"
 #include "devtype.h"

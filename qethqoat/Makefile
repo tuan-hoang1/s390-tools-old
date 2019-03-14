@@ -1,7 +1,5 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include
-
 all: qethqoat
 
 qethqoat: qethqoat.o

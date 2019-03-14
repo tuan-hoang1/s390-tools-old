@@ -6,22 +6,21 @@
  * Copyright IBM Corp. 2016
  */
 
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include <errno.h>
 #include <dirent.h>
+#include <errno.h>
 #include <libgen.h>
 #include <regex.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
-#include "util_base.h"
-#include "util_scandir.h"
-#include "util_libc.h"
-#include "util_panic.h"
-#include "zt_common.h"
+#include "lib/util_base.h"
+#include "lib/util_libc.h"
+#include "lib/util_panic.h"
+#include "lib/util_scandir.h"
+#include "lib/zt_common.h"
 
 /// @cond
 struct util_scandir_filter {

@@ -7,16 +7,17 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include <string.h>
-#include <time.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
 #include <dirent.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <fcntl.h>
 #include <linux/fs.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "zgetdump.h"
 
 #define SYSFS_BUSDIR	"/sys/bus/ccw/devices"

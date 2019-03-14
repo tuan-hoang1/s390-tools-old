@@ -1,4 +1,4 @@
-s390-tools (1.37.0)
+s390-tools (1.37.1)
    Category operating system. Contains the source tree of a set of
    user space utilities that should to be used together with the
    System z (s390) Linux kernel and device drivers.
@@ -354,6 +354,17 @@ Dependencies:
 
 Release History:
 ================
+1.37.1
+    Changes of existing tools:
+    - dbginfo.sh: Add Docker debug data
+
+    Bug Fixes:
+    - lsdasd: Replace continue with return
+    - lscss: Allow to specify devices from subchannel set 3
+    - mon_fsstatd: Only use physical filesystems
+    - mon_fsstatd: Fix double free in error path
+    - mon_procd: Fix segmentation fault
+
 1.37.0
     Added new tools:
     - dump2tar: Add sysfs collection helper for dbginfo.sh

@@ -7,19 +7,19 @@
  *
  */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <wait.h>
+#include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
 #include <sys/sysmacros.h>
-#include <dirent.h>
-#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <wait.h>
 
-#include "u2s.h"
+#include "lib/u2s.h"
 #include "misc.h"
 
 #define DEV_BUFFER_LENGTH 20

@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "misc.h"
-
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -13,8 +11,8 @@
 #include <limits.h>
 #include <signal.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -28,8 +26,8 @@
 #include "dasd.h"
 #include "device.h"
 #include "devtype.h"
+#include "misc.h"
 #include "path.h"
-#include "util.h"
 
 #define DRYRUN_HEADER_BEGIN	((char) 0x01)
 #define DRYRUN_HEADER_END	((char) 0x02)

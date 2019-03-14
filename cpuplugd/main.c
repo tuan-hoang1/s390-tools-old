@@ -8,11 +8,12 @@
  *            Hans-Joachim Picht <hans@linux.vnet.ibm.com>
  */
 
-#include <fenv.h>
-#include <time.h>
 #include <fcntl.h>
+#include <fenv.h>
 #include <sys/file.h>
 #include <sys/time.h>
+#include <time.h>
+
 #include "cpuplugd.h"
 
 struct symbol_names sym_names[] = {

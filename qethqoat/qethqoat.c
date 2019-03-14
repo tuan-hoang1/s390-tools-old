@@ -6,23 +6,24 @@
  * Author(s): Frank Blaschka <frank.blaschka@de.ibm.com>
  */
 
+#include <arpa/inet.h>
+#include <errno.h>
+#include <getopt.h>
+#include <iconv.h>
+#include <net/if.h>
+#include <netdb.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/ioctl.h>
-#include <net/if.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <errno.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <getopt.h>
-#include <iconv.h>
+
+#include "lib/zt_common.h"
 #include "qethqoat.h"
-#include "zt_common.h"
 
 static iconv_t l_iconv_ebcdic_ascii;
 

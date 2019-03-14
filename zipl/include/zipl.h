@@ -12,7 +12,7 @@
 #define ZIPL_H
 
 #include <stdint.h>
-#include "zt_common.h"
+#include "lib/zt_common.h"
 
 #define ZIPL_MAGIC			"zIPL"
 #define ZIPL_MAGIC_SIZE			4

@@ -8,9 +8,10 @@
  */
 
 #include <stdarg.h>
-#include "stage2dump.h"
+
 #include "error.h"
 #include "sclp.h"
+#include "stage2dump.h"
 
 #define CPU_ADDRESS_MAX	1000
 #define MACHINE_HAS_VX	machine_has_vx

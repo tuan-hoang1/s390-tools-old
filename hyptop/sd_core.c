@@ -10,11 +10,11 @@
 
 #include <string.h>
 #include <time.h>
-#include "sd.h"
-#include "hyptop.h"
+
 #include "helper.h"
+#include "hyptop.h"
 #include "opts.h"
-#include "util.h"
+#include "sd.h"
 
 /*
  * Internal globals for system data

@@ -8,19 +8,20 @@
  *
  *************************************************************************/
 
-#include <unistd.h>
-#include <stdio.h>
-#include <sys/ioctl.h>
+#include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
+#include <libgen.h>
 #include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <libgen.h>
+#include <sys/ioctl.h>
 #include <sys/mtio.h>
-#include "zt_common.h"
-#include "tape390_common.h" 
+#include <unistd.h>
+
+#include "lib/zt_common.h"
+#include "tape390_common.h"
 
 #define KEKL_LENGTH 65 /* 64 bytes plus trailing \0 */
 #define TOT_KEKL_LENGTH KEKL_LENGTH+1+5 /* kekl plus colon plus LABEL or HASH */

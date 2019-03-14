@@ -1,6 +1,5 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include
 ALL_CFLAGS += -D_FILE_OFFSET_BITS=64
 
 lib = libzds.a

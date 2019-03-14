@@ -1,6 +1,6 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I. -I../include -DVERSION=$(VERSION)
+ALL_CPPFLAGS += -DVERSION=$(VERSION)
 
 
 ifeq (${HAVE_PFM},0)

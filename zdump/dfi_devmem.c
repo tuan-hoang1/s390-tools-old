@@ -7,16 +7,17 @@
  * Author(s): Michael Holzheu <holzheu@linux.vnet.ibm.com>
  */
 
-#include <string.h>
-#include <time.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
 #include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/utsname.h>
 #include <linux/fs.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/utsname.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "zgetdump.h"
 
 /*

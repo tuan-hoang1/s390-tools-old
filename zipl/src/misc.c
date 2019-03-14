@@ -8,19 +8,18 @@
  *            Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
  */
 
-#include "misc.h"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <fcntl.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "error.h"
+#include "misc.h"
 
 
 /* Allocate SIZE bytes of memory. Upon success, return pointer to memory.

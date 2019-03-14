@@ -6,7 +6,6 @@
  * Copyright IBM Corp. 2016
  */
 
-#include "dump.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -26,6 +25,7 @@
 
 #include "buffer.h"
 #include "dref.h"
+#include "dump.h"
 #include "global.h"
 #include "idcache.h"
 #include "misc.h"

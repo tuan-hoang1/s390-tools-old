@@ -7,37 +7,39 @@
  */
 
 #define FUSE_USE_VERSION 26
-#include <unistd.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <stddef.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <linux/fs.h>
-#include <sys/time.h>
 #include <assert.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <search.h>
-#include <iconv.h>
 #include <ctype.h>
-#include <math.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <fuse.h>
+#include <fuse_opt.h>
+#include <iconv.h>
+#include <linux/fs.h>
 #ifdef HAVE_SETXATTR
 #include <linux/xattr.h>
 #endif
-#include <fuse.h>
-#include <fuse_opt.h>
+#include <math.h>
+#include <search.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include "zt_common.h"
-#include "util.h"
-#include "helper.h"
-#include "edf.h"
+#include "lib/util_base.h"
+#include "lib/util_list.h"
+#include "lib/zt_common.h"
+
 #include "cmsfs-fuse.h"
 #include "ebcdic.h"
+#include "edf.h"
+#include "helper.h"
 
 struct cmsfs cmsfs;
 static struct util_list open_file_list;
@@ -1749,7 +1751,7 @@ static int cmsfs_getattr(const char *path, struct stat *stbuf)
 
 		/* size */
 		stbuf->st_size = (off_t) fst.record_len * (off_t) fst.nr_records;
-		stbuf->st_blocks = max(stbuf->st_size, cmsfs.blksize);
+		stbuf->st_blocks = MAX(stbuf->st_size, cmsfs.blksize);
 		stbuf->st_blocks = ((stbuf->st_blocks + cmsfs.data_block_mask) &
 			~cmsfs.data_block_mask) >> 9;
 	} else {
@@ -1992,8 +1994,8 @@ static void rewrite_dir_ptr_block(struct walk_file *walk,
 	if (!level)
 		return;
 
-	end = min(start + PTRS_PER_BLOCK,
-		per_level_fixed(level - 1, walk->dlist_used));
+	end = MIN(start + PTRS_PER_BLOCK,
+		  per_level_fixed(level - 1, walk->dlist_used));
 	BUG(start > end);
 
 	for (i = start; i < end; i++) {
@@ -2257,8 +2259,8 @@ static int rewrite_pointer_block_fixed(struct file *f, int level, off_t dst,
 	 * start is always the first entry of a pointer block,
 	 * end is the last used entry in this pointer block.
 	 */
-	end = min(start + f->ptr_per_block,
-		per_level_fixed(level - 1, f->fst->nr_blocks));
+	end = MIN(start + f->ptr_per_block,
+		  per_level_fixed(level - 1, f->fst->nr_blocks));
 	BUG(start > end);
 
 	for (i = start; i < end; i++) {
@@ -2329,8 +2331,8 @@ static int rewrite_pointer_block_variable(struct file *f, int level,
 	 * start is always the first entry of a pointer block,
 	 * end is the last used entry in this pointer block.
 	 */
-	end = min(start + f->ptr_per_block,
-		per_level_var(level - 1, f->fst->nr_blocks));
+	end = MIN(start + f->ptr_per_block,
+		  per_level_var(level - 1, f->fst->nr_blocks));
 	BUG(start > end);
 
 	for (i = start; i < end; i++) {
@@ -4165,7 +4167,7 @@ static ssize_t find_newline(const char *buf, int len)
 static int cmsfs_write(const char *path, const char *buf, size_t size,
 		       off_t offset, struct fuse_file_info *fi)
 {
-	int scan_len = min(size, MAX_RECORD_LEN + 1);
+	int scan_len = MIN(size, (size_t)MAX_RECORD_LEN + 1);
 	int rc, nl_byte = 1, null_record = 0, pad = 0;
 	struct file *f = get_fobj(fi);
 	ssize_t rsize;
@@ -4187,7 +4189,7 @@ static int cmsfs_write(const char *path, const char *buf, size_t size,
 
 	if (f->fst->record_format == RECORD_LEN_FIXED &&
 	    f->fst->record_len)
-		scan_len = min(scan_len, f->fst->record_len + 1);
+		scan_len = MIN(scan_len, f->fst->record_len + 1);
 
 	rsize = find_newline(buf, scan_len);
 	BUG(rsize < LINEFEED_NOT_FOUND);

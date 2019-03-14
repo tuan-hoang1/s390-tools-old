@@ -6,10 +6,10 @@
  * Copyright IBM Corp. 2016
  */
 
-#include <stdlib.h>
 #include <errno.h>
+#include <stdlib.h>
 
-#include "dasd_sys.h"
+#include "lib/dasd_sys.h"
 
 /**
  * Get raw-track access mode status

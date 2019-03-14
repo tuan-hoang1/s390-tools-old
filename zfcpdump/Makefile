@@ -1,7 +1,5 @@
 include ../common.mak
 
-ALL_CPPFLAGS += -I../include
-
 CPIOINIT  = $(call echocmd,"  CPIOINI ",/$@)./cpioinit
 
 all: $(ZFCPDUMP_PART_RD)

@@ -8,10 +8,10 @@
  *            Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
  */
 
-#include "error.h"
-
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
+
+#include "error.h"
 
 
 #define ERROR_STRING_SIZE	1024

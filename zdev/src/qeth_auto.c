@@ -4,8 +4,6 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "qeth_auto.h"
-
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,8 +13,8 @@
 #include "device.h"
 #include "misc.h"
 #include "path.h"
-#include "util.h"
 #include "qeth.h"
+#include "qeth_auto.h"
 
 /*
  * QETH autodetection

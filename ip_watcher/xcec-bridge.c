@@ -9,25 +9,26 @@
  * Copyright IBM Corp. 2003, 2006
  */
 
+#include <dirent.h>
+#include <errno.h>
+#include <features.h>
+#include <net/ethernet.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <netpacket/packet.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <syslog.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <features.h>
-#include <netpacket/packet.h>
-#include <net/ethernet.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <signal.h>
-#include <string.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include "zt_common.h"
+#include <unistd.h>
+
+#include "lib/zt_common.h"
 
 /* a signal causes the interfaces to be re-checked */
 

@@ -4,12 +4,10 @@
  * Copyright IBM Corp. 2016
  */
 
+#include <regex.h>
 #include <sys/types.h>
 
-#include <regex.h>
-
-#include "util_panic.h"
-
+#include "lib/util_panic.h"
 #include "misc.h"
 
 /**

@@ -13,31 +13,31 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "lib/zt_common.h"
+
 #include "attrib.h"
 #include "blkinfo.h"
 #include "ccw.h"
 #include "ctc.h"
-#include "export.h"
-#include "misc.h"
 #include "device.h"
 #include "devnode.h"
 #include "devtype.h"
+#include "export.h"
 #include "inuse.h"
+#include "misc.h"
 #include "module.h"
 #include "namespace.h"
 #include "opts.h"
 #include "path.h"
 #include "root.h"
 #include "scsi.h"
-#include "setting.h"
 #include "select.h"
+#include "setting.h"
 #include "subtype.h"
 #include "table_attribs.h"
 #include "table_types.h"
 #include "udev.h"
-#include "util.h"
 #include "zfcp_lun.h"
-#include "zt_common.h"
 
 /* Main program action. */
 typedef enum {

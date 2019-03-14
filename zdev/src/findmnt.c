@@ -4,14 +4,12 @@
  * Author(s): Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
  */
 
-#include "findmnt.h"
-
 #include <stdlib.h>
 #include <string.h>
 
 #include "devnode.h"
+#include "findmnt.h"
 #include "misc.h"
-#include "util.h"
 
 #define FINDMNT_CMDLINE	"findmnt -n -T %s -o SOURCE 2>/dev/null"
 

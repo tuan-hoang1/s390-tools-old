@@ -16,10 +16,6 @@
 #include "iucvterm/config.h"
 #include "iucvterm/proto.h"
 
-
-#define min(a,b)		((a) < (b) ? (a) : (b))
-#define max(a,b)		((a) > (b) ? (a) : (b))
-
 /* Message buffer: message header + 4096 bytes of data */
 #define MSG_BUFFER_SIZE		(MSG_DATA_OFFSET + (4096))
 

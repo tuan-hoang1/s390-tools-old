@@ -6,8 +6,8 @@
  * Copyright IBM Corp. 2016
  */
 
-#ifndef UTIL_PATH_H
-#define UTIL_PATH_H
+#ifndef LIB_UTIL_PATH_H
+#define LIB_UTIL_PATH_H
 
 #include <stdbool.h>
 
@@ -18,4 +18,4 @@ bool util_path_is_writable(const char *fmt, ...);
 bool util_path_is_dir(const char *fmt, ...);
 bool util_path_is_reg_file(const char *fmt, ...);
 
-#endif /** UTIL_PATH_H @} */
+#endif /** LIB_UTIL_PATH_H @} */

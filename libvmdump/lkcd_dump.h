@@ -9,10 +9,10 @@
 #ifndef LKCD_DUMP_H
 #define LKCD_DUMP_H
 
-#include "zt_common.h"
+#include "lib/zt_common.h"
 
-#include "register_content.h"
 #include "dump.h"
+#include "register_content.h"
 
 #define UTS_LEN 65
 #define DUMP_BUFFER_SIZE     0x2000  /* Size of dump buffer */

@@ -11,16 +11,13 @@
 #ifndef HELPER_H
 #define HELPER_H
 
-#include <stdlib.h>
 #include <limits.h>
+#include <stdlib.h>
 #include <sys/types.h>
-#include "zt_common.h"
 
-/*
- * min/max macros
- */
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
-#define MIN(x, y) ((x) < (y) ? (x) : (y))
+#include "lib/util_base.h"
+#include "lib/zt_common.h"
+
 #define G0(x) MAX(0, (s64) (x))
 
 /*

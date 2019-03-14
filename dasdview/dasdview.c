@@ -8,97 +8,117 @@
 #define _LARGEFILE64_SOURCE    /* needed for unistd.h */
 #define _FILE_OFFSET_BITS 64   /* needed for unistd.h */
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <getopt.h>
-#include <stdarg.h>
-#include <ctype.h>
-#include <malloc.h>
-
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-
-#include <sys/utsname.h>
 #include <linux/version.h>
+#include <malloc.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/utsname.h>
+#include <unistd.h>
 
-#include "zt_common.h"
-#include "vtoc.h"
+#include "lib/libzds.h"
+#include "lib/u2s.h"
+#include "lib/util_base.h"
+#include "lib/util_opt.h"
+#include "lib/util_prg.h"
+#include "lib/vtoc.h"
+#include "lib/zt_common.h"
+
 #include "dasdview.h"
-#include "u2s.h"
-#include "libzds.h"
-
 
 /* Characters per line */
 #define DASDVIEW_CPL 16
 
-/* Full tool name */
-static const char tool_name[] = "dasdview: zSeries DASD view program";
+static const struct util_prg prg = {
+	.desc = "Display DASD and VTOC information and dump the content of "
+		"a DASD to the console.\n"
+		"DEVICE is the node of the device (e.g. '/dev/dasda').",
+	.args = "DEVICE",
+	.copyright_vec = {
+		{
+			.owner = "IBM Corp.",
+			.pub_first = 2001,
+			.pub_last = 2006,
+		},
+		UTIL_PRG_COPYRIGHT_END
+	}
+};
 
-/* Copyright notice */
-static const char copyright_notice[] = "Copyright IBM Corp. 2001, 2006";
-
-/* Error message string */
-#define ERROR_STRING_SIZE       1024
-static char error_string[ERROR_STRING_SIZE];
-
-#define min(x, y) ((x) > (y) ? (y) : (x))
+static struct util_opt opt_vec[] = {
+	UTIL_OPT_SECTION("DUMP OPTIONS"),
+	{
+		.option = { NULL, no_argument, NULL, '1' },
+		.desc = "Show DASD content in short Hex/EBCDIC/ASCII format",
+		.flags = UTIL_OPT_FLAG_NOLONG,
+	},
+	{
+		.option = { NULL, no_argument, NULL, '2' },
+		.desc = "Show DASD content in detailed Hex/EBCDIC/ASCII format",
+		.flags = UTIL_OPT_FLAG_NOLONG,
+	},
+	{
+		.option = { "begin", required_argument, NULL, 'b' },
+		.argument = "BEGIN",
+		.desc = "Specify start of dump in kilobytes (suffix k), "
+			"megabytes (m), blocks (b), tracks (t), or cylinders (c)",
+	},
+	{
+		.option = { "size", required_argument, NULL, 's' },
+		.argument = "SIZE",
+		.desc = "Specify size of dump in kilobytes (suffix k), "
+			"megabytes (m), blocks (b), tracks (t), or cylinders (c)",
+	},
+	UTIL_OPT_SECTION("MISC"),
+	{
+		.option = { "characteristic", no_argument, NULL, 'c' },
+		.desc = "Print the characteristics of a device",
+	},
+	{
+		.option = { "info", no_argument, NULL, 'i' },
+		.desc = "Print general DASD information and geometry",
+	},
+	{
+		.option = { "volser", no_argument, NULL, 'j' },
+		.desc = "Print the volume serial number",
+	},
+	{
+		.option = { "label", no_argument, NULL, 'l' },
+		.desc = "Print information about the volume label",
+	},
+	{
+		.option = { "vtoc", required_argument, NULL, 't' },
+		.argument = "SPEC",
+		.desc = "Print the table of content (VTOC)",
+	},
+	{
+		.option = { "extended", no_argument, NULL, 'x' },
+		.desc = "Print extended DASD information",
+	},
+	UTIL_OPT_HELP,
+	UTIL_OPT_VERSION,
+	UTIL_OPT_END
+};
 
 /*
  * Generate and print an error message based on the formatted
  * text string FMT and a variable amount of extra arguments.
  */
-void
-zt_error_print (const char* fmt, ...)
+static void zt_error_print(const char *fmt, ...)
 {
 	va_list args;
 
 	va_start (args, fmt);
-	vsnprintf (error_string, ERROR_STRING_SIZE, fmt, args);
+	vsnprintf(error_str, ERROR_STRING_SIZE, fmt, args);
 	va_end (args);
 
-	fprintf (stderr, "Error: %s\n", error_string);
-}
-
-/*
- * Print version information.
- */
-static void
-print_version (void)
-{
-	printf ("%s version %s\n", tool_name, RELEASE_STRING);
-	printf ("%s\n", copyright_notice);
-}
-
-static void
-dasdview_usage(void)
-{
-	printf("\nprints DASD information:\n\n");
-	printf("dasdview [-b begin] [-s size] [-1|-2] \n"
-	       "         [-i] [-x] [-j] [-c]\n"
-	       "         [-l] [-t {info|f1|f3|f4|f5|f7|f8|f9|all}] \n"
-	       "         [-h] [-v] \n"
-	       "         <device>\n"
-	       "\nwhere:\n"
-	       "-b: prints a DASD dump from 'begin'\n"
-	       "-s: prints a DASD dump with size 'size'\n"
-	       "-1: use format 1 for the dump (default)\n"
-	       "-2: use format 2 for the dump\n"
-	       "    'begin' and 'size' can have the following format:\n"
-	       "    x[k|m|b|t|c]\n"
-	       "    for x byte, kilobyte, megabyte, blocks, tracks and\n"
-	       "    cylinders\n"
-	       "-i: prints general DASD information and geometry\n"
-	       "-x: prints extended DASD information\n"
-	       "-j: prints the volume serial number (volume identifier)\n"
-	       "-l: prints information about the volume label\n"
-	       "-t: prints the table of content (VTOC)\n"
-	       "-c: prints the characteristics of a device\n"
-	       "-h: prints this usage text\n"
-	       "-v: prints the version number\n");
+	fprintf(stderr, "Error: %s\n", error_str);
 }
 
 /*
@@ -1719,7 +1739,7 @@ static void dasdview_print_vtoc_f9(dasdview_info_t *info)
 	}
 }
 
-static void dasdview_print_vtoc_f3()
+static void dasdview_print_vtoc_f3(void)
 {
 	/* dasdfmt formatted DASD devices have no format3 labels, but since the
 	 *  option exists for raw DASDs, we need to have some sensible message
@@ -2026,7 +2046,7 @@ static void dasdview_print_format_raw(unsigned int size, char *dumpstr)
 	residual = size;
 	while (residual) {
 		/* we handle at most 16 bytes per line */
-		count = min(residual, 16);
+		count = MIN(residual, 16u);
 		bzero(asc, 17);
 		bzero(ebc, 17);
 		printf("|");
@@ -2160,7 +2180,7 @@ static void dasdview_view_raw(dasdview_info_t *info)
 	 * but we can read a larger blob and the block layer will split up
 	 * the requests for us.
 	 */
-	trckbuffsize = min(tracks_to_read, 16);
+	trckbuffsize = MIN(tracks_to_read, 16u);
 	/* track data must be page aligned for O_DIRECT */
 	trackdata = memalign(4096, trckbuffsize * RAWTRACKSIZE);
 	if (!trackdata) {
@@ -2182,7 +2202,7 @@ static void dasdview_view_raw(dasdview_info_t *info)
 	residual = tracks_to_read;
 	track = trckstart;
 	while (residual) {
-		trckcount = min(trckbuffsize, residual);
+		trckcount = MIN(trckbuffsize, residual);
 		trckend = track + trckcount - 1;
 		rc = lzds_dasdhandle_read_tracks_to_buffer(dasdh, track,
 							   trckend, trackdata);
@@ -2232,29 +2252,29 @@ dasdview_print_characteristic(dasdview_info_t *info)
 int main(int argc, char * argv[]) {
 
 	dasdview_info_t info;
-	int oc, index;
+	int oc;
 	unsigned long long max=0LL;
 	char *begin_param_str = NULL;
 	char *size_param_str  = NULL;
 	int rc;
 
+	util_prg_init(&prg);
+	util_opt_init(opt_vec, NULL);
+
 	bzero (&info, sizeof(info));
 	while (1)
 	{
-		oc = getopt_long(argc, argv, dasdview_getopt_string,
-				 dasdview_getopt_long_options, &index);
+		oc = util_opt_getopt_long(argc, argv);
 
 		switch (oc)
 		{
 		case 'h':
-			dasdview_usage();
-			exit(0);
-		case ':':
-			dasdview_usage();
-			exit(1);
+			util_prg_print_help();
+			util_opt_print_help();
+			exit(EXIT_SUCCESS);
 		case 'v':
-			print_version();
-			exit(0);
+			util_prg_print_version();
+			exit(EXIT_SUCCESS);
 		case 'b':
 			begin_param_str = optarg;
 			info.action_specified = 1;
@@ -2272,10 +2292,6 @@ int main(int argc, char * argv[]) {
 		case '2':
 			info.format1 = 0;
 			info.format2 = 1;
-			break;
-		case 'f':
-			strcpy(info.device, optarg);
-			info.node_specified = 1;
 			break;
 		case 'i':  /* print general DASD information and geometry */
 			info.action_specified = 1;
@@ -2338,16 +2354,16 @@ int main(int argc, char * argv[]) {
 	}
 
 	/* do some tests */
-	if (!info.node_specified && (info.device_id >= argc)) {
+	if (info.device_id >= argc) {
 		zt_error_print("dasdview: usage error\n"	\
-			       "Device not specified!");
-		exit(-1);
+			       "No device specified!");
+		exit(EXIT_FAILURE);
 	}
 
-	if (info.node_specified && (info.device_id < argc)) {
+	if (info.device_id + 1 < argc) {
 		zt_error_print("dasdview: usage error\n"	\
-			       "Device can only specified once!");
-		exit(-1);
+			       "More than one device specified!");
+		exit(EXIT_FAILURE);
 	}
 
 	if (info.device_id < argc)

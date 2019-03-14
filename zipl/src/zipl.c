@@ -7,15 +7,15 @@
  *            Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
  */
 
-#include "zipl.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
-#include <unistd.h>
-#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include "lib/zt_common.h"
 
 #include "boot.h"
 #include "bootmap.h"
@@ -24,7 +24,7 @@
 #include "install.h"
 #include "job.h"
 #include "misc.h"
-#include "zt_common.h"
+#include "zipl.h"
 
 
 /* Flag deciding the level of verbosity */

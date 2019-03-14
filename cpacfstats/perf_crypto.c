@@ -9,18 +9,18 @@
  *   Harald Freudenberger <freude@de.ibm.com>
  */
 
-#include <stdint.h>
+#include <errno.h>
 #include <getopt.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+#include <perfmon/perf_event.h>
+#include <perfmon/pfmlib.h>
+#include <perfmon/pfmlib_perf_event.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
 #include <unistd.h>
-#include <errno.h>
-#include <perfmon/pfmlib_perf_event.h>
-#include <perfmon/pfmlib.h>
-#include <perfmon/perf_event.h>
 
 #include "cpacfstats.h"
 

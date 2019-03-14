@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util_rec.h"
+#include "lib/util_rec.h"
 
 /*
  * Print three records in specified format

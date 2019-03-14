@@ -8,7 +8,6 @@
 #define ZFCP_LUN_H
 
 #include <stdint.h>
-
 #include "ccw.h"
 
 #define ZFCP_LUN_NAME		"zfcp-lun"

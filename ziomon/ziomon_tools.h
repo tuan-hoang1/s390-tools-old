@@ -10,9 +10,9 @@
 #ifndef ZIOMON_TOOLS_H
 #define ZIOMON_TOOLS_H
 
-#include <linux/types.h>
 #include <byteswap.h>
 #include <endian.h>
+#include <linux/types.h>
 
 
 #define swap_64(num)   (num = be64toh(num))
