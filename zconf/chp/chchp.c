@@ -116,7 +116,7 @@ static void write_value(const char *dir, const char *key, const char *val)
 	 */
 	if (strcmp(key, "status") != 0) {
 		if (strcmp(val, val2) != 0) {
-			printf("failed - attribute value not as expected");
+			printf("failed - attribute value not as expected\n");
 			exit(EXIT_FAILURE);
 		}
 	}

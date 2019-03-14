@@ -246,6 +246,23 @@ struct namespace qeth_namespace = {
 
 
 /*
+ * QETH specific attribute data.
+ */
+
+struct qeth_attrib_data {
+	enum qeth_layer_type {
+		layer_any,
+		layer_2,
+		layer_3
+	} layer_type;
+};
+
+#define QETH_DATA(layer)			\
+	((struct qeth_attrib_data []) { {	\
+		.layer_type = layer,		\
+		} })
+
+/*
  * QETH device attributes.
  */
 
@@ -284,6 +301,7 @@ static struct attrib qeth_attr_portname = {
 	.order_cmp = ccw_offline_only_order_cmp,
 	.check = ccw_offline_only_check,
 	.map = VALUE_MAP_ARRAY(VALUE_MAP("no portname required", "")),
+	.st_data = QETH_DATA(layer_any),
 };
 
 static struct attrib qeth_attr_priority_queueing = {
@@ -314,6 +332,7 @@ static struct attrib qeth_attr_priority_queueing = {
 		ACCEPT_STR("no_prio_queueing:3")
 	),
 	.unstable = 1,
+	.st_data = QETH_DATA(layer_any),
 };
 
 static struct attrib qeth_attr_buffer_count = {
@@ -326,6 +345,7 @@ static struct attrib qeth_attr_buffer_count = {
 	.order_cmp = ccw_offline_only_order_cmp,
 	.check = ccw_offline_only_check,
 	.accept = ACCEPT_ARRAY(ACCEPT_RANGE(8, 128)),
+	.st_data = QETH_DATA(layer_any),
 };
 
 static struct attrib qeth_attr_portno = {
@@ -337,6 +357,7 @@ static struct attrib qeth_attr_portno = {
 	.order_cmp = ccw_offline_only_order_cmp,
 	.check = ccw_offline_only_check,
 	.accept = ACCEPT_ARRAY(ACCEPT_RANGE(0, 1)),
+	.st_data = QETH_DATA(layer_any),
 };
 
 static struct attrib qeth_attr_hsuid = {
@@ -346,6 +367,7 @@ static struct attrib qeth_attr_hsuid = {
 	"Specify a 1-8 character identifier used to identify a HiperSockets\n"
 	"QETH device in the AF_IUCV addressing family support.\n",
 	.defval = "",
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_recover = {
@@ -361,6 +383,7 @@ static struct attrib qeth_attr_recover = {
 	.accept = ACCEPT_ARRAY(ACCEPT_NUM(1)),
 	.writeonly = 1,
 	.activeonly = 1,
+	.st_data = QETH_DATA(layer_any),
 };
 
 static struct attrib qeth_attr_isolation = {
@@ -375,6 +398,7 @@ static struct attrib qeth_attr_isolation = {
 	.defval = "none",
 	.accept = ACCEPT_ARRAY(ACCEPT_STR("none"), ACCEPT_STR("drop"),
 			       ACCEPT_STR("forward")),
+	.st_data = QETH_DATA(layer_any),
 };
 
 static struct attrib qeth_attr_performance_stats = {
@@ -386,6 +410,7 @@ static struct attrib qeth_attr_performance_stats = {
 	"  1: Performance statistics data is collected\n",
 	.defval = "0",
 	.accept = ACCEPT_ARRAY(ACCEPT_RANGE(0, 1)),
+	.st_data = QETH_DATA(layer_any),
 };
 
 static struct attrib qeth_attr_hw_trap = {
@@ -400,6 +425,7 @@ static struct attrib qeth_attr_hw_trap = {
 	.defval = "disarm",
 	.accept = ACCEPT_ARRAY(ACCEPT_STR("disarm"), ACCEPT_STR("arm"),
 			       ACCEPT_STR("trap")),
+	.st_data = QETH_DATA(layer_any),
 };
 
 static struct attrib qeth_attr_route4 = {
@@ -435,6 +461,7 @@ static struct attrib qeth_attr_route4 = {
 				  "secondary_connector"),
 			VALUE_MAP("secondary connector",
 				   "secondary_connector")),
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_route6 = {
@@ -471,6 +498,7 @@ static struct attrib qeth_attr_route6 = {
 			VALUE_MAP("secondary connector",
 				   "secondary_connector")),
 	.unstable = 1,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_fake_broadcast = {
@@ -484,6 +512,7 @@ static struct attrib qeth_attr_fake_broadcast = {
 	.defval = "0",
 	.order_cmp = after_layer2_order_cmp,
 	.accept = ACCEPT_ARRAY(ACCEPT_RANGE(0, 1)),
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_ipa_takeover_enable = {
@@ -497,6 +526,7 @@ static struct attrib qeth_attr_ipa_takeover_enable = {
 	.defval = "0",
 	.order_cmp = after_layer2_order_cmp,
 	.accept = ACCEPT_ARRAY(ACCEPT_RANGE(0, 1)),
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_ipa_takeover_add4 = {
@@ -511,6 +541,7 @@ static struct attrib qeth_attr_ipa_takeover_add4 = {
 	.multi = 1,
 	.activerem = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_ipa_takeover_add6 = {
@@ -525,6 +556,7 @@ static struct attrib qeth_attr_ipa_takeover_add6 = {
 	.multi = 1,
 	.activerem = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_ipa_takeover_del4 = {
@@ -538,6 +570,7 @@ static struct attrib qeth_attr_ipa_takeover_del4 = {
 	.writeonly = 1,
 	.activeonly = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_ipa_takeover_del6 = {
@@ -550,6 +583,7 @@ static struct attrib qeth_attr_ipa_takeover_del6 = {
 	.writeonly = 1,
 	.activeonly = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_ipa_takeover_invert4 = {
@@ -564,6 +598,7 @@ static struct attrib qeth_attr_ipa_takeover_invert4 = {
 	.defval = "0",
 	.accept = ACCEPT_ARRAY(ACCEPT_RANGE(0, 1)),
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_ipa_takeover_invert6 = {
@@ -578,6 +613,7 @@ static struct attrib qeth_attr_ipa_takeover_invert6 = {
 	.defval = "0",
 	.accept = ACCEPT_ARRAY(ACCEPT_RANGE(0, 1)),
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_rxip_add4 = {
@@ -590,6 +626,7 @@ static struct attrib qeth_attr_rxip_add4 = {
 	.multi = 1,
 	.activerem = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_rxip_add6 = {
@@ -602,6 +639,7 @@ static struct attrib qeth_attr_rxip_add6 = {
 	.multi = 1,
 	.activerem = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_rxip_del4 = {
@@ -613,6 +651,7 @@ static struct attrib qeth_attr_rxip_del4 = {
 	.writeonly = 1,
 	.activeonly = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_rxip_del6 = {
@@ -624,6 +663,7 @@ static struct attrib qeth_attr_rxip_del6 = {
 	.writeonly = 1,
 	.activeonly = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_sniffer = {
@@ -636,6 +676,7 @@ static struct attrib qeth_attr_sniffer = {
 	.defval = "0",
 	.order_cmp = after_layer2_order_cmp,
 	.accept = ACCEPT_ARRAY(ACCEPT_RANGE(0, 1)),
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_vipa_add4 = {
@@ -648,6 +689,7 @@ static struct attrib qeth_attr_vipa_add4 = {
 	.multi = 1,
 	.activerem = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_vipa_add6 = {
@@ -660,6 +702,7 @@ static struct attrib qeth_attr_vipa_add6 = {
 	.multi = 1,
 	.activerem = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_vipa_del4 = {
@@ -671,6 +714,7 @@ static struct attrib qeth_attr_vipa_del4 = {
 	.writeonly = 1,
 	.activeonly = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_vipa_del6 = {
@@ -682,6 +726,7 @@ static struct attrib qeth_attr_vipa_del6 = {
 	.writeonly = 1,
 	.activeonly = 1,
 	.order_cmp = after_layer2_order_cmp,
+	.st_data = QETH_DATA(layer_3),
 };
 
 static struct attrib qeth_attr_bridge_role = {
@@ -697,6 +742,7 @@ static struct attrib qeth_attr_bridge_role = {
 	.accept = ACCEPT_ARRAY(ACCEPT_STR("primary"),
 			       ACCEPT_STR("secondary"),
 			       ACCEPT_STR("none")),
+	.st_data = QETH_DATA(layer_2),
 };
 
 static struct attrib qeth_attr_bridge_hostnotify = {
@@ -710,6 +756,7 @@ static struct attrib qeth_attr_bridge_hostnotify = {
 	.defval = "0",
 	.order_cmp = after_layer2_order_cmp,
 	.accept = ACCEPT_ARRAY(ACCEPT_RANGE(0, 1)),
+	.st_data = QETH_DATA(layer_2),
 };
 
 static struct attrib qeth_attr_bridge_reflect_promisc = {
@@ -729,6 +776,7 @@ static struct attrib qeth_attr_bridge_reflect_promisc = {
 	.accept = ACCEPT_ARRAY(ACCEPT_STR("primary"),
 			       ACCEPT_STR("secondary"),
 			       ACCEPT_STR("none")),
+	.st_data = QETH_DATA(layer_2),
 };
 
 /*
@@ -860,35 +908,95 @@ static exit_code_t setting_ineffective(struct setting *s, int layer2)
 	return EXIT_INVALID_CONFIG;
 }
 
+static enum qeth_layer_type get_layer_type(struct setting *s)
+{
+	struct qeth_attrib_data *data = s->attrib->st_data;
+
+	if (!data)
+		return layer_any;
+	else
+		return data->layer_type;
+}
+
+static void add_layer2_setting(struct setting_list *list, int layer2)
+{
+	setting_list_apply(list, &qeth_attr_layer2,
+			   qeth_attr_layer2.name, layer2 ? "1" : "0");
+}
+
+static exit_code_t incompatible_attrib(struct setting *a, struct setting *b)
+{
+	const char *text = "Settings '%s' and '%s' require incompatible "
+			   "layer2 values\n";
+
+	if (force) {
+		delayed_warn(text, a->attrib->name, b->attrib->name);
+
+		return EXIT_OK;
+	}
+	delayed_forceable(text, a->attrib->name, b->attrib->name);
+
+	return EXIT_INVALID_CONFIG;
+}
+
+/* Generate implicit layer2 setting if required by a setting that relies
+ * on a specific layer2 value. */
+static exit_code_t generate_layer2(char *list_type, struct setting_list *list,
+				   int *layer2, int *modified)
+{
+	const char *text = "Adding layer2=%d to %s configuration (required by "
+			   "%s)\n";
+	struct setting *s, *l2 = NULL, *l3 = NULL;
+	enum qeth_layer_type t;
+
+	util_list_iterate(&list->list, s) {
+		t = get_layer_type(s);
+		if (t == layer_2)
+			l2 = s;
+		else if (t == layer_3)
+			l3 = s;
+	}
+
+	if (l2 && l3)
+		return incompatible_attrib(l2, l3);
+
+	if (l2 || l3) {
+		*layer2 = l2 ? 1 : 0;
+		*modified = 1;
+		delayed_info(text, *layer2, list_type,
+			     (l2 ? l2 : l3)->attrib->name);
+		add_layer2_setting(list, *layer2);
+	}
+
+	return EXIT_OK;
+}
+
+static exit_code_t check_ineffective_settings(struct setting_list *list,
+					      int layer2)
+{
+	struct setting *s;
+	enum qeth_layer_type t;
+	exit_code_t rc = EXIT_OK;
+
+	util_list_iterate(&list->list, s) {
+		t = get_layer_type(s);
+		if (t == layer_2 && layer2 == 0)
+			rc = setting_ineffective(s, 1);
+		else if (t == layer_3 && layer2 == 1)
+			rc = setting_ineffective(s, 0);
+		if (rc)
+			break;
+	}
+
+	return rc;
+}
+
 /* Check if layer2 setting can be correctly applied. */
 static exit_code_t check_layer2(struct device *dev, config_t config)
 {
-	struct attrib *attribs[] = {
-		&qeth_attr_route4,
-		&qeth_attr_route6,
-		&qeth_attr_fake_broadcast,
-		&qeth_attr_sniffer,
-		&qeth_attr_hsuid,
-		&qeth_attr_ipa_takeover_enable,
-		&qeth_attr_ipa_takeover_add4,
-		&qeth_attr_ipa_takeover_add6,
-		&qeth_attr_ipa_takeover_del4,
-		&qeth_attr_ipa_takeover_del6,
-		&qeth_attr_ipa_takeover_invert4,
-		&qeth_attr_ipa_takeover_invert6,
-		&qeth_attr_rxip_add4,
-		&qeth_attr_rxip_add6,
-		&qeth_attr_rxip_del4,
-		&qeth_attr_rxip_del6,
-		&qeth_attr_vipa_add4,
-		&qeth_attr_vipa_add6,
-		&qeth_attr_vipa_del4,
-		&qeth_attr_vipa_del6,
-	};
-	struct setting *l, *s;
+	struct setting *l;
 	int layer2_detected, layer2_active = -1, layer2_persistent = -1,
 	    layer2_modified = 0;
-	unsigned int i;
 	exit_code_t rc = EXIT_OK;
 
 	layer2_detected = detect_layer2(dev);
@@ -896,11 +1004,21 @@ static exit_code_t check_layer2(struct device *dev, config_t config)
 	if (l) {
 		layer2_active = atoi(l->value);
 		layer2_modified |= l->modified;
+	} else if (SCOPE_ACTIVE(config)) {
+		rc = generate_layer2("active", dev->active.settings,
+				     &layer2_active, &layer2_modified);
+		if (rc)
+			goto out;
 	}
 	l = setting_list_find(dev->persistent.settings, qeth_attr_layer2.name);
 	if (l) {
 		layer2_persistent = atoi(l->value);
 		layer2_modified |= l->modified;
+	} else if (SCOPE_PERSISTENT(config)) {
+		rc = generate_layer2("persistent", dev->persistent.settings,
+				     &layer2_persistent, &layer2_modified);
+		if (rc)
+			goto out;
 	}
 
 	/* Check correct layer2 setting. */
@@ -913,31 +1031,17 @@ static exit_code_t check_layer2(struct device *dev, config_t config)
 			if (rc)
 				goto out;
 		}
-
 	}
 
-	if (layer2_active != 1 && layer2_persistent != 1)
-		goto out;
-
-	for (i = 0; i < ARRAY_SIZE(attribs); i++) {
-		if (SCOPE_ACTIVE(config) && layer2_active == 1) {
-			s = setting_list_find(dev->active.settings,
-					      attribs[i]->name);
-			if (s) {
-				rc = setting_ineffective(s, 0);
-				if (rc)
-					goto out;
-			}
-		}
-		if (SCOPE_PERSISTENT(config) && layer2_persistent == 1) {
-			s = setting_list_find(dev->persistent.settings,
-					      attribs[i]->name);
-			if (s) {
-				rc = setting_ineffective(s, 0);
-				if (rc)
-					goto out;
-			}
-		}
+	if (SCOPE_ACTIVE(config)) {
+		rc = check_ineffective_settings(dev->active.settings,
+						layer2_active);
+		if (rc)
+			goto out;
+	}
+	if (SCOPE_PERSISTENT(config)) {
+		rc = check_ineffective_settings(dev->persistent.settings,
+						layer2_persistent);
 	}
 
 out:
@@ -951,7 +1055,8 @@ static exit_code_t qeth_st_check_pre_configure(struct subtype *st,
 	exit_code_t rc;
 
 	/* No need to check if device is deconfigured. */
-	if (dev->active.deconfigured)
+	if ((SCOPE_ACTIVE(config) && dev->active.deconfigured) ||
+	    (SCOPE_PERSISTENT(config) && dev->persistent.deconfigured))
 		return EXIT_OK;
 
 	rc = check_layer2(dev, config);
@@ -984,12 +1089,6 @@ static exit_code_t qeth_st_is_definable(struct subtype *st, const char *id,
 	err_t_print(err, "Invalid number of CCW device IDs\n");
 
 	return EXIT_INVALID_ID;
-}
-
-static void add_layer2_setting(struct device *dev, int layer2)
-{
-	setting_list_apply(dev->active.settings, &qeth_attr_layer2,
-			   qeth_attr_layer2.name, layer2 ? "1" : "0");
 }
 
 /**
@@ -1025,7 +1124,7 @@ static exit_code_t qeth_st_detect_definable(struct subtype *st,
 
 	layer2 = detect_layer2(dev);
 	if (layer2 > -1)
-		add_layer2_setting(dev, layer2);
+		add_layer2_setting(dev->active.settings, layer2);
 
 	dev->active.definable = 1;
 

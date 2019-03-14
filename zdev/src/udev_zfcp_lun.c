@@ -487,6 +487,8 @@ static exit_code_t write_luns_rule(const char *path, struct util_list *list)
 	char *hba_id;
 	struct setting *s;
 
+	sort_zfcp_lun_list(list);
+
 	node = util_list_start(list);
 	if (!node)
 		return EXIT_INTERNAL_ERROR;

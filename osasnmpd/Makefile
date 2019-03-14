@@ -18,7 +18,7 @@ check_dep:
 	$(call check_dep, \
 		"osasnmpd", \
 		"net-snmp/net-snmp-config.h", \
-		"net-snmp-devel", \
+		"net-snmp-devel or libsnmp-dev", \
 		"HAVE_SNMP=0")
 
 all: check_dep osasnmpd

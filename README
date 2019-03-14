@@ -1,4 +1,4 @@
-s390-tools (1.37.1)
+s390-tools (1.38.0)
    Category operating system. Contains the source tree of a set of
    user space utilities that should to be used together with the
    System z (s390) Linux kernel and device drivers.
@@ -121,7 +121,8 @@ s390-tools (1.37.1)
 
    * dumpconf:
      Allows to configure the dump device used for system dump in case a kernel
-     panic occurs. This tool can also be used as an init script for etc/init.d.
+     panic occurs. This tool can also be used by the "dumpconf" systemd unit
+     or as System V init script in /etc/init.d.
      Prerequisite for dumpconf is a Linux kernel with the "dump on panic"
      feature.
 
@@ -316,12 +317,10 @@ Dependencies:
      device logic in a helper script called 'zdev-root-update': This script
      is invoked whenever the root device configuration is changed and it must
      ensure that the persistent root device configuration is put into effect
-     during boot. zdev provides two sample implementations for zdev-root-update
+     during boot. zdev provides a sample implementation for zdev-root-update
      which can be selected during the 'make install' step using the HAVE_DRACUT
      variable:
 
-     - The default (HAVE_DRACUT=0) works with systems that use zipl as boot
-       loader without an initial RAM-disk.
      - HAVE_DRACUT=1 installs a zdev-root-update helper that works with zipl
        as boot loader and dracut as initial RAM-disk provider.
 
@@ -354,6 +353,30 @@ Dependencies:
 
 Release History:
 ================
+1.38.0
+    Changes of existing tools:
+    - systemd: Add new units for cpi, dumpconf, mon_fsstatd, and mon_procd
+    - fdasd: Add new command action 'l' to list known partition types
+    - chmem: Try to online memory to zone movable
+          Starting with kernel 4.13 (commit f1dd2cd1), the default zone for
+          hotplug memory is changed from zone movable to zone normal. In order
+          to preserve the previous default behaviour, chmem will now always try
+          to set memory online to the zone movable, before trying to set it
+          online to the default zone.
+    - zfcpdbf: Print high part of "new" 64 bit SCSI LUN
+    - zfcpdbf: Print payload with full FCP_RSP IU in SCSI trace records
+    - util_opt: Add command specific command line parsing
+    - util_rec: Implement util_rec_iterate() function
+    - util_rec: Record field values can be stored and processed in argz format
+
+    Bug Fixes:
+    - zipl/zgetdump: Add missing SCSI multipath dump information to man pages
+    - lsqeth: Fix attributes name: ipa -> ipa_takeover and parp -> rxip
+    - lsqeth: Fix lsqeth output of ipa/vipa/rxip addresses of interfaces
+    - zfcpdbf: Fix payload length for zfcp_dbf_hba_bit_err
+    - chzdev: Add implicit qeth layer settings handling
+    - qethqoat: Fix OSA 6S detection
+
 1.37.1
     Changes of existing tools:
     - dbginfo.sh: Add Docker debug data

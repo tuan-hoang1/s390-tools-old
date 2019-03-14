@@ -8,13 +8,14 @@
  */
 
 #include <ctype.h>
+#include <stdint.h>
 #include <time.h>
 
 #include "vm_dump.h"
 
 Dump::DumpType VMDump::getDumpType(const char* inputFileName)
 {
-	char fmbk_id[8] = {0xc8, 0xc3, 0xd7, 0xc4, 0xc6, 0xd4, 0xc2, 0xd2};
+	uint8_t fmbk_id[8] = {0xc8, 0xc3, 0xd7, 0xc4, 0xc6, 0xd4, 0xc2, 0xd2};
 	struct _fir_basic  fir;
 	struct _fmbk fmbk;
 	struct _adsr adsr;
@@ -84,7 +85,7 @@ Dump::DumpType VMDump::getDumpType(const char* inputFileName)
 
 VMDump::VMDump(const char *fileName) : Dump(fileName, "rb")
 {
-	char fmbk_id[8] = {0xc8, 0xc3, 0xd7, 0xc4, 0xc6, 0xd4, 0xc2, 0xd2};
+	uint8_t fmbk_id[8] = {0xc8, 0xc3, 0xd7, 0xc4, 0xc6, 0xd4, 0xc2, 0xd2};
 
 	ebcdicAsciiConv = iconv_open("ISO-8859-1", "EBCDIC-US");
 

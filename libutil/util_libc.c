@@ -6,6 +6,7 @@
  * Copyright IBM Corp. 2016
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -108,20 +109,20 @@ void *__util_strdup(const char *func, const char *file, int line,
 }
 
 /**
-  * Concatenate two strings or exit in case of failure
-  *
-  * The first string \a str1 is resized and a copy of the second
-  * string \a str2 is appended to it.
-  *
-  * Therefore the first string \a str1 must either have been allocated
-  * using malloc(), calloc(), or realloc() or must be NULL.
-  *
-  * @param[in] str1 Pointer to first string to concatenate, which
-  *                 becomes invalid
-  * @param[in] str2 Constant pointer to second string to concatenate
-  *
-  * @returns Pointer to concatenated string
-  */
+ * Concatenate two strings or exit in case of failure
+ *
+ * The first string \a str1 is resized and a copy of the second
+ * string \a str2 is appended to it.
+ *
+ * Therefore the first string \a str1 must either have been allocated
+ * using malloc(), calloc(), or realloc() or must be NULL.
+ *
+ * @param[in] str1 Pointer to first string to concatenate, which
+ *                 becomes invalid
+ * @param[in] str2 Constant pointer to second string to concatenate
+ *
+ * @returns Pointer to concatenated string
+ */
 char *util_strcat_realloc(char *str1, const char *str2)
 {
 	char *buf;
@@ -133,6 +134,21 @@ char *util_strcat_realloc(char *str1, const char *str2)
 		buf = util_strdup(str2);
 	}
 	return buf;
+}
+
+/**
+ * Convert string to uppercase
+ *
+ * String \a str is converted to uppercase
+ *
+ * @param[in,out] str String to convert
+ */
+void util_str_toupper(char *str)
+{
+	int i;
+
+	for (i = 0; str[i] != '\0'; i++)
+		str[i] = toupper(str[i]);
 }
 
 /*

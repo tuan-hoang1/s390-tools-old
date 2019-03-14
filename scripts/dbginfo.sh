@@ -115,27 +115,26 @@ fi
 ########################################
 # Global used variables
 #
-
 # The base working directory
 readonly WORKDIR_BASE="$(echo "${paramWORKDIR_BASE}" | sed -e 's#/$##')/"
 
 # The terminal
-readonly TERMINAL=$(tty 2>/dev/null)
+readonly TERMINAL="$(tty 2>/dev/null)"
 
 # The hostname of the system
-readonly SYSTEMHOSTNAME=$(hostname -s 2>/dev/null)
+readonly SYSTEMHOSTNAME="$(hostname -s 2>/dev/null)"
 
 # The kernel release version as delivered from uname -r
-readonly KERNEL_RELEASE_VERSION=$(uname -r 2>/dev/null)
+readonly KERNEL_RELEASE_VERSION="$(uname -r 2>/dev/null)"
 
 # The processor ID for the first processor
-readonly PROCESSORID=$(grep -E ".*processor 0:.*" /proc/cpuinfo | sed 's/.*identification[[:space:]]*\=[[:space:]]*\([[:alnum:]]*\).*/\1/g')
-
+readonly PROCESSORID="$(grep -E ".*processor 0:.*" /proc/cpuinfo | \
+                      sed 's/.*identification[[:space:]]*\=[[:space:]]*\([[:alnum:]]*\).*/\1/g')"
 # The processor version for the first processor
-readonly PROCESSORVERSION=$(grep -E ".*processor 0:.*" /proc/cpuinfo | sed 's/.*version[[:space:]]*\=[[:space:]]*\([[:alnum:]]*\).*/\1/g')
-
+readonly PROCESSORVERSION="$(grep -E ".*processor 0:.*" /proc/cpuinfo | \
+                      sed 's/.*version[[:space:]]*\=[[:space:]]*\([[:alnum:]]*\).*/\1/g')"
 # The current date
-readonly DATETIME=$(date +%Y-%m-%d-%H-%M-%S 2>/dev/null)
+readonly DATETIME="$(date +%Y-%m-%d-%H-%M-%S 2>/dev/null)"
 
 # The current working directory for the actual script execution
 if test -z "${PROCESSORID}"; then
@@ -247,6 +246,8 @@ PROCFILES="\
   /proc/qeth\
   /proc/qeth_perf\
   /proc/qeth_ipa_takeover\
+  /proc/sched_debug\
+  /proc/schedstat\
   /proc/service_levels\
   /proc/slabinfo\
   /proc/stat\
@@ -443,7 +444,8 @@ CMDS="uname -a\
   :java -version\
   :cat /root/.bash_history\
   :env\
-  :journalctl --all --no-pager --since=$(date -d '5 day ago' +%Y-%m-%d) --until=now --lines=50000 > ${OUTPUT_FILE_JOURNALCTL}\
+  :journalctl --all --no-pager --since=$(date -d '5 day ago' +%Y-%m-%d) --until=now --lines=50000 \
+   > '${OUTPUT_FILE_JOURNALCTL}'\
   :openssl engine\
   :systemd-delta\
   :systemctl --all --no-pager show\
@@ -453,8 +455,8 @@ CMDS="uname -a\
   :docker images\
   :docker network ls\
   :docker ps -a\
-  :docker stats --no-stream\
   :docker version\
+  :docker stats --no-stream\
   :systemctl status docker.service\
   "
 

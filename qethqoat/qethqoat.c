@@ -203,6 +203,9 @@ static void print_physical(struct qeth_qoat_physical *phdr)
 	case OAT_OSA_GEN_OSAE5S:
 		osagen = "OSA-Express5S";
 		break;
+	case OAT_OSA_GEN_OSAE6S:
+		osagen = "OSA-Express6S";
+		break;
 	default:
 		sprintf(tmp, "unknown (0x%x)", phdr->osa_gen);
 		osagen = tmp;

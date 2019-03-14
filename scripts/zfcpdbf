@@ -109,6 +109,7 @@ use constant PAGE_SIZE => 4096;
 use constant HEADER_SIZE => 16;
 use constant TZ_LIMIT => 12 * 3600;
 use constant ZFCP_DBF_SAN_MAX_PAYLOAD => 48;
+use constant FCP_RESP_WITH_EXT => 24;
 
 our @TRACE_RECORDS;
 our %PAYLOAD_RECORDS;
@@ -614,6 +615,7 @@ sub _print_hba_id3
 {
 	my $fsf_req_id = shift();
 	my $rec = shift();
+	my $payload_length = shift();
 
 	print "Link fail cnt  : ", substr($rec, 8, 8), "\n";
 	print "Sync loss cnt  : ", substr($rec, 16, 8), "\n";
@@ -629,7 +631,8 @@ sub _print_hba_id3
 	print "Adv B2B t-cred : ", substr($rec, 96, 8), "\n";
 	print "Cur B2B t-cred : ", substr($rec, 104, 8), "\n";
 	print "SRB length     : ", $payload_length, "\n" if ($payload_length);
-	if ($payload_length != 64 + 56) {
+	if ($payload_length &&
+	    $payload_length != 64 + 56) {
 	    print "WARNING: Check if struct fsf_bit_error_payload still matches SRB bit error payload.\n";
 	}
 }
@@ -791,12 +794,14 @@ sub print_scsi_common
 	my $record_id = substr($rec->[2], 0, 2);
 	my $fsf_req_id = substr($rec->[2], 78, 16);
 	my $payload_length = hex(substr($rec->[2], 110, 4));
-	my $pay_rec = $PAYLOAD_RECORDS{$fsf_req_id}{"fcp_sns"};
+	my $pay_sns = $PAYLOAD_RECORDS{$fsf_req_id}{"fcp_sns"};
+	my $pay_riu = $PAYLOAD_RECORDS{$fsf_req_id}{"fcp_riu"};
 
 	print "Tag            : ", str_from_hex(substr($rec->[2], 2, 14)), "\n";
 	print "Request ID     : 0x", $fsf_req_id, "\n";
 	print "SCSI ID        : 0x", substr($rec->[2], 16, 8), "\n";
 	print "SCSI LUN       : 0x", substr($rec->[2], 24, 8), "\n";
+	print "SCSI LUN high  : 0x", substr($rec->[2],162, 8), "\n";
 	print "SCSI result    : 0x", substr($rec->[2], 32, 8), "\n";
 	print "SCSI retries   : 0x", substr($rec->[2], 40, 2), "\n";
 	print "SCSI allowed   : 0x", substr($rec->[2], 42, 2), "\n";
@@ -805,9 +810,15 @@ sub print_scsi_common
 	print "FCP rsp inf cod: 0x", substr($rec->[2], 44, 2), "\n";
 	print "FCP rsp IU     : ", payload_format(substr($rec->[2], 114, 48));
 
-	print "Sense len      : ", $payload_length, "\n" if ($payload_length);
-	print_payload($payload_length, $pay_rec, "Sense info")
-	    if ($payload_length);
+	if (defined($pay_sns)) {
+		print "Sense len      : ", $payload_length, "\n"
+			if ($payload_length);
+		print_payload($payload_length, $pay_sns, "Sense info")
+	}
+	if (defined($pay_riu) && ($payload_length > FCP_RESP_WITH_EXT)) {
+		print "FCP rsp IU len : ", $payload_length, "\n";
+		print_payload($payload_length, $pay_riu, "FCP rsp IU all");
+	}
 	print "\n";
 }
 

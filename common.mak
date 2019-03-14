@@ -5,8 +5,8 @@ COMMON_INCLUDED = true
 # The variable "DISTRELEASE" should be overwritten in rpm spec files with:
 # "make DISTRELEASE=%{release}" and "make install DISTRELEASE=%{release}"
 VERSION            = 1
-RELEASE            = 37
-PATCHLEVEL         = 1
+RELEASE            = 38
+PATCHLEVEL         = 0
 DISTRELEASE        = build-$(shell date +%Y%m%d)
 S390_TOOLS_RELEASE = $(VERSION).$(RELEASE).$(PATCHLEVEL)-$(DISTRELEASE)
 export S390_TOOLS_RELEASE
@@ -169,8 +169,9 @@ TOOLS_DATADIR   = $(INSTALLDIR)/usr/share/s390-tools
 TOOLS_LIBDIR    = $(INSTALLDIR)/lib/s390-tools
 ZFCPDUMP_DIR    = $(INSTALLDIR)/lib/s390-tools/zfcpdump
 # Systemd support files are installed only if a directory is specified
-# for SYSTEMDSYSTEMUNITDIR
+# for SYSTEMDSYSTEMUNITDIR (e.g. /lib/systemd/system)
 SYSTEMDSYSTEMUNITDIR =
+
 INSTDIRS        = $(USRSBINDIR) $(USRBINDIR) $(BINDIR) $(LIBDIR) $(MANDIR) \
 			$(SYSCONFDIR) $(TOOLS_LIBDIR) $(TOOLS_DATADIR) \
 			$(ZFCPDUMP_DIR) $(SYSTEMDSYSTEMUNITDIR)
@@ -298,6 +299,10 @@ endif
 $(rootdir)/libutil/libutil.a: $(rootdir)/libutil
 	$(MAKE) -C $(rootdir)/libutil/ libutil.a
 .PHONY: $(rootdir)/libutil
+
+$(rootdir)/libccw/libccw.a: $(rootdir)/libccw
+	$(MAKE) -C $(rootdir)/libccw/ libccw.a
+.PHONY: $(rootdir)/libccw
 
 $(rootdir)/libvtoc/libvtoc.a: $(rootdir)/libvtoc
 	$(MAKE) -C $(rootdir)/libvtoc/ libvtoc.a

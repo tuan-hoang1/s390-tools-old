@@ -43,6 +43,22 @@ static void print_records(const char *format, struct util_rec *rec)
 }
 
 /*
+ * Print keys for record fields
+ */
+static void print_fields(struct util_rec *rec)
+{
+	struct util_rec_fld *fld;
+	int i = 1;
+
+	printf("###########################################################\n");
+	printf("# Keys of record fields\n");
+
+	util_rec_iterate(rec, fld) {
+		printf("Field %d : %s\n", i++, util_rec_fld_get_key(fld));
+	}
+}
+
+/*
  * Print records in "wide", "long", and "csv" format
  */
 int main(void)
@@ -59,6 +75,7 @@ int main(void)
 
 	rec = util_rec_new_csv(",");
 	print_records("CSV format", rec);
+	print_fields(rec);
 	util_rec_free(rec);
 
 	return EXIT_SUCCESS;

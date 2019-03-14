@@ -9,6 +9,8 @@
 
 #include <inttypes.h>
 
+#include "lib/ccw.h"
+
 #include "devtype.h"
 #include "exit_code.h"
 #include "misc.h"
@@ -23,18 +25,6 @@
 struct attrib;
 struct namespace;
 struct subtype;
-
-/**
- * ccw_devid - CCW device ID
- * @cssid: Channel Subsystem ID
- * @ssid: Subchannel set ID
- * @devno: Device number
- */
-struct ccw_devid {
-	unsigned int cssid:8;
-	unsigned int ssid:8;
-	unsigned int devno:16;
-} __attribute__ ((packed));
 
 /**
  * ccw_chpid - Channel-Path ID

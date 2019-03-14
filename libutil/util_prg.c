@@ -9,19 +9,30 @@
 #include <errno.h>
 #include <stdio.h>
 
+#include "lib/util_base.h"
 #include "lib/util_prg.h"
 #include "lib/zt_common.h"
-
-#include "misc.h"
 
 /*
  * Private data
  */
 static struct util_prg_l {
 	const struct util_prg *prg;
+	/* Command used for parsing */
+	const char *command;
 } l;
 
 struct util_prg_l *util_prg_l = &l;
+
+/**
+ * Set the current command for command line option processing
+ *
+ * @param[in] command  The current command or NULL for no command
+ */
+void util_prg_set_command(const char *command)
+{
+	l.command = command;
+}
 
 /**
  * Print program usage information for the --help option
@@ -29,12 +40,15 @@ struct util_prg_l *util_prg_l = &l;
 void util_prg_print_help(void)
 {
 	/* Print usage */
-	printf("Usage: %s [OPTIONS]", program_invocation_short_name);
+	printf("Usage: %s", program_invocation_short_name);
+	if (l.prg->command_args)
+		printf(" %s", l.prg->command_args);
+	printf(" [OPTIONS]");
 	if (l.prg->args)
 		printf(" %s", l.prg->args);
 	/* Print usage description */
 	printf("\n\n");
-	misc_print_formatted(l.prg->desc, 0);
+	util_print_indented(l.prg->desc, 0);
 	printf("\n");
 }
 
@@ -64,8 +78,12 @@ void util_prg_print_version(void)
  */
 void util_prg_print_parse_error(void)
 {
-	fprintf(stderr, "Try '%s --help' for more information.\n",
-		program_invocation_short_name);
+	if (l.command)
+		fprintf(stderr, "Try '%s %s --help' for more information.\n",
+			program_invocation_short_name, l.command);
+	else
+		fprintf(stderr, "Try '%s --help' for more information.\n",
+			program_invocation_short_name);
 }
 
 /**

@@ -17,7 +17,7 @@ check_dep:
 	$(call check_dep, \
 			"cpacfstats", \
 			"perfmon/pfmlib.h", \
-			"libpfm-devel", \
+			"libpfm-devel or libpfm4-dev", \
 			"HAVE_PFM=0")
 
 all:		check_dep cpacfstats cpacfstatsd

@@ -121,16 +121,20 @@ int util_scandir_hexsort(const struct dirent **de1, const struct dirent **de2)
 }
 
 /**
- * Construct a list of direcotry entries
+ * Construct a list of direcotry entries using POSIX regular expressions
  *
- * A desired directory in sysfs is scanned for entries of a given type and
- * name pattern. The returned list consist of an array of pointers to
- * structures. Both this elements as well as the pointer array itself are
- * allocated by the function and has to bee released by the user via free.
+ * A desired directory in sysfs is scanned for entries of a given name
+ * pattern. The name pattern is constructed with sprintf() using a format
+ * string and variable argument list. After constructing the pattern it
+ * is used with regcomp() and regexec() to find matching entries.
+ * The returned list of matches consist of an array of pointers to
+ * directory entries. The entries as well as the pointer array itself are
+ * allocated by the function and has to be released by the user via free.
  *
  * @param[out] de_vec         Vector of matched directory entries
  * @param[in]  compar_fn      Callback function for sorting the entry list
- * @param[in]  fmt            Format string, describes the search directory
+ * @param[in]  path           Path to the directory to scan
+ * @param[in]  fmt            Format string, describes the search pattern as POSIX regex
  * @param[in]  ...            Values for format string
  *
  * @returns    Number of returned directory entries
@@ -138,20 +142,20 @@ int util_scandir_hexsort(const struct dirent **de1, const struct dirent **de2)
 int util_scandir(struct dirent ***de_vec,
 		 int compar_fn(const struct dirent **first,
 			       const struct dirent **second),
+		 const char *path,
 		 const char *fmt, ...)
 {
-	char *path, *pattern;
+	char *pattern;
 	va_list ap;
 	int rc;
 
 	va_start(ap, fmt);
-	rc = vasprintf(&path, fmt, ap);
+	rc = vasprintf(&pattern, fmt, ap);
 	va_end(ap);
 	if (rc < 0)
 		return -1;
-	pattern = basename(path);
-	rc = scandir_regexp(de_vec, dirname(path), pattern, compar_fn);
-	free(path);
+	rc = scandir_regexp(de_vec, path, pattern, compar_fn);
+	free(pattern);
 
 	return rc;
 }

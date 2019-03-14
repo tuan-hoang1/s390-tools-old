@@ -14,7 +14,7 @@ check_dep:
 	$(call check_dep, \
 		"hyptop", \
 		"ncurses.h", \
-		"ncurses-devel", \
+		"ncurses-devel or libncurses-dev", \
 		"HAVE_NCURSES=0")
 
 LDLIBS += -lncurses

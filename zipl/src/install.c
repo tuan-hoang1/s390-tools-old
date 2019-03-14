@@ -17,8 +17,8 @@
 #include <sys/ioctl.h>
 #include <sys/mtio.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <sys/time.h>
-#include <sys/types.h>
 #include <syslog.h>
 #include <unistd.h>
 

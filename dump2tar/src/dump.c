@@ -988,6 +988,7 @@ static int open_output(struct task *task)
 	bool to_stdout = !task->opts->output_file ||
 			 strcmp(task->opts->output_file, "-") == 0;
 	int rc = EXIT_OK;
+	struct stat st;
 
 	if (to_stdout) {
 		set_stdout_data();
@@ -1023,8 +1024,13 @@ static int open_output(struct task *task)
 
 	if (task->output_fd < 0)
 		rc = EXIT_RUNTIME;
-	else if (!task->opts->append)
-		ftruncate(task->output_fd, 0);
+	else if (!task->opts->append) {
+		if (fstat(task->output_fd, &st) == -1)
+			rc = EXIT_RUNTIME;
+		else if (S_ISREG(st.st_mode) &&
+			 ftruncate(task->output_fd, 0) == -1)
+			rc = EXIT_RUNTIME;
+	}
 
 #ifdef HAVE_ZLIB
 out:

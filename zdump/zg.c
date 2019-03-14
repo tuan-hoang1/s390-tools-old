@@ -9,6 +9,7 @@
 
 #include <limits.h>
 #include <stdlib.h>
+#include <sys/sysmacros.h>
 #include <sys/time.h>
 
 #include "zgetdump.h"

@@ -283,15 +283,16 @@ function __print_normal_format
 
 	countd=${#output_array[@]}
 	countd=$((countd-1))
+	if_name="`cat $device_dir/$1/if_name`"
 
 	printf 'Device name                  : %-20s\n' "${format_array_print[0]}"
 	echo '-------------------------------------------------------------------------'
 
 	while [ "$countc" -le "$countd" ]
 		do
-			if [ -e "$interface_dir$1/device/layer2" ]; then
-			 if [ `cat "$interface_dir$1/device/layer2"` = 1 ]; then
-				__layer2_print ${output_array[$countc]} $1
+			if [ -e "$interface_dir$if_name/device/layer2" ]; then
+			 if [ `cat "$interface_dir$if_name/device/layer2"` = 1 ]; then
+				__layer2_print ${output_array[$countc]} $if_name
 				rc=$?
 			 fi
 			fi
@@ -309,14 +310,18 @@ function __print_normal_format
 			countc=$((countc+1))
 		done
 
-	for k in  'ipa' 'vipa' 'parp'
+	for k in 'ipa_takeover' 'vipa' 'rxip'
 		do
+			if [ ! -d "$device_dir/$1/$k" ]; then
+				continue;
+			fi
+
 			case "$k" in
-				ipa ) temp=( ${ipa_array[@]} )
+				ipa_takeover ) temp=( ${ipa_array[@]} )
 				      m="ipa";;
 				vipa ) temp=( ${vipa_array[@]} )
 				      m="vipa";;
-				parp ) temp=( ${parp_array[@]} )
+				rxip ) temp=( ${parp_array[@]} )
 				      m="parp";;
 			esac
 			if [ "$temp" != 0 ]; then
@@ -325,7 +330,7 @@ function __print_normal_format
 				while [ "$count" -lt ${#temp[*]} ]
 					do
 						if [ "$countb" -gt 0 ]; then
-							printf '                                : %s\n' "${temp[$count]}"
+							printf '        %-20s : %s\n' '' "${temp[$count]}"
 						else
 							printf '        %-20s : %s\n' $m "${temp[$count]}"
 						fi
@@ -466,7 +471,7 @@ for k in ${device_list}
 case "$format" in
 	1 ) __print_proc_format;;
 	0 ) modprobe vmcp >/dev/null 2>&1
-	    __print_normal_format $if_name
+	    __print_normal_format $k
 	    echo '';;
 esac
 done

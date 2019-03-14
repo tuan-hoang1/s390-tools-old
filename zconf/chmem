@@ -86,7 +86,10 @@ sub chmem_online($)
 {
 	my $block = shift;
 
-	qx(echo online > $memdir/memory$block/state 2>/dev/null);
+	qx(echo online_movable > $memdir/memory$block/state 2>/dev/null);
+	if ($? >> 8 != 0) {
+		qx(echo online > $memdir/memory$block/state 2>/dev/null);
+	}
 	return $? >> 8;
 }
 

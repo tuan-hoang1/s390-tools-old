@@ -32,7 +32,8 @@ load a data segment for initializing named saved segments
 .IP "     -"
 create a system dump on a DASD disk partition or tape device
 .IP "     -"
-create a system dump file on a SCSI disk partition
+create a system dump on a device mapper multipath partition device node of
+a SCSI disk
 .PP
 
 To be able to specify more than one boot configuration, the
@@ -330,7 +331,8 @@ indicates the menu name.
 .IP
 .B Configuration section:
 .br
-Specify a DASD partition or an IBM 3480/3490/3590 tape device on which to
+Specify a DASD partition, device mapper multipath partition device node of a
+SCSI disk or an IBM 3480/3490/3590 tape device on which to
 install a system dump record. Once a device prepared in such a way
 is booted, the current system status is written in a raw format to that device
 and can later be retrieved using the
@@ -344,7 +346,8 @@ K, M or G to signify that the decimal number be interpreted as kilobytes,
 megabytes or gigabytes respectively. SIZE will be rounded up to the next
 megabyte boundary. Note that when you specify a SIZE lower than the actual
 memory size used by linux (see kernel parameter mem=), the resulting dump
-will be incomplete.
+will be incomplete. Also note that for SCSI dump the SIZE parameter is not
+supported.
 .PP
 
 .B dumptofs
@@ -636,6 +639,11 @@ The default value for
 .B 'timeout'
 is 0.
 .PP
+
+.SH NOTES
+While it is not recommended for reasons of recovery and redundancy, FCP.
+attached SCSI disks can also be accessed directly without multipathing,.
+for example via the "/dev/disk/by-path/" device nodes.
 
 .SH SEE ALSO
 .BR zipl (8),

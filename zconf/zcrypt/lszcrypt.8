@@ -1,3 +1,14 @@
+.\" lszcrypt.8
+.\"
+.\" Copyright IBM Corp. 2017
+.\" Author(s): Harald Freudenberger <freude@linux.vnet.ibm.com>
+.\"
+.\" use
+.\"   groff -man -Tutf8 lszcrypt.8
+.\" or
+.\"   nroff -man lszcrypt.8
+.\" to process this source
+.\"
 .TH LSZCRYPT 8 "AUG 2008" "s390-tools"
 .SH NAME
 lszcrypt \- display zcrypt device and configuration information
@@ -56,12 +67,12 @@ in hexadecimal notation.
 .B -b, --bus
 Displays the AP bus attributes and exits.
 .TP 8
-.B -c, --capability <device id>
-Shows the capabilities of a cryptographic device of hardware type 6 or
-higher. The device id value may be given as decimal or hex value (with
-a leading 0x). The capabilities of a cryptographic device depend on the
-card type and the installed function facilities. A cryptographic device
-can provide one or more of the following capabilities:
+.B -c, --capability <card device id>
+Shows the capabilities of a cryptographic card device of hardware type 6 or
+higher. The card device id value may be given as decimal or hex value (with
+a leading 0x). The capabilities of a cryptographic card device depend on
+the card type and the installed function facilities.  A cryptographic card
+device can provide one or more of the following capabilities:
 .RS
 .IP "o" 3
 RSA 2K Clear Key

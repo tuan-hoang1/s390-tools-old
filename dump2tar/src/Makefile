@@ -15,7 +15,7 @@ check_dep_zlib:
 	$(call check_dep, \
 			"dump2tar", \
 			"zlib.h", \
-			"zlib-devel", \
+			"zlib-devel or libz-dev", \
 			"HAVE_ZLIB=0")
 
 all: check_dep_zlib dump2tar

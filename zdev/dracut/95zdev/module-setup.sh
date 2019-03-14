@@ -17,8 +17,7 @@ check() {
     [ "$_arch" = "s390" -o "$_arch" = "s390x" ] || return 1
 
     # Ensure that required tools are available
-    chzdev --version > /dev/null || return 1
-    lszdev --version > /dev/null || return 1
+    require_binaries chzdev lszdev || return 1
 
     return 0
 }

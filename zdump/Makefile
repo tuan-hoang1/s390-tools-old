@@ -13,7 +13,7 @@ check_dep_fuse:
 	$(call check_dep, \
 		"zgetdump mount support", \
 		"fuse.h", \
-		"fuse-devel", \
+		"fuse-devel or libfuse-dev", \
 		"HAVE_FUSE=0")
 endif
 
@@ -34,7 +34,7 @@ check_dep_zlib:
 	$(call check_dep, \
 			"zgetdump", \
 			"zlib.h", \
-			"zlib-devel", \
+			"zlib-devel or libz-dev", \
 			"HAVE_ZLIB=0")
 
 all: check_dep_fuse check_dep_zlib zgetdump

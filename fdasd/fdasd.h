@@ -1,7 +1,7 @@
 /*
  * File...........: s390-tools/fdasd/fdasd.h
  * Author(s)......: Volker Sameske <sameske@de.ibm.com>
- *                  Horst Hummel   <Horst.Hummel@de.ibm.com>
+ *		    Horst Hummel   <Horst.Hummel@de.ibm.com>
  * Copyright IBM Corp. 2001,2012
  */
 
@@ -9,38 +9,38 @@
 #define FDASD_H
 
 /*****************************************************************************
- * SECTION: Definitions needed for DASD-API (see dasd.h)                     *
+ * SECTION: Definitions needed for DASD-API (see dasd.h)		     *
  *****************************************************************************/
 
 #define DASD_IOCTL_LETTER 'D'
 
 #define DASD_PARTN_BITS 2
 
-/* 
+/*
  * struct dasd_information_t
  * represents any data about the device, which is visible to userspace.
  *  including foramt and featueres.
  */
 typedef struct dasd_information_t {
-        unsigned int devno;           /* S/390 devno                         */
-        unsigned int real_devno;      /* for aliases                         */
-        unsigned int schid;           /* S/390 subchannel identifier         */
-        unsigned int cu_type  : 16;   /* from SenseID                        */
-        unsigned int cu_model :  8;   /* from SenseID                        */
-        unsigned int dev_type : 16;   /* from SenseID                        */
-        unsigned int dev_model : 8;   /* from SenseID                        */
-        unsigned int open_count; 
-        unsigned int req_queue_len; 
-        unsigned int chanq_len;       /* length of chanq                     */
-        char type[4];                 /* from discipline.name, 'none' for    */
-	                              /* unknown                             */
-        unsigned int status;          /* current device level                */
-        unsigned int label_block;     /* where to find the VOLSER            */
-        unsigned int FBA_layout;      /* fixed block size (like AIXVOL)      */
-        unsigned int characteristics_size;
-        unsigned int confdata_size;
-        char characteristics[64];     /* from read_device_characteristics    */
-        char configuration_data[256]; /* from read_configuration_data        */
+	unsigned int devno;	      /* S/390 devno			     */
+	unsigned int real_devno;      /* for aliases			     */
+	unsigned int schid;	      /* S/390 subchannel identifier	     */
+	unsigned int cu_type  : 16;   /* from SenseID			     */
+	unsigned int cu_model :  8;   /* from SenseID			     */
+	unsigned int dev_type : 16;   /* from SenseID			     */
+	unsigned int dev_model : 8;   /* from SenseID			     */
+	unsigned int open_count;
+	unsigned int req_queue_len;
+	unsigned int chanq_len;       /* length of chanq		     */
+	char type[4];		      /* from discipline.name, 'none' for    */
+				      /* unknown			     */
+	unsigned int status;	      /* current device level		     */
+	unsigned int label_block;     /* where to find the VOLSER	     */
+	unsigned int FBA_layout;      /* fixed block size (like AIXVOL)      */
+	unsigned int characteristics_size;
+	unsigned int confdata_size;
+	char characteristics[64];     /* from read_device_characteristics    */
+	char configuration_data[256]; /* from read_configuration_data	     */
 } dasd_information_t;
 
 struct dasd_eckd_characteristics {
@@ -120,9 +120,8 @@ struct dasd_eckd_characteristics {
 /* Get information on a dasd device (enhanced) */
 #define BIODASDINFO   _IOR(DASD_IOCTL_LETTER,1,dasd_information_t)
 
-
 /*****************************************************************************
- * SECTION: Further IOCTL Definitions  (see fs.h and hdreq.h)                *
+ * SECTION: Further IOCTL Definitions  (see fs.h and hdreq.h)		     *
  *****************************************************************************/
 #define BLKROGET   _IO(0x12,94) /* get read-only status (0 = read_write) */
 #define BLKRRPART  _IO(0x12,95) /* re-read partition table */
@@ -133,7 +132,7 @@ struct dasd_eckd_characteristics {
 #define HDIO_GETGEO		0x0301
 
 /*****************************************************************************
- * SECTION: FDASD internal types                                             *
+ * SECTION: FDASD internal types					     *
  *****************************************************************************/
 #define PARTN_MASK ((1 << DASD_PARTN_BITS) - 1)
 #define USABLE_PARTITIONS ((1 << DASD_PARTN_BITS) - 1)
@@ -150,11 +149,25 @@ struct dasd_eckd_characteristics {
 #define ALTERNATE_CYLINDERS_USED 0x10
 
 /* partition types */
-#define PARTITION_NATIVE 1
-#define PARTITION_SWAP 2
-#define PARTITION_RAID 3
-#define PARTITION_LVM 4
-#define PARTITION_GPFS 5
+#define PARTITION_NEW		0
+#define PARTITION_NATIVE	1
+#define PARTITION_SWAP		2
+#define PARTITION_RAID		3
+#define PARTITION_LVM		4
+#define PARTITION_GPFS		5
+
+/*
+ * PARTITION_NEW is the first item in our partition_types array and technically
+ * maps to PARTITION_NATIVE. As PARTITION_NEW isn't a valid partition_type, it
+ * can be ignored. Use this offset when iterate over the array.
+ */
+#define VALID_PARTITION_OFFSET	1
+
+typedef struct partition_type {
+	char *name;	/* User-friendly Name */
+	char *dsname;	/* Data Set Name */
+	int type;	/* Numerical Representation */
+} partition_type_t;
 
 struct fdasd_options {
 	char *device;
@@ -169,17 +182,16 @@ static struct fdasd_options options = {
 };
 
 typedef struct partition_info {
-        u_int8_t           used;
-        unsigned long      start_trk;
-        unsigned long      end_trk;
-        unsigned long      len_trk;
-        unsigned long      fspace_trk;
-        format1_label_t    *f1;
-	int                type;
-        struct partition_info *next;
-        struct partition_info *prev;
+	u_int8_t	   used;
+	unsigned long	   start_trk;
+	unsigned long	   end_trk;
+	unsigned long	   len_trk;
+	unsigned long	   fspace_trk;
+	format1_label_t    *f1;
+	int		   type;
+	struct partition_info *next;
+	struct partition_info *prev;
 } partition_info_t;
-
 
 typedef struct config_data {
 	unsigned long start;
@@ -187,10 +199,9 @@ typedef struct config_data {
 	int type;
 } config_data_t;
 
-
 typedef struct fdasd_anchor {
-        int vlabel_changed;
-        int vtoc_changed;
+	int vlabel_changed;
+	int vtoc_changed;
 	int auto_partition;
 	int print_table;
 	int print_volser;
@@ -207,15 +218,15 @@ typedef struct fdasd_anchor {
 	u_int16_t dev_type;
 	unsigned int used_partitions;
 	unsigned long label_pos;
-        unsigned int  blksize;
-        unsigned long fspace_trk;
-        format4_label_t  *f4;
-        format5_label_t  *f5;
+	unsigned int  blksize;
+	unsigned long fspace_trk;
+	format4_label_t  *f4;
+	format5_label_t  *f5;
 	format7_label_t  *f7;
 	format9_label_t  *f9; /* template for all f9 labels */
-        partition_info_t *first;
-        partition_info_t *last;
-        volume_label_t   *vlabel;
+	partition_info_t *first;
+	partition_info_t *last;
+	volume_label_t	 *vlabel;
 	config_data_t confdata[USABLE_PARTITIONS];
 	u_int32_t hw_cylinders;
 	u_int32_t formatted_cylinders;
@@ -229,7 +240,7 @@ enum fdasd_failure {
 	unable_to_seek_disk,
 	unable_to_read_disk,
 	read_only_disk,
-        unable_to_ioctl,
+	unable_to_ioctl,
 	wrong_disk_type,
 	wrong_disk_format,
 	disk_in_use,
@@ -245,7 +256,3 @@ enum fdasd_failure {
 #define INPUT_BUF_SIZE 1024
 
 #endif /* FDASD_H */
-
-
-
-

@@ -10,6 +10,8 @@
 
 
 #include <ctype.h>
+#include <sys/sysmacros.h>
+
 #include "lib/zt_common.h"
 
 #include "ipl_tools.h"

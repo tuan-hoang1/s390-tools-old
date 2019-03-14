@@ -34,15 +34,17 @@ int main(void)
 {
 	struct dirent **de_vec;
 	int count, i;
-	char *path = "/sys/devices/system/cpu";
+	const char *path = "/sys/devices/system/cpu";
+	const char *prefix = "cpu";
 
 	show_cpu_dir(path);
 
 	/*
 	 * Process all files that match regular expression "cpu[0-9]+"
-	 * and sort them alphabetically.
+	 * and sort them alphabetically. Note that the regular expression
+	 * is constructed with a variable argument list.
 	 */
-	count = util_scandir(&de_vec, alphasort, "%s/cpu[0-9]+", path);
+	count = util_scandir(&de_vec, alphasort, path, "%s[0-9]+", prefix);
 	if (count == -1) {
 		perror("util_dir_scan failed");
 		return EXIT_FAILURE;

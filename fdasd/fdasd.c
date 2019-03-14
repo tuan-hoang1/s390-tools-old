@@ -1,16 +1,18 @@
 /*
  * File...........: s390-tools/fdasd/fdasd.c
  * Author(s)......: Volker Sameske   <sameske@de.ibm.com>
- *                  Horst Hummel     <horst.hummel@de.ibm.com>
- *                  Gerhard Tonn     <ton@de.ibm.com>
- *                  Stefan Weinhuber <wein@de.ibm.com>
+ *		    Horst Hummel     <horst.hummel@de.ibm.com>
+ *		    Gerhard Tonn     <ton@de.ibm.com>
+ *		    Stefan Weinhuber <wein@de.ibm.com>
  * Copyright IBM Corp. 2001,2012
  */
 
 #include <getopt.h>
 #include <stdio.h>
+#include <sys/sysmacros.h>
 
 #include "lib/dasd_sys.h"
+#include "lib/util_base.h"
 #include "lib/util_opt.h"
 #include "lib/util_prg.h"
 #include "lib/vtoc.h"
@@ -22,6 +24,103 @@
 static struct hd_geometry geo;
 static char line_buffer[LINE_LENGTH];
 static char *line_ptr = line_buffer;
+
+/*
+ * Array of all supported partition types and its corresponding name and
+ * DSNAME (Data Set Name)
+ */
+static partition_type_t partition_types[] = {
+	[PARTITION_NEW] = {
+		.name = "Linux native",
+		.dsname = "NEW",
+		.type = PARTITION_NATIVE,
+	},
+	[PARTITION_NATIVE] = {
+		.name = "Linux native",
+		.dsname = "NATIVE",
+		.type = PARTITION_NATIVE,
+	},
+	[PARTITION_SWAP] = {
+		.name = "Linux swap",
+		.dsname = "SWAP",
+		.type = PARTITION_SWAP,
+	},
+	[PARTITION_RAID] = {
+		.name = "Linux raid",
+		.dsname = "RAID",
+		.type = PARTITION_RAID,
+	},
+	[PARTITION_LVM] = {
+		.name = "Linux lvm",
+		.dsname = "LVM",
+		.type = PARTITION_LVM,
+	},
+	[PARTITION_GPFS] = {
+		.name = "GPFS NSD",
+		.dsname = "GPFS",
+		.type = PARTITION_GPFS,
+	},
+};
+
+/*
+ * Return the partition name corresponding to DSNAME (Data Set Name)
+ */
+static int get_part_name_by_dsname(char *dsname, char **name)
+{
+	unsigned int i;
+
+	if (!dsname) {
+		*name = partition_types[PARTITION_NATIVE].name;
+		return 0;
+	}
+
+	for (i = 0; i < UTIL_ARRAY_SIZE(partition_types); i++) {
+		if (strstr(dsname, partition_types[i].dsname) != NULL) {
+			*name = partition_types[i].name;
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+/*
+ * Return the partition type corresponding to DSNAME (Data Set Name)
+ */
+static int get_part_type_by_dsname(char *dsname, int *type)
+{
+	unsigned int i;
+
+	if (!dsname) {
+		*type = PARTITION_NATIVE;
+		return 0;
+	}
+
+	for (i = 0; i < UTIL_ARRAY_SIZE(partition_types); i++) {
+		if (strstr(dsname, partition_types[i].dsname) != NULL) {
+			*type = partition_types[i].type;
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+/*
+ * Return the DSNAME (Data Set Name) of a partition corresponding to its type
+ */
+static int get_part_dsname_by_type(unsigned int type, char **dsname)
+{
+	if (type > UTIL_ARRAY_SIZE(partition_types))
+		return 1;
+
+	if (type == 0)
+		*dsname = partition_types[PARTITION_NATIVE].dsname;
+	else
+		*dsname = partition_types[type].dsname;
+
+	return 0;
+}
 
 static const struct util_prg prg = {
 	.desc = "Manage partitions on DASD volumes.\n"
@@ -89,18 +188,16 @@ static struct util_opt opt_vec[] = {
 	UTIL_OPT_END
 };
 
-static int
-getpos (fdasd_anchor_t *anc, int dsn)
+static int getpos(fdasd_anchor_t *anc, int dsn)
 {
 	return anc->partno[dsn];
 }
 
-static int
-getdsn (fdasd_anchor_t *anc, int pos)
+static int getdsn(fdasd_anchor_t *anc, int pos)
 {
 	int i;
 
-	for (i=0; i<USABLE_PARTITIONS; i++) {
+	for (i = 0; i < USABLE_PARTITIONS; i++) {
 		if (anc->partno[i] == pos)
 			return i;
 	}
@@ -108,8 +205,7 @@ getdsn (fdasd_anchor_t *anc, int pos)
 	return -1;
 }
 
-static void
-setpos (fdasd_anchor_t *anc, int dsn, int pos)
+static void setpos(fdasd_anchor_t *anc, int dsn, int pos)
 {
 	anc->partno[dsn] = pos;
 }
@@ -128,6 +224,7 @@ static u_int32_t get_usable_cylinders(fdasd_anchor_t *anc)
 			(u_int16_t) anc->f4->DS4DEVAC;
 	else
 		cyl = anc->f4->DS4DEVCT.DS4DSCYL;
+
 	return cyl;
 }
 
@@ -154,19 +251,18 @@ static void get_addr_of_highest_f1_f8_label(fdasd_anchor_t *anc, cchhb_t *addr)
 	vtoc_set_cchhb(addr, VTOC_START_CC, VTOC_START_HH, record);
 }
 
-/* 
+/*
  * Check for valid volume serial characters (max. 6) - remove invalid.
- * If volser is empty, fill with default volser. 
+ * If volser is empty, fill with default volser.
  */
-static void 
-fdasd_check_volser(char *volser, int devno)
+static void fdasd_check_volser(char *volser, int devno)
 {
 	int from, to;
 
-	for (from=0, to=0; volser[from] && from < VOLSER_LENGTH; from++)
-		if ((volser[from] >= 0x23 && 
+	for (from = 0, to = 0; volser[from] && from < VOLSER_LENGTH; from++)
+		if ((volser[from] >= 0x23 &&
 		     volser[from] <= 0x25) || /* # $ % */
-		    (volser[from] >= 0x30 && 
+		    (volser[from] >= 0x30 &&
 		     volser[from] <= 0x39) || /* 0-9 */
 		    (volser[from] >= 0x40 &&
 		     volser[from] <= 0x5a) || /* @ A-Z */
@@ -175,29 +271,31 @@ fdasd_check_volser(char *volser, int devno)
 			volser[to++] = toupper(volser[from]);
 
 	volser[to] = 0x00;
-	
-	if (volser[0] == 0x00) {
-		sprintf(volser, "0X%04x", devno);
-	}
-}
 
+	if (volser[0] == 0x00)
+		sprintf(volser, "0X%04x", devno);
+}
 
 /*
  * Free memory of fdasd anchor struct.
  */
-static void 
-fdasd_cleanup (fdasd_anchor_t *anchor) 
+static void fdasd_cleanup(fdasd_anchor_t *anchor)
 {
-        partition_info_t *part_info, *next;
-        int i;
+	partition_info_t *part_info, *next;
+	int i;
 
-        if (anchor == NULL) return;
+	if (anchor == NULL)
+		return;
 
-	if (anchor->f4 != NULL) free(anchor->f4);
-	if (anchor->f5 != NULL) free(anchor->f5);
-	if (anchor->f7 != NULL) free(anchor->f7);
-	if (anchor->vlabel != NULL) free(anchor->vlabel);
-	
+	if (anchor->f4 != NULL)
+		free(anchor->f4);
+	if (anchor->f5 != NULL)
+		free(anchor->f5);
+	if (anchor->f7 != NULL)
+		free(anchor->f7);
+	if (anchor->vlabel != NULL)
+		free(anchor->vlabel);
+
 	part_info = anchor->first;
 	for (i = 1; i <= USABLE_PARTITIONS && part_info != NULL; i++) {
 		next = part_info->next;
@@ -207,86 +305,82 @@ fdasd_cleanup (fdasd_anchor_t *anchor)
 	}
 }
 
-
 /*
  * Exit fdasd.
  */
-static void 
-fdasd_exit (fdasd_anchor_t *anchor, int rc) 
+static void fdasd_exit(fdasd_anchor_t *anchor, int rc)
 {
-        fdasd_cleanup(anchor);
+	fdasd_cleanup(anchor);
 	exit(rc);
 }
-
 
 /*
  *
  */
-static void 
-fdasd_error(fdasd_anchor_t *anc, enum fdasd_failure why, char *str)
+static void fdasd_error(fdasd_anchor_t *anc, enum fdasd_failure why, char *str)
 {
-        char err_str[ERROR_STRING_SIZE];
+	char err_str[ERROR_STRING_SIZE];
 
 	switch (why) {
 	case parser_failed:
 		snprintf(err_str, ERROR_STRING_SIZE,
 			 "%s parser error\n%s\n", FDASD_ERROR, str);
 		break;
-        case unable_to_open_disk:
-	        snprintf(err_str, ERROR_STRING_SIZE,
-			"%s open error\n%s\n", FDASD_ERROR, str);
+	case unable_to_open_disk:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s open error\n%s\n", FDASD_ERROR, str);
 		break;
-        case unable_to_seek_disk:
-	        snprintf(err_str, ERROR_STRING_SIZE, 
-			"%s seek error\n%s\n", FDASD_ERROR, str);
+	case unable_to_seek_disk:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s seek error\n%s\n", FDASD_ERROR, str);
 		break;
-        case unable_to_read_disk:
-	        snprintf(err_str, ERROR_STRING_SIZE, 
-			"%s read error\n%s\n", FDASD_ERROR, str);
+	case unable_to_read_disk:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s read error\n%s\n", FDASD_ERROR, str);
 		break;
-        case read_only_disk:
-	        snprintf(err_str, ERROR_STRING_SIZE, 
-			"%s write error\n%s\n", FDASD_ERROR, str);
+	case read_only_disk:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s write error\n%s\n", FDASD_ERROR, str);
 		break;
-        case unable_to_ioctl:
-	        snprintf(err_str, ERROR_STRING_SIZE,
-			"%s IOCTL error\n%s\n", FDASD_ERROR, str);
+	case unable_to_ioctl:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s IOCTL error\n%s\n", FDASD_ERROR, str);
 		break;
-        case wrong_disk_type:
-                snprintf(err_str, ERROR_STRING_SIZE,
-			"%s Unsupported disk type\n%s\n",
-                        FDASD_ERROR, str);
-                break;           
-        case wrong_disk_format:
-                snprintf(err_str, ERROR_STRING_SIZE,
-			"%s Unsupported disk format\n%s\n",
-                        FDASD_ERROR, str);
-                break;   
-        case disk_in_use:
-                snprintf(err_str, ERROR_STRING_SIZE,
-			"%s Disk in use\n%s\n", FDASD_ERROR, str);
-                break;      
-        case config_syntax_error:
-                snprintf(err_str, ERROR_STRING_SIZE,
-			"%s Config file syntax error\n%s\n",
-                        FDASD_ERROR, str);
-                break;       
-        case vlabel_corrupted:
-	        snprintf(err_str, ERROR_STRING_SIZE, 
-			"%s Volume label is corrupted.\n%s\n", 
-			FDASD_ERROR, str);
+	case wrong_disk_type:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s Unsupported disk type\n%s\n",
+			 FDASD_ERROR, str);
 		break;
-        case dsname_corrupted:
-	        snprintf(err_str, ERROR_STRING_SIZE,
-			"%s a data set name is corrupted.\n%s\n", 
-			FDASD_ERROR, str);
+	case wrong_disk_format:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s Unsupported disk format\n%s\n",
+			 FDASD_ERROR, str);
 		break;
-        case malloc_failed:
-	        snprintf(err_str, ERROR_STRING_SIZE, 
-			"%s space allocation\n%s\n", FDASD_ERROR, str);
+	case disk_in_use:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s Disk in use\n%s\n", FDASD_ERROR, str);
 		break;
-        case device_verification_failed:
-	        snprintf(err_str, ERROR_STRING_SIZE,
+	case config_syntax_error:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s Config file syntax error\n%s\n",
+			 FDASD_ERROR, str);
+		break;
+	case vlabel_corrupted:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s Volume label is corrupted.\n%s\n",
+			 FDASD_ERROR, str);
+		break;
+	case dsname_corrupted:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s a data set name is corrupted.\n%s\n",
+			 FDASD_ERROR, str);
+		break;
+	case malloc_failed:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s space allocation\n%s\n", FDASD_ERROR, str);
+		break;
+	case device_verification_failed:
+		snprintf(err_str, ERROR_STRING_SIZE,
 			 "%s device verification failed\n%s\n",
 			 FDASD_ERROR, str);
 		break;
@@ -295,10 +389,10 @@ fdasd_error(fdasd_anchor_t *anc, enum fdasd_failure why, char *str)
 			 "%s VOLSER not found on device %s\n",
 			 FDASD_ERROR, str);
 		break;
-	default: 
-	        snprintf(err_str, ERROR_STRING_SIZE,
-			"%s Fatal error\n%s\n",
-			FDASD_ERROR, str);
+	default:
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "%s Fatal error\n%s\n",
+			 FDASD_ERROR, str);
 	}
 
 	fputc('\n', stderr);
@@ -307,46 +401,41 @@ fdasd_error(fdasd_anchor_t *anc, enum fdasd_failure why, char *str)
 	fdasd_exit(anc, -1);
 }
 
-
 /*
  * Read line from stdin into global line_buffer
  * and set global line_ptr to first printing character except space.
  */
-static int
-read_line(void) 
+static int read_line(void)
 {
 	bzero(line_buffer, LINE_LENGTH);
 	line_ptr = line_buffer;
-        if (!fgets(line_buffer, LINE_LENGTH, stdin))
+	if (!fgets(line_buffer, LINE_LENGTH, stdin))
 		return 0;
 	while (*line_ptr && !isgraph(*line_ptr))
 		line_ptr++;
+
 	return *line_ptr;
 }
 
-
 /*
- * 
+ *
  */
-static char
-read_char(char *mesg) 
+static char read_char(char *mesg)
 {
-        fputs(mesg, stdout);
+	fputs(mesg, stdout);
 	read_line();
 
-        return *line_ptr;
+	return *line_ptr;
 }
-
 
 /*
  * Print question string an enforce y/n answer.
  */
-static int
-yes_no(char *question_str)
+static int yes_no(char *question_str)
 {
+	ssize_t bytes_read;
 	char *answer;
 	size_t size;
-	ssize_t bytes_read;
 
 	size = 0;
 	answer = NULL;
@@ -363,42 +452,27 @@ yes_no(char *question_str)
 	free(answer);
 }
 
-
-/*
- *
- */
-static char *
-fdasd_partition_type (char *str) 
+static char *fdasd_partition_type(char *dsname)
 {
-	if (strncmp("NATIVE", str, 6) == 0)
-		strcpy(str, "Linux native");
-	else if (strncmp("NEW   ", str, 6) == 0)
-		strcpy(str, "Linux native");
-	else if (strncmp("SWAP  ", str, 6) == 0)
-		strcpy(str, "Linux swap");
-	else if (strncmp("RAID  ", str, 6) == 0)
-		strcpy(str, "Linux raid");
-	else if (strncmp("LVM   ", str, 6) == 0)
-		strcpy(str, "Linux lvm");
-	else if (strncmp("GPFS  ", str, 6) == 0)
-		strcpy(str, "GPFS NSD");
-	else
-		strcpy(str, "unknown");
+	char *name = NULL;
 
-	return str;
+	if (get_part_name_by_dsname(dsname, &name))
+		name = "unknown";
+
+	return name;
 }
 
 /*
  * prints the menu
  */
-static void
-fdasd_menu (void) 
+static void fdasd_menu(void)
 {
 	printf("Command action\n"
 	       "   m   print this menu\n"
 	       "   p   print the partition table\n"
 	       "   n   add a new partition\n"
 	       "   d   delete a partition\n"
+	       "   l   list known partition types\n"
 	       "   v   change volume serial\n"
 	       "   t   change partition type\n"
 	       "   r   re-create VTOC and delete all partitions\n"
@@ -408,13 +482,11 @@ fdasd_menu (void)
 	       "   w   write table to disk and exit\n");
 }
 
-
 /*
  * initializes the anchor structure and allocates some
  * memory for the labels
  */
-static void
-fdasd_initialize_anchor (fdasd_anchor_t *anc) 
+static void fdasd_initialize_anchor(fdasd_anchor_t *anc)
 {
 	partition_info_t *part_info, *prev_part_info = NULL;
 	volume_label_t *vlabel;
@@ -422,21 +494,21 @@ fdasd_initialize_anchor (fdasd_anchor_t *anc)
 
 	bzero(anc, sizeof(fdasd_anchor_t));
 
-	for (i=0; i<USABLE_PARTITIONS; i++)
+	for (i = 0; i < USABLE_PARTITIONS; i++)
 		setpos(anc, i, -1);
 
 	anc->f4 = malloc(sizeof(format4_label_t));
-	if (anc->f4 == NULL) 
+	if (anc->f4 == NULL)
 		fdasd_error(anc, malloc_failed,
 			    "FMT4 DSCB memory allocation failed.");
 
 	anc->f5 = malloc(sizeof(format5_label_t));
-	if (anc->f5 == NULL) 
+	if (anc->f5 == NULL)
 		fdasd_error(anc, malloc_failed,
 			    "FMT5 DSCB memory allocation failed.");
 
 	anc->f7 = malloc(sizeof(format7_label_t));
-	if (anc->f7 == NULL) 
+	if (anc->f7 == NULL)
 		fdasd_error(anc, malloc_failed,
 			    "FMT7 DSCB memory allocation failed.");
 
@@ -453,17 +525,17 @@ fdasd_initialize_anchor (fdasd_anchor_t *anc)
 	vtoc_init_format9_label(anc->f9);
 
 	vlabel = malloc(sizeof(volume_label_t));
-	if (vlabel == NULL) 
+	if (vlabel == NULL)
 		fdasd_error(anc, malloc_failed,
 			    "Volume label memory allocation failed.");
 	bzero(vlabel, sizeof(volume_label_t));
 	anc->vlabel = vlabel;
 
-	for (i=1; i<=USABLE_PARTITIONS; i++) {
+	for (i = 1; i <= USABLE_PARTITIONS; i++) {
 		part_info = malloc(sizeof(partition_info_t));
-		if (part_info == NULL) 
+		if (part_info == NULL)
 			fdasd_error(anc, malloc_failed,
-				   "Partition info memory allocation failed.");
+				    "Partition info memory allocation failed.");
 		memset(part_info, 0, sizeof(partition_info_t));
 
 		/* add part_info to double pointered list */
@@ -475,7 +547,7 @@ fdasd_initialize_anchor (fdasd_anchor_t *anc)
 		}
 
 		part_info->f1 = malloc(sizeof(format1_label_t));
-		if (part_info->f1 == NULL) 
+		if (part_info->f1 == NULL)
 			fdasd_error(anc, malloc_failed,
 				    "FMT1 DSCB memory allocation failed.");
 		bzero(part_info->f1, sizeof(format1_label_t));
@@ -494,8 +566,8 @@ fdasd_initialize_anchor (fdasd_anchor_t *anc)
 
 static void fdasd_parse_force_options(fdasd_anchor_t *anc, char *optarg)
 {
-	unsigned int devtype, blksize;
 	char err_str[ERROR_STRING_SIZE];
+	unsigned int devtype, blksize;
 	int rc;
 
 	if (optarg) {
@@ -507,18 +579,18 @@ static void fdasd_parse_force_options(fdasd_anchor_t *anc, char *optarg)
 			fdasd_error(anc, parser_failed, err_str);
 		}
 		if (devtype == DASD_3390_TYPE || devtype == DASD_3380_TYPE ||
-		    devtype == DASD_9345_TYPE)
+		    devtype == DASD_9345_TYPE) {
 			anc->dev_type = devtype;
-		else {
+		} else {
 			snprintf(err_str, ERROR_STRING_SIZE,
 				 "Force parameter '%x' is not a supported"
 				 " device type.\n", devtype);
 			fdasd_error(anc, parser_failed, err_str);
 		}
 		if (blksize == 4096 || blksize == 2048 ||
-		    blksize == 1024 || blksize ==  512)
+		    blksize == 1024 || blksize ==  512) {
 			anc->blksize = blksize;
-		else {
+		} else {
 			snprintf(err_str, ERROR_STRING_SIZE,
 				 "Force parameter '%d' is not a supported"
 				 " block size.\n", blksize);
@@ -534,9 +606,9 @@ static void fdasd_parse_force_options(fdasd_anchor_t *anc, char *optarg)
 /*
  * parses the command line options
  */
-static void
-fdasd_parse_options (fdasd_anchor_t *anc, struct fdasd_options *options, 
-		     int argc, char *argv[]) 
+static void fdasd_parse_options(fdasd_anchor_t *anc,
+				struct fdasd_options *options,
+				int argc, char *argv[])
 {
 	int opt;
 
@@ -605,12 +677,12 @@ fdasd_parse_options (fdasd_anchor_t *anc, struct fdasd_options *options,
 
 	/* save device */
 	if (optind >= argc)
-		fdasd_error(anc, parser_failed, 
+		fdasd_error(anc, parser_failed,
 			    "No device specified.\n");
 	if (optind + 1 < argc)
-		fdasd_error(anc, parser_failed, 
+		fdasd_error(anc, parser_failed,
 			    "More than one device specified.\n");
-	options->device = argv[optind]; 	
+	options->device = argv[optind];
 }
 
 static int gettoken(char *str, char *ch, char *token[], int max)
@@ -632,11 +704,11 @@ static int gettoken(char *str, char *ch, char *token[], int max)
 /*
  * parses config file
  */
-static int
-fdasd_parse_conffile(fdasd_anchor_t *anc, struct fdasd_options *options) 
+static int fdasd_parse_conffile(fdasd_anchor_t *anc,
+				struct fdasd_options *options)
 {
-	char buffer[CONFIG_FILE_SIZE + 1];
 	char err_str[ERROR_STRING_SIZE], *c1, *c2, *token[CONFIG_MAX];
+	char buffer[CONFIG_FILE_SIZE + 1];
 	int fd, rc;
 	int i;
 
@@ -649,8 +721,8 @@ fdasd_parse_conffile(fdasd_anchor_t *anc, struct fdasd_options *options)
 	fd = open(options->conffile, O_RDONLY);
 	if (fd < 0) {
 		snprintf(err_str, ERROR_STRING_SIZE,
-			"Could not open config file '%s' "
-			"in read-only mode!\n", options->conffile);
+			 "Could not open config file '%s' "
+			 "in read-only mode!\n", options->conffile);
 		fdasd_error(anc, unable_to_open_disk, err_str);
 	}
 
@@ -660,18 +732,17 @@ fdasd_parse_conffile(fdasd_anchor_t *anc, struct fdasd_options *options)
 		return -1;
 	close(fd);
 
-
 	for (i = 0; i < rc; i++)
 		buffer[i] = toupper(buffer[i]);
 
 	c1 = buffer;
 
-	for (i=0; i<USABLE_PARTITIONS; i++) {
+	for (i = 0; i < USABLE_PARTITIONS; i++) {
 		c1 = strchr(c1, '[');
 		if (c1 == NULL) {
 			if (!anc->silent)
-				printf("no config file entry for " \
-				       "partition %d found...\n", i+1);
+				printf("no config file entry for "
+				       "partition %d found...\n", i + 1);
 			break;
 		}
 		c1 += 1;
@@ -679,8 +750,8 @@ fdasd_parse_conffile(fdasd_anchor_t *anc, struct fdasd_options *options)
 		c2 = strchr(c1, ']');
 		if (c2 == NULL) {
 			snprintf(err_str, ERROR_STRING_SIZE,
-				"']' missing in config file " \
-				"%s\n", options->conffile);
+				 "']' missing in config file "
+				 "%s\n", options->conffile);
 			fdasd_error(anc, config_syntax_error, err_str);
 		}
 		strcpy(c2, "");
@@ -688,126 +759,117 @@ fdasd_parse_conffile(fdasd_anchor_t *anc, struct fdasd_options *options)
 		memset(token, 0, sizeof(token));
 		if (gettoken(c1, ",", token, CONFIG_MAX) < 2) {
 			snprintf(err_str, ERROR_STRING_SIZE,
-				 "Missing parameter in config file "	\
+				 "Missing parameter in config file "
 				 "%s\n", options->conffile);
 			fdasd_error(anc, config_syntax_error, err_str);
 		}
 
-		if (strstr(token[0], "FIRST") != NULL)
+		if (strstr(token[0], "FIRST") != NULL) {
 			anc->confdata[i].start = FIRST_USABLE_TRK;
-		else {
+		} else {
 			errno = 0;
 			anc->confdata[i].start = strtol(token[0],
 							(char **) NULL, 10);
 			if (errno != 0 || anc->confdata[i].start == 0) {
 				snprintf(err_str, ERROR_STRING_SIZE,
-					 "invalid partition start in config"
+					 "invalid partition start in config "
 					 "file %s\n", options->conffile);
 				fdasd_error(anc, config_syntax_error, err_str);
 			}
 		}
 
-		if (strstr(token[1], "LAST") != NULL)
-			anc->confdata[i].stop = anc->formatted_cylinders
-				* geo.heads - 1;
-		else {
+		if (strstr(token[1], "LAST") != NULL) {
+			anc->confdata[i].stop =
+				anc->formatted_cylinders * geo.heads - 1;
+		} else {
 			errno = 0;
 			anc->confdata[i].stop = strtol(token[1],
 						       (char **) NULL, 10);
 			if (errno != 0 || anc->confdata[i].stop == 0) {
 				snprintf(err_str, ERROR_STRING_SIZE,
-					 "invalid partition end in config"
+					 "invalid partition end in config "
 					 "file %s\n", options->conffile);
 				fdasd_error(anc, config_syntax_error, err_str);
 			}
 		}
 
-		if (token[2] == NULL || strstr(token[2], "NATIVE") != NULL)
-			anc->confdata[i].type = PARTITION_NATIVE;
-		else if (strstr(token[2], "SWAP") != NULL)
-			anc->confdata[i].type = PARTITION_SWAP;
-		else if (strstr(token[2], "RAID") != NULL)
-			anc->confdata[i].type = PARTITION_RAID;
-		else if (strstr(token[2], "LVM") != NULL)
-			anc->confdata[i].type = PARTITION_LVM;
-		else if (strstr(token[2], "GPFS") != NULL)
-			anc->confdata[i].type = PARTITION_GPFS;
-		else {
+		if (get_part_type_by_dsname(token[2], &anc->confdata[i].type)) {
 			snprintf(err_str, ERROR_STRING_SIZE,
 				 "invalid partition type in config file %s\n",
 				 options->conffile);
 			fdasd_error(anc, config_syntax_error, err_str);
 		}
+
 		c1 = c2 + 1;
 	}
 
 	return 0;
 }
 
-
 /*
  * checks input from config file
  */
-static void
-fdasd_check_conffile_input (fdasd_anchor_t *anc,
-			    struct fdasd_options *options)
+static void fdasd_check_conffile_input(fdasd_anchor_t *anc,
+				       struct fdasd_options *options)
 {
+	unsigned long start, stop, first_trk, last_trk;
 	partition_info_t *part_info = anc->first;
+	char err_str[ERROR_STRING_SIZE];
 	int i;
 
-	if (anc->verbose) printf("checking config file data...\n");
-	for (i=0; i<USABLE_PARTITIONS; i++) {
-		unsigned long start, stop, first_trk, last_trk;
-		char err_str[ERROR_STRING_SIZE];
-	   
+	if (anc->verbose)
+		printf("checking config file data...\n");
+
+	for (i = 0; i < USABLE_PARTITIONS; i++) {
 		start = anc->confdata[i].start;
 		stop = anc->confdata[i].stop;
 
-		if ((start == 0) || (stop == 0)) break;
+		if (start == 0 || stop == 0)
+			break;
 
 		first_trk = FIRST_USABLE_TRK;
 		last_trk = anc->formatted_cylinders * geo.heads - 1;
 
-		if ((start < first_trk) || (start > last_trk)) {
+		if (start < first_trk || start > last_trk) {
 			snprintf(err_str, ERROR_STRING_SIZE,
-				"One of the lower partition limits "
-				"(%ld) is not within the range of \n "
-				"available tracks on disk (%ld-%ld)!\n", 
-				start, first_trk, last_trk);
+				 "One of the lower partition limits "
+				 "(%ld) is not within the range of\n"
+				 "available tracks on disk (%ld-%ld)!\n",
+				 start, first_trk, last_trk);
 			fdasd_error(anc, config_syntax_error, err_str);
 		}
 
-		if ((stop < first_trk) || (stop > last_trk)) {
+		if (stop < first_trk || stop > last_trk) {
 			snprintf(err_str, ERROR_STRING_SIZE,
-				"One of the upper partition limits "
-				"(%ld) is not within the range of \n "
-				"available tracks on disk (%ld-%ld)!\n", 
-				stop, first_trk, last_trk);
+				 "One of the upper partition limits "
+				 "(%ld) is not within the range of\n "
+				 "available tracks on disk (%ld-%ld)!\n",
+				 stop, first_trk, last_trk);
 			fdasd_error(anc, config_syntax_error, err_str);
 		}
 
 		if (start >= stop) {
 			snprintf(err_str, ERROR_STRING_SIZE,
-				"Lower partition limit (%ld) is not "
-				"less than upper partition \nlimit (%ld) "
-				"in config file %s!\n", 
+				 "Lower partition limit (%ld) is not "
+				 "less than upper partition\nlimit (%ld) "
+				 "in config file %s!\n",
 				 start, stop, options->conffile);
 			fdasd_error(anc, config_syntax_error, err_str);
 		}
 
-		if ((i > 0) && (start <= anc->confdata[i-1].stop)) {
+		if (i > 0 && start <= anc->confdata[i - 1].stop) {
 			snprintf(err_str, ERROR_STRING_SIZE,
-				"Partitions overlap or are not in "
-				"ascending order!\n");
+				 "Partitions overlap or are not in "
+				 "ascending order!\n");
 			fdasd_error(anc, config_syntax_error, err_str);
 		}
 
-		if ((i < (USABLE_PARTITIONS - 1)) && 
-		    (anc->confdata[i+1].start > 0) && 
-		    (stop >= anc->confdata[i+1].start)) {
+		if (i < (USABLE_PARTITIONS - 1) &&
+		    anc->confdata[i + 1].start > 0 &&
+		    stop >= anc->confdata[i + 1].start) {
 			snprintf(err_str, ERROR_STRING_SIZE,
-				"Partitions overlap or are not in "
-				"ascending order!\n");
+				 "Partitions overlap or are not in "
+				 "ascending order!\n");
 			fdasd_error(anc, config_syntax_error, err_str);
 		}
 
@@ -820,41 +882,38 @@ fdasd_check_conffile_input (fdasd_anchor_t *anc,
 		/* update the current free space counter */
 		if (i == 0)
 			anc->fspace_trk = start - FIRST_USABLE_TRK;
-		
+
 		if (i < USABLE_PARTITIONS - 1) {
 			if (anc->confdata[i+1].start != 0)
-				part_info->fspace_trk = 
-					anc->confdata[i+1].start-stop-1; 
+				part_info->fspace_trk =
+					anc->confdata[i+1].start-stop-1;
 			else
-				part_info->fspace_trk = last_trk - stop; 
+				part_info->fspace_trk = last_trk - stop;
+		} else if (i == USABLE_PARTITIONS - 1) {
+			part_info->fspace_trk = last_trk - stop;
 		}
-		else if (i == USABLE_PARTITIONS - 1)
-			part_info->fspace_trk = last_trk - stop; 
 
 		part_info = part_info->next;
 	}
-	return;
 }
-
 
 /*
  * Verifies the specified block device.
  */
-static void
-fdasd_verify_device (fdasd_anchor_t *anc, char *name) 
+static void fdasd_verify_device(fdasd_anchor_t *anc, char *name)
 {
-	struct stat dst;
 	char err_str[ERROR_STRING_SIZE];
+	struct stat dst;
 	int count;
 
-	if ((stat(name, &dst)) < 0 ) {
+	if (stat(name, &dst) < 0) {
 		snprintf(err_str, ERROR_STRING_SIZE,
 			 "Unable to get device status for device '%s'\n",
 			 name);
 		fdasd_error(anc, device_verification_failed, err_str);
 	}
 
-	if (!(S_ISBLK (dst.st_mode))) {
+	if (!S_ISBLK(dst.st_mode)) {
 		snprintf(err_str, ERROR_STRING_SIZE,
 			 "Device '%s' (%d/%d) is not a block device\n", name,
 			 (unsigned short) major(dst.st_rdev),
@@ -862,13 +921,12 @@ fdasd_verify_device (fdasd_anchor_t *anc, char *name)
 		fdasd_error(anc, device_verification_failed, err_str);
 	}
 
-	if (minor (dst.st_rdev) & PARTN_MASK) {
+	if (minor(dst.st_rdev) & PARTN_MASK) {
 		snprintf(err_str, ERROR_STRING_SIZE,
 			 "Partition '%s' (%d/%d) detected where device is "
 			 "required\n", name,
 			 (unsigned short) major(dst.st_rdev),
 			 (unsigned short) minor(dst.st_rdev));
-
 		fdasd_error(anc, device_verification_failed, err_str);
 	}
 
@@ -893,48 +951,48 @@ fdasd_verify_device (fdasd_anchor_t *anc, char *name)
 				 name);
 			fdasd_error(anc, device_verification_failed, err_str);
 		}
-	} else if (count > 1)
+	} else if (count > 1) {
 		printf("\nWARNING:\n"
 		       "Disk %s is online on operating system instances in %d different LPARs.\n"
 		       "Ensure that the disk is not being used by a system outside your LPAR.\n"
 		       "Note: Your installation might include z/VM systems that are configured to\n"
 		       "automatically vary on disks, regardless of whether they are subsequently used.\n\n",
 		       name, count);
+	}
 
-	if (anc->verbose)
+	if (anc->verbose) {
 		printf("Verification successful for '%s' (%d/%d)\n", name,
 		       (unsigned short) major(dst.st_rdev),
 		       (unsigned short) minor(dst.st_rdev));
+	}
 }
-
 
 /*
  * Verifies the specified fdasd command line option
  * combinations.
  *
- * Note: 
- *  - 'version' and 'help' are priority options. 
- *       All other parameters are ignored in that case.
+ * Note:
+ *  - 'version' and 'help' are priority options.
+ *	 All other parameters are ignored in that case.
  *  - 'silent' and 'verbose' are allways allowed in any
- *       combination.
- * 
+ *	 combination.
+ *
  */
-static void 
-fdasd_verify_options (fdasd_anchor_t *anc) 
+static void fdasd_verify_options(fdasd_anchor_t *anc)
 {
-	/* Checked option combinations                       */
+	/* Checked option combinations			     */
 	/* (inv = invalid / req = required / opt = optional) */
-	/*                                                   */
-	/*              vols labe keep auto conf tabl        */
-	/*              er   l    _vol      if   e           */
-	/*                        ser                        */
-	/*                                                   */
-	/* volser       -    inv  INV  inv  inv  inv         */
-	/* label             -    inv  REQ  REQ  inv         */
-	/* keep_volser            -    REQ  REQ  inv         */
-	/* auto              opt  opt  -    inv  inv         */
-	/* config            opt  opt       -    inv         */
-	/* table                                 -           */
+	/*						     */
+	/*		vols labe keep auto conf tabl	     */
+	/*		er   l	  _vol	    if	 e	     */
+	/*			  ser			     */
+	/*						     */
+	/* volser	-    inv  INV  inv  inv  inv	     */
+	/* label	     -	  inv  REQ  REQ  inv	     */
+	/* keep_volser		  -    REQ  REQ  inv	     */
+	/* auto		     opt  opt  -    inv  inv	     */
+	/* config	     opt  opt	    -	 inv	     */
+	/* table				 -	     */
 
 	if (anc->print_volser &&
 	    (options.volser || anc->keep_volser || anc->auto_partition ||
@@ -950,7 +1008,7 @@ fdasd_verify_options (fdasd_anchor_t *anc)
 				    "Option 'auto' or 'config' required when"
 				    " specifying 'label'\n");
 		}
-		if ((anc->keep_volser || anc->print_table)) {
+		if (anc->keep_volser || anc->print_table) {
 			fdasd_error(anc, parser_failed,
 				    "Option 'label' cannot be used with "
 				    "'keep_volser' and 'table'.\n");
@@ -969,6 +1027,7 @@ fdasd_verify_options (fdasd_anchor_t *anc)
 				    " with 'table'.\n");
 		}
 	}
+
 	if (anc->auto_partition &&
 	    (options.conffile || anc->print_table)) {
 		fdasd_error(anc, parser_failed,
@@ -984,65 +1043,64 @@ fdasd_verify_options (fdasd_anchor_t *anc)
 	}
 }
 
-
 /*
  * print mapping: partition number - data set name
  */
-static void
-fdasd_show_mapping (fdasd_anchor_t *anc) 
+static void fdasd_show_mapping(fdasd_anchor_t *anc)
 {
 	char str[20], *dev, dsname[45], *strp;
-        partition_info_t *part_info;
-	int i=0, j=0, dev_len;
+	partition_info_t *part_info;
+	int i = 0, j = 0, dev_len;
 
-        printf("\ndevice .........: %s\n",options.device);
+	printf("\ndevice .........: %s\n", options.device);
 	bzero(str, sizeof(str));
 	vtoc_volume_label_get_label(anc->vlabel, str);
-        printf("volume label ...: %.4s\n", str);
+	printf("volume label ...: %.4s\n", str);
 	bzero(str, sizeof(str));
 	vtoc_volume_label_get_volser(anc->vlabel, str);
-        printf("volume serial ..: %s\n\n", str);
+	printf("volume serial ..: %s\n\n", str);
 
 	dev_len = strlen(options.device);
 	dev = malloc(dev_len + 10);
 	if (!dev)
-                fdasd_error(anc, malloc_failed,
+		fdasd_error(anc, malloc_failed,
 			    "Show mapping: memory allocation failed.");
-        strcpy(dev, options.device);
-        if (((strp = strstr(dev,DISC)) != NULL) ||
-	    ((strp = strstr(dev,DEVICE)) != NULL))
-                strcpy(strp, PART);
+	strcpy(dev, options.device);
+	strp = strstr(dev, DISC);
+	if (strp == NULL)
+		strp = strstr(dev, DEVICE);
+	if (strp != NULL)
+		strcpy(strp, PART);
 
 	printf("WARNING: This mapping may be NOT up-to-date,\n"
 	       "         if you have NOT saved your last changes!\n\n");
 
-	for (part_info = anc->first ; part_info != NULL;
+	for (part_info = anc->first; part_info != NULL;
 	     part_info = part_info->next) {
-                i++;
-                if (part_info->used != 0x01)
+		i++;
+		if (part_info->used != 0x01)
 			continue;
 
 		bzero(dsname, sizeof(dsname));
 		strncpy(dsname, part_info->f1->DS1DSNAM, 44);
 		vtoc_ebcdic_dec(dsname, dsname, 44);
-	
-		if (getdsn(anc, i-1) < 0)
+
+		if (getdsn(anc, i - 1) < 0)
 			sprintf(dsname, "new data set");
 
 		printf("%s%-2d -  %-44s\n", dev, i, dsname);
 		j++;
-        }
+	}
 
-	if (j == 0) printf("No partitions defined.\n");
+	if (j == 0)
+		printf("No partitions defined.\n");
 	free(dev);
 }
-
 
 /*
  * prints only the volume serial
  */
-static void 
-fdasd_print_volser (fdasd_anchor_t *anc)
+static void fdasd_print_volser(fdasd_anchor_t *anc)
 {
 	char volser[VOLSER_LENGTH + 1];
 
@@ -1051,19 +1109,17 @@ fdasd_print_volser (fdasd_anchor_t *anc)
 	printf("%6.6s\n", volser);
 }
 
-
 /*
  * print partition table
  */
-static void
-fdasd_list_partition_table (fdasd_anchor_t *anc) 
+static void fdasd_list_partition_table(fdasd_anchor_t *anc)
 {
-        partition_info_t *part_info;
-        char str[20], *dev, *strp, *ch;
-        int i=0, dev_len = strlen(options.device);
+	int i = 0, dev_len = strlen(options.device);
+	char str[20], *dev, *strp, *ch;
+	partition_info_t *part_info;
 
 	if (!anc->silent) {
-		printf("\nDisk %s: \n"
+		printf("\nDisk %s:\n"
 		       "  cylinders ............: %d\n"
 		       "  tracks per cylinder ..: %d\n"
 		       "  blocks per track .....: %d\n"
@@ -1080,8 +1136,8 @@ fdasd_list_partition_table (fdasd_anchor_t *anc)
 		printf("  max partitions .......: %d\n\n", USABLE_PARTITIONS);
 	}
 
-        if (dev_len < 20)
-                dev_len = 20;
+	if (dev_len < 20)
+		dev_len = 20;
 
 	if (!anc->silent) {
 		printf(" ------------------------------- tracks"
@@ -1092,25 +1148,29 @@ fdasd_list_partition_table (fdasd_anchor_t *anc)
 
 	dev = malloc(dev_len + 10);
 	if (!dev)
-                fdasd_error(anc, malloc_failed,
+		fdasd_error(anc, malloc_failed,
 			    "Print partition table: memory allocation failed.");
-        strcpy(dev, options.device);
-        if (((strp = strstr(dev,DISC)) != NULL) ||
-	    ((strp = strstr(dev,DEVICE)) != NULL))
-                strcpy(strp, PART);
+	strcpy(dev, options.device);
 
-        for (part_info = anc->first; part_info != NULL;
+	strp = strstr(dev, DISC);
+	if (strp == NULL)
+		strp = strstr(dev, DEVICE);
+	if (strp != NULL)
+		strcpy(strp, PART);
+
+	for (part_info = anc->first; part_info != NULL;
 	     part_info = part_info->next) {
 		i++;
 
-                if ((part_info == anc->first) && (anc->fspace_trk > 0)) 
-                        printf("%*s   %9ld%9ld%9ld       unused\n",dev_len,"",
-                                (unsigned long) FIRST_USABLE_TRK,
-                                (unsigned long) FIRST_USABLE_TRK +
-                                anc->fspace_trk - 1,
-                                anc->fspace_trk);
+		if (part_info == anc->first && anc->fspace_trk > 0) {
+			printf("%*s   %9ld%9ld%9ld       unused\n", dev_len, "",
+			       (unsigned long)FIRST_USABLE_TRK,
+			       (unsigned long)FIRST_USABLE_TRK +
+			       anc->fspace_trk - 1,
+			       anc->fspace_trk);
+		}
 
-                if (part_info->used != 0x01)
+		if (part_info->used != 0x01)
 			continue;
 
 		vtoc_ebcdic_dec(part_info->f1->DS1DSNAM,
@@ -1119,56 +1179,72 @@ fdasd_list_partition_table (fdasd_anchor_t *anc)
 		if (ch != NULL) {
 			strncpy(str, ch + 9, 6);
 			str[6] = '\0';
-		} else
+		} else {
 			strcpy(str, "error");
+		}
 
 		vtoc_ebcdic_enc(part_info->f1->DS1DSNAM,
 				part_info->f1->DS1DSNAM, 44);
 
-		printf("%*s%-2d %9ld%9ld%9ld   %2x  %6s\n", 
+		printf("%*s%-2d %9ld%9ld%9ld   %2x  %6s\n",
 		       dev_len, dev, i, part_info->start_trk,
 		       part_info->end_trk, part_info->len_trk, i,
 		       fdasd_partition_type(str));
 
-		if (part_info->fspace_trk > 0) 
+		if (part_info->fspace_trk > 0)
 			printf("%*s   %9ld%9ld%9ld       unused\n",
-			       dev_len , "" , part_info->end_trk + 1,
+			       dev_len, "", part_info->end_trk + 1,
 			       part_info->end_trk + part_info->fspace_trk,
 			       part_info->fspace_trk);
-        }
+	}
 	free(dev);
+}
+
+/*
+ * List all supported partition types.
+ */
+static void fdasd_list_known_partitions(void)
+{
+	unsigned int i;
+
+	for (i = VALID_PARTITION_OFFSET;
+	     i < UTIL_ARRAY_SIZE(partition_types); i++) {
+		printf("%3d %s\n",
+		       partition_types[i].type, partition_types[i].name);
+	}
 }
 
 /*
  * get volser from vtoc
  */
-static int
-fdasd_get_volser(fdasd_anchor_t *anc, char *volser)
+static int fdasd_get_volser(fdasd_anchor_t *anc, char *volser)
 {
 	volume_label_t vlabel;
 
 	vtoc_read_volume_label(options.device, anc->label_pos, &vlabel);
 	vtoc_volume_label_get_volser(&vlabel, volser);
+
 	return 0;
 }
 
 /*
  * call IOCTL to re-read the partition table
  */
-static void
-fdasd_reread_partition_table (fdasd_anchor_t *anc)
+static void fdasd_reread_partition_table(fdasd_anchor_t *anc)
 {
 	char err_str[ERROR_STRING_SIZE];
 	int fd;
 
-	if (!anc->silent) printf("rereading partition table...\n");
+	if (!anc->silent)
+		printf("rereading partition table...\n");
 
-	if ((fd = open(options.device, O_RDONLY)) < 0) {
+	fd = open(options.device, O_RDONLY);
+	if (fd < 0) {
 		snprintf(err_str, ERROR_STRING_SIZE,
-			"Could not open device '%s' "
-			"in read-only mode!\n", options.device);
+			 "Could not open device '%s' "
+			 "in read-only mode!\n", options.device);
 		fdasd_error(anc, unable_to_open_disk, err_str);
-	} 
+	}
 
 	if (ioctl(fd, BLKRRPART, NULL) != 0) {
 		close(fd);
@@ -1176,45 +1252,49 @@ fdasd_reread_partition_table (fdasd_anchor_t *anc)
 			    "partition table.\nPlease reboot!");
 	}
 	close(fd);
-} 
-
+}
 
 /*
  * writes all changes to dasd
  */
-static void
-fdasd_write_vtoc_labels (fdasd_anchor_t *anc) 
+static void fdasd_write_vtoc_labels(fdasd_anchor_t *anc)
 {
-        partition_info_t *part_info;
-	unsigned long blk, maxblk;
 	char dsno[6], volser[VOLSER_LENGTH + 1], s2[45], *c1, *c2, *ch;
-	int i=0, k=0;
-	cchhb_t f9addr;
+	partition_info_t *part_info;
+	unsigned long blk, maxblk;
 	format1_label_t emptyf1;
+	char *dsname = NULL;
+	cchhb_t f9addr;
+	int i = 0, k = 0;
 
-	if (!anc->silent) printf("writing VTOC...\n");
-	if (anc->verbose) printf("DSCBs: ");
+	if (!anc->silent)
+		printf("writing VTOC...\n");
+	if (anc->verbose)
+		printf("DSCBs: ");
 
 	blk = (cchhb2blk(&anc->vlabel->vtoc, &geo) - 1) * anc->blksize;
-	if (blk <= 0) 
+	if (blk <= 0)
 		fdasd_error(anc, vlabel_corrupted, "");
 	maxblk = blk + anc->blksize * 9; /* f4+f5+f7+3*f8+3*f9 */
 
 	/* write FMT4 DSCB */
 	vtoc_write_label(options.device, blk, NULL, anc->f4, NULL, NULL, NULL);
-	if (anc->verbose) printf("f4 ");
+	if (anc->verbose)
+		printf("f4 ");
 	blk += anc->blksize;
 
 	/* write FMT5 DSCB */
 	vtoc_write_label(options.device, blk, NULL, NULL, anc->f5, NULL, NULL);
-	if (anc->verbose) printf("f5 ");
+	if (anc->verbose)
+		printf("f5 ");
 	blk += anc->blksize;
 
 	/* write FMT7 DSCB */
 	if (anc->big_disk) {
 		vtoc_write_label(options.device, blk,  NULL, NULL,
 				 NULL, anc->f7, NULL);
-		if (anc->verbose) printf("f7 ");
+		if (anc->verbose)
+			printf("f7 ");
 		blk += anc->blksize;
 	}
 
@@ -1222,19 +1302,18 @@ fdasd_write_vtoc_labels (fdasd_anchor_t *anc)
 	for (part_info = anc->first; part_info != NULL;
 	     part_info = part_info->next) {
 
-		if (part_info->used != 0x01) {
+		if (part_info->used != 0x01)
 			continue;
-		}
 
 		i++;
-		strncpy((char *)part_info->f1->DS1DSSN,	anc->vlabel->volid,
+		strncpy((char *)part_info->f1->DS1DSSN, anc->vlabel->volid,
 			VOLSER_LENGTH);
 
 		ch = part_info->f1->DS1DSNAM;
 		vtoc_ebcdic_dec(ch, ch, 44);
 		c1 = ch + 7;
 
-		if (getdsn(anc, i-1) > -1) {
+		if (getdsn(anc, i - 1) > -1) {
 			/* re-use the existing data set name */
 			c2 = strchr(c1, '.');
 			if (c2 != NULL)
@@ -1248,17 +1327,8 @@ fdasd_write_vtoc_labels (fdasd_anchor_t *anc)
 			strncpy(c1, volser, VOLSER_LENGTH + 1);
 			c1 = strchr(ch, ' ');
 			strncpy(c1, s2, 31);
-		}
-		else {
-			if (strstr(ch, "SWAP") != NULL)
-				part_info->type = PARTITION_SWAP;
-			else if (strstr(ch, "RAID") != NULL)
-				part_info->type = PARTITION_RAID;
-			else if (strstr(ch, "LVM") != NULL)
-				part_info->type = PARTITION_LVM;
-			else if (strstr(ch, "GPFS") != NULL)
-				part_info->type = PARTITION_GPFS;
-			else
+		} else {
+			if (get_part_type_by_dsname(ch, &part_info->type))
 				part_info->type = PARTITION_NATIVE;
 
 			/* create a new data set name */
@@ -1266,43 +1336,28 @@ fdasd_write_vtoc_labels (fdasd_anchor_t *anc)
 				k++;
 
 			setpos(anc, k, i-1);
-			
+
 			strncpy(ch, "LINUX.V               "
 				"                      ", 44);
 
 			strncpy(volser, anc->vlabel->volid, VOLSER_LENGTH);
 			vtoc_ebcdic_dec(volser, volser, VOLSER_LENGTH);
 			strncpy(c1, volser, VOLSER_LENGTH);
-				
+
 			c1 = strchr(ch, ' ');
 			strncpy(c1, ".PART", 5);
 			c1 += 5;
 
-			sprintf(dsno,"%04d", k+1);
-			strncpy(c1, dsno, 4);
+			sprintf(dsno, "%04d.", k + 1);
+			strncpy(c1, dsno, 5);
+			c1 += 5;
 
-			c1 += 4;
-
-			switch (part_info->type) {
-			case PARTITION_NATIVE:
-				strncpy(c1, ".NATIVE", 7);
-				break;
-			case PARTITION_SWAP:
-				strncpy(c1, ".SWAP", 5);
-				break;
-			case PARTITION_RAID:
-				strncpy(c1, ".RAID", 5);
-				break;
-			case PARTITION_LVM:
-				strncpy(c1, ".LVM", 4);
-				break;
-			case PARTITION_GPFS:
-				strncpy(c1, ".GPFS", 5);
-				break;
-			}
+			get_part_dsname_by_type(part_info->type, &dsname);
+			strncpy(c1, dsname, strlen(dsname)); /* We don't want \0 */
 		}
 		vtoc_ebcdic_enc(ch, ch, 44);
-		if (anc->verbose) printf("%2x ", part_info->f1->DS1FMTID);
+		if (anc->verbose)
+			printf("%2x ", part_info->f1->DS1FMTID);
 
 		if (part_info->f1->DS1FMTID == 0xf8) {
 			/* Now as we know where which label will be written, we
@@ -1320,7 +1375,8 @@ fdasd_write_vtoc_labels (fdasd_anchor_t *anc)
 			blk += anc->blksize;
 			vtoc_write_label(options.device, blk,  NULL, NULL,
 					 NULL, NULL, anc->f9);
-			if (anc->verbose) printf("f9 ");
+			if (anc->verbose)
+				printf("f9 ");
 			blk += anc->blksize;
 		} else {
 			vtoc_write_label(options.device, blk, part_info->f1,
@@ -1334,33 +1390,33 @@ fdasd_write_vtoc_labels (fdasd_anchor_t *anc)
 	while (blk < maxblk) {
 		vtoc_write_label(options.device, blk, &emptyf1, NULL,
 				 NULL, NULL, NULL);
-		if (anc->verbose) printf("empty ");
+		if (anc->verbose)
+			printf("empty ");
 		blk += anc->blksize;
 	}
 
-	if (anc->verbose) printf("\n");
+	if (anc->verbose)
+		printf("\n");
 }
-
 
 /*
  * writes all changes to dasd
  */
-static void
-fdasd_write_labels (fdasd_anchor_t *anc) 
+static void fdasd_write_labels(fdasd_anchor_t *anc)
 {
-        if (anc->vlabel_changed) {
-		if (!anc->silent) printf("writing volume label...\n");
-	        vtoc_write_volume_label(options.device, anc->label_pos,
+	if (anc->vlabel_changed) {
+		if (!anc->silent)
+			printf("writing volume label...\n");
+		vtoc_write_volume_label(options.device, anc->label_pos,
 					anc->vlabel);
 	}
 
-	if (anc->vtoc_changed) 
+	if (anc->vtoc_changed)
 		fdasd_write_vtoc_labels(anc);
 
-        if ((anc->vtoc_changed)||(anc->vlabel_changed)) 
+	if ((anc->vtoc_changed) || (anc->vlabel_changed))
 		fdasd_reread_partition_table(anc);
 }
-
 
 /*
  * re-creates the VTOC and deletes all partitions
@@ -1377,13 +1433,12 @@ static void fdasd_recreate_vtoc_unconditional(fdasd_anchor_t *anc)
 
 	vtoc_init_format5_label(anc->f5);
 	vtoc_init_format7_label(anc->f7);
-	vtoc_set_freespace(anc->f4,anc->f5, anc->f7, '+', anc->verbose,
+	vtoc_set_freespace(anc->f4, anc->f5, anc->f7, '+', anc->verbose,
 			   FIRST_USABLE_TRK,
 			   anc->formatted_cylinders * geo.heads - 1,
 			   anc->formatted_cylinders, geo.heads);
 
 	while (part_info != NULL) {
-
 		bzero(part_info->f1, sizeof(format1_label_t));
 
 		if (part_info->used == 0x01) {
@@ -1398,10 +1453,10 @@ static void fdasd_recreate_vtoc_unconditional(fdasd_anchor_t *anc)
 	}
 
 	anc->used_partitions = 0;
-	anc->fspace_trk = anc->formatted_cylinders * geo.heads
-		- FIRST_USABLE_TRK;
+	anc->fspace_trk =
+		anc->formatted_cylinders * geo.heads - FIRST_USABLE_TRK;
 
-	for (i=0; i<USABLE_PARTITIONS; i++)
+	for (i = 0; i < USABLE_PARTITIONS; i++)
 		setpos(anc, i, -1);
 
 	anc->vtoc_changed++;
@@ -1426,26 +1481,25 @@ static void fdasd_recreate_vtoc(fdasd_anchor_t *anc)
 		printf("creating new VTOC... ");
 	}
 	fdasd_recreate_vtoc_unconditional(anc);
-	if (!anc->silent) printf("ok\n");
+	if (!anc->silent)
+		printf("ok\n");
 }
-
 
 /*
  * re-create all VTOC labels, but use the partition information
  * from existing VTOC
  */
-static void
-fdasd_reuse_vtoc(fdasd_anchor_t *anc)
+static void fdasd_reuse_vtoc(fdasd_anchor_t *anc)
 {
 	partition_info_t *part_info = anc->first;
+	char str[INPUT_BUF_SIZE];
 	format1_label_t f1;
 	format4_label_t f4;
 	format5_label_t f5;
 	format7_label_t f7;
-	char str[INPUT_BUF_SIZE];
 
 	if (!anc->silent) {
-		snprintf(str, INPUT_BUF_SIZE, 
+		snprintf(str, INPUT_BUF_SIZE,
 			"WARNING: this will re-create your VTOC "
 			"entries using the partition\n           "
 			"information of your existing VTOC. Continue?");
@@ -1454,7 +1508,8 @@ fdasd_reuse_vtoc(fdasd_anchor_t *anc)
 			return;
 	}
 
-	if (!anc->silent) printf("re-creating VTOC... ");
+	if (!anc->silent)
+		printf("re-creating VTOC... ");
 
 	vtoc_init_format4_label(&f4, geo.cylinders, anc->formatted_cylinders,
 				geo.heads, geo.sectors,
@@ -1468,11 +1523,12 @@ fdasd_reuse_vtoc(fdasd_anchor_t *anc)
 	vtoc_init_format5_label(&f5);
 	vtoc_init_format7_label(&f7);
 
-	if (anc->fspace_trk > 0)
+	if (anc->fspace_trk > 0) {
 		vtoc_set_freespace(&f4, &f5, &f7, '+', anc->verbose,
-				   FIRST_USABLE_TRK, 
+				   FIRST_USABLE_TRK,
 				   FIRST_USABLE_TRK + anc->fspace_trk - 1,
 				   anc->formatted_cylinders, geo.heads);
+	}
 
 	while (part_info != NULL) {
 		if (part_info->used != 0x01) {
@@ -1487,19 +1543,19 @@ fdasd_reuse_vtoc(fdasd_anchor_t *anc)
 			vtoc_init_format1_label(anc->blksize,
 						&part_info->f1->DS1EXT1, &f1);
 
-
 		strncpy(f1.DS1DSNAM, part_info->f1->DS1DSNAM, 44);
 		strncpy((char *)f1.DS1DSSN, (char *)part_info->f1->DS1DSSN, 6);
 		f1.DS1CREDT = part_info->f1->DS1CREDT;
 
 		memcpy(part_info->f1, &f1, sizeof(format1_label_t));
 
-		if (part_info->fspace_trk > 0)
+		if (part_info->fspace_trk > 0) {
 			vtoc_set_freespace(&f4, &f5, &f7, '+', anc->verbose,
-					   part_info->end_trk + 1, 
+					   part_info->end_trk + 1,
 					   part_info->end_trk +
 					   part_info->fspace_trk,
 					   anc->formatted_cylinders, geo.heads);
+		}
 
 		part_info = part_info->next;
 	}
@@ -1509,18 +1565,15 @@ fdasd_reuse_vtoc(fdasd_anchor_t *anc)
 	memcpy(anc->f5, &f5, sizeof(format5_label_t));
 	memcpy(anc->f7, &f7, sizeof(format7_label_t));
 
-	if (!anc->silent) printf("ok\n");
+	if (!anc->silent)
+		printf("ok\n");
 	anc->vtoc_changed++;
-
-	return;
 }
-
 
 /*
  * Changes the volume serial (menu option)
  */
-static void
-fdasd_change_volser (fdasd_anchor_t *anc) 
+static void fdasd_change_volser(fdasd_anchor_t *anc)
 {
 	char volser[VOLSER_LENGTH + 1];
 
@@ -1531,7 +1584,7 @@ fdasd_change_volser (fdasd_anchor_t *anc)
 	read_line();
 	fdasd_check_volser(line_ptr, anc->devno);
 
-	printf("\nvolume identifier changed to '%-6s'\n",line_ptr);
+	printf("\nvolume identifier changed to '%-6s'\n", line_ptr);
 	vtoc_volume_label_set_volser(anc->vlabel, line_ptr);
 
 	vtoc_set_cchhb(&anc->vlabel->vtoc, VTOC_START_CC, VTOC_START_HH, 0x01);
@@ -1539,35 +1592,34 @@ fdasd_change_volser (fdasd_anchor_t *anc)
 	anc->vtoc_changed++;
 }
 
-
 /*
  * changes the partition type
  */
-static void
-fdasd_change_part_type (fdasd_anchor_t *anc)
+static void fdasd_change_part_type(fdasd_anchor_t *anc)
 {
-        unsigned int part_id, part_type, i;
+	unsigned int part_id, part_type, i;
+	partition_info_t *part_info;
+	char *dsname = NULL;
 	char str[20], *ch;
-        partition_info_t *part_info;
 
 	fdasd_list_partition_table(anc);
 
 	/* ask for partition number */
 	printf("\nchange partition type\n");
-        while (!isdigit(part_id = read_char("partition id (use 0 to exit): ")))
+	while (!isdigit(part_id = read_char("partition id (use 0 to exit): ")))
 		printf("Invalid partition id '%c' detected.\n", part_id);
 
-        part_id -= 48;
+	part_id -= 48;
 	printf("\n");
-        if (part_id == 0) 
+	if (part_id == 0)
 		return;
-        if (part_id > anc->used_partitions) {
-                printf("'%d' is not a valid partition id!\n", part_id);
-                return;
-        }
+	if (part_id > anc->used_partitions) {
+		printf("'%d' is not a valid partition id!\n", part_id);
+		return;
+	}
 
 	part_info = anc->first;
-        for (i=1; i < part_id; i++) 
+	for (i = 1; i < part_id; i++)
 		part_info = part_info->next;
 
 	/* ask for partition type */
@@ -1576,57 +1628,37 @@ fdasd_change_part_type (fdasd_anchor_t *anc)
 	if (ch != NULL) {
 		strncpy(str, ch, 6);
 		str[6] = '\0';
-	} else
+	} else {
 		strcpy(str, "error");
-
-	printf("current partition type is: %s\n\n", fdasd_partition_type(str));
-	printf("   1  Linux native\n" \
-	       "   2  Linux swap\n" \
-	       "   3  Linux raid\n" \
-	       "   4  Linux lvm\n" \
-	       "   5  GPFS NSD\n\n");
-	part_type = 0;
-	while ((part_type < 1) || (part_type > 5)) {
-        	while (!isdigit(part_type =
-				read_char("new partition type: ")));
-        	part_type -= 48;
 	}
 
-        switch (part_type) {
-	case PARTITION_NATIVE:
-		strncpy(str, "NATIVE", 6);
-		break;
-	case PARTITION_SWAP:
-		strncpy(str, "SWAP  ", 6);
-		break;
-	case PARTITION_RAID:
-		strncpy(str, "RAID  ", 6);
-		break;
-	case PARTITION_LVM:
-		strncpy(str, "LVM   ", 6);
-		break;
-	case PARTITION_GPFS:
-		strncpy(str, "GPFS  ", 6);
-		break;
+	printf("current partition type is: %s\n\n", fdasd_partition_type(str));
+	fdasd_list_known_partitions();
+	printf("\n");
 
-	default:
-                printf("'%d' is not supported!\n", part_type);
-        }
+	part_type = 0;
+	while (part_type < 1 || part_type > UTIL_ARRAY_SIZE(partition_types) - 1) {
+		while (!isdigit(part_type =
+				read_char("new partition type: ")));
+		part_type -= 48;
+	}
+
+	if (get_part_dsname_by_type(part_type, &dsname))
+		printf("'%d' is not supported!\n", part_type);
+	else
+		snprintf(str, 7, "%-6s", dsname);
 
 	ch = strstr(part_info->f1->DS1DSNAM, "PART") + 9;
-	if (ch != NULL)	
+	if (ch != NULL)
 		strncpy(ch, str, 6);
 	vtoc_ebcdic_enc(part_info->f1->DS1DSNAM, part_info->f1->DS1DSNAM, 44);
-        anc->vtoc_changed++;
+	anc->vtoc_changed++;
 }
-
-
 
 /*
  * initialize the VOL1 volume label
  */
-static void
-fdasd_init_volume_label(fdasd_anchor_t *anc)
+static void fdasd_init_volume_label(fdasd_anchor_t *anc)
 {
 	volume_label_t *vlabel = anc->vlabel;
 	char volser[VOLSER_LENGTH + 1];
@@ -1648,8 +1680,7 @@ fdasd_init_volume_label(fdasd_anchor_t *anc)
 		vtoc_volume_label_set_volser(vlabel, volser);
 	} else {
 		printf("\nPlease specify volume serial (6 characters)"
-		       "[0X%04x]: ",
-		       anc->devno);
+		       "[0X%04x]: ", anc->devno);
 		read_line();
 		fdasd_check_volser(line_ptr, anc->devno);
 		vtoc_volume_label_set_volser(vlabel, line_ptr);
@@ -1659,35 +1690,33 @@ fdasd_init_volume_label(fdasd_anchor_t *anc)
 	anc->vlabel_changed++;
 }
 
-
 /*
  * sets some important partition data
  * (like used, start_trk, end_trk, len_trk)
  * by calculating these values with the
  * information provided in the labels
  */
-static void
-fdasd_update_partition_info (fdasd_anchor_t *anc) 
+static void fdasd_update_partition_info(fdasd_anchor_t *anc)
 {
-        partition_info_t *prev_part_info = NULL, *part_info = anc->first;
+	partition_info_t *prev_part_info = NULL, *part_info = anc->first;
 	unsigned long max = anc->formatted_cylinders * geo.heads - 1;
-        int i;
+	int i;
 
 	anc->used_partitions = geo.sectors - 2 - anc->f4->DS4DSREC;
 
-        for (i=1; i<=USABLE_PARTITIONS; i++) {
+	for (i = 1; i <= USABLE_PARTITIONS; i++) {
 		if (part_info->f1->DS1FMTID != 0xf1 &&
 		    part_info->f1->DS1FMTID != 0xf8) {
-		        if (i == 1)
+			if (i == 1)
 				/* there is no partition at all */
 				anc->fspace_trk = max - FIRST_USABLE_TRK + 1;
 			else
-			        /* previous partition was the last one */
-			        prev_part_info->fspace_trk = 
+				/* previous partition was the last one */
+				prev_part_info->fspace_trk =
 					max - prev_part_info->end_trk;
 			break;
 		}
-		
+
 		/* this is a valid format 1 label */
 		part_info->used = 0x01;
 		part_info->start_trk = cchh2trk(&part_info->f1->DS1EXT1.llimit,
@@ -1697,41 +1726,40 @@ fdasd_update_partition_info (fdasd_anchor_t *anc)
 
 		part_info->len_trk = part_info->end_trk -
 			part_info->start_trk + 1;
-		
-		if (i == 1) 
-		        /* first partition, there is at least one */
-			anc->fspace_trk = 
+
+		if (i == 1) {
+			/* first partition, there is at least one */
+			anc->fspace_trk =
 				part_info->start_trk - FIRST_USABLE_TRK;
-		else {
-		        if (i == USABLE_PARTITIONS) 
-			        /* last possible partition */
-			        part_info->fspace_trk = 
+		} else {
+			if (i == USABLE_PARTITIONS)
+				/* last possible partition */
+				part_info->fspace_trk =
 					max - part_info->end_trk;
 
 			/* set free space values of previous partition */
-		        prev_part_info->fspace_trk = part_info->start_trk - 
+			prev_part_info->fspace_trk = part_info->start_trk -
 				prev_part_info->end_trk - 1;
 		}
 
-	        prev_part_info = part_info;
-	        part_info = part_info->next;
+		prev_part_info = part_info;
+		part_info = part_info->next;
 	}
 }
 
 /*
- * reorganizes all FMT1s, move all empty labels to the end 
+ * reorganizes all FMT1s, move all empty labels to the end
  */
-static void
-fdasd_reorganize_FMT1s (fdasd_anchor_t *anc) 
+static void fdasd_reorganize_FMT1s(fdasd_anchor_t *anc)
 {
-	int i, j;
-	format1_label_t *f1_label;
 	partition_info_t *part_info;
+	format1_label_t *f1_label;
+	int i, j;
 
-	for (i=1; i<=USABLE_PARTITIONS - 1; i++) {
+	for (i = 1; i <= USABLE_PARTITIONS - 1; i++) {
 		part_info = anc->first;
-		for (j=1; j<=USABLE_PARTITIONS - i; j++) {
-			if (part_info->f1->DS1FMTID < 
+		for (j = 1; j <= USABLE_PARTITIONS - i; j++) {
+			if (part_info->f1->DS1FMTID <
 			    part_info->next->f1->DS1FMTID) {
 				f1_label = part_info->f1;
 				part_info->f1 = part_info->next->f1;
@@ -1742,20 +1770,19 @@ fdasd_reorganize_FMT1s (fdasd_anchor_t *anc)
 	}
 }
 
-
 /*
  * we have a invalid FMT4 DSCB and therefore we will re-create the VTOC
  */
-static void
-fdasd_process_invalid_vtoc(fdasd_anchor_t *anc)
+static void fdasd_process_invalid_vtoc(fdasd_anchor_t *anc)
 {
 	printf(" invalid\ncreating new VTOC...\n");
 	if (anc->hw_cylinders > LV_COMPAT_CYL) {
 		printf("Warning: Device has more then %u cylinders!\n",
-			       LV_COMPAT_CYL);
+		       LV_COMPAT_CYL);
 		if (yes_no("Are you sure it was completely"
 			   " formatted with dasdfmt?") == 1) {
-			if (!anc->silent) printf("exiting...\n");
+			if (!anc->silent)
+				printf("exiting...\n");
 			fdasd_exit(anc, 0);
 		}
 	}
@@ -1777,28 +1804,27 @@ fdasd_process_invalid_vtoc(fdasd_anchor_t *anc)
 	anc->vtoc_changed++;
 }
 
-
 /*
  *
  */
-static void
-fdasd_process_valid_vtoc(fdasd_anchor_t *anc, unsigned long blk)
+static void fdasd_process_valid_vtoc(fdasd_anchor_t *anc, unsigned long blk)
 {
 	int f1_counter = 0, f7_counter = 0, f5_counter = 0;
 	int i, part_no, f1_size = sizeof(format1_label_t);
 	partition_info_t *part_info = anc->first;
-	format1_label_t f1_label;
 	char part_no_str[5], *part_pos;
+	format1_label_t f1_label;
 
-	if (!anc->silent) printf(" ok\n");
+	if (!anc->silent)
+		printf(" ok\n");
 
 	if (anc->f4->DS4DEVCT.DS4DSCYL == LV_COMPAT_CYL &&
 	    anc->f4->DS4DCYL > anc->f4->DS4DEVCT.DS4DSCYL)
 		anc->formatted_cylinders = anc->f4->DS4DCYL;
 	else
 		anc->formatted_cylinders = anc->f4->DS4DEVCT.DS4DSCYL;
-	anc->fspace_trk = anc->formatted_cylinders * geo.heads
-		- FIRST_USABLE_TRK;
+	anc->fspace_trk =
+		anc->formatted_cylinders * geo.heads - FIRST_USABLE_TRK;
 	/* skip f4 label, already read before */
 	blk += anc->blksize;
 
@@ -1807,7 +1833,8 @@ fdasd_process_valid_vtoc(fdasd_anchor_t *anc, unsigned long blk)
 		       "Only %u of %u cylinders are available.\n",
 		       anc->formatted_cylinders, anc->hw_cylinders);
 
-	if (anc->verbose) printf("VTOC DSCBs          : ");
+	if (anc->verbose)
+		printf("VTOC DSCBs          : ");
 
 	/* go through remaining labels, f4 label already done */
 	for (i = 1; i < geo.sectors; i++) {
@@ -1838,7 +1865,7 @@ fdasd_process_valid_vtoc(fdasd_anchor_t *anc, unsigned long blk)
 			vtoc_ebcdic_enc(part_info->f1->DS1DSNAM,
 					part_info->f1->DS1DSNAM, 44);
 
-			if ((part_no < 0) || (part_no >= USABLE_PARTITIONS))
+			if (part_no < 0 || part_no >= USABLE_PARTITIONS)
 				printf("WARNING: partition number (%i) found "
 				       "in data set name of an existing "
 				       "partition\ndoes not match range of "
@@ -1851,12 +1878,14 @@ fdasd_process_valid_vtoc(fdasd_anchor_t *anc, unsigned long blk)
 			f1_counter++;
 			break;
 		case 0xf5:
-			if (anc->verbose) printf("f5 ");
+			if (anc->verbose)
+				printf("f5 ");
 			memcpy(anc->f5, &f1_label, f1_size);
 			f5_counter++;
 			break;
 		case 0xf7:
-			if (anc->verbose) printf("f7 ");
+			if (anc->verbose)
+				printf("f7 ");
 			if (f7_counter == 0)
 				memcpy(anc->f7, &f1_label, f1_size);
 			f7_counter++;
@@ -1865,34 +1894,34 @@ fdasd_process_valid_vtoc(fdasd_anchor_t *anc, unsigned long blk)
 			/* each format 8 lable has an associated format 9 lable,
 			 * but they are of no further use to us.
 			 */
-			if (anc->verbose) printf("f9 ");
+			if (anc->verbose)
+				printf("f9 ");
 			break;
-		default: 
+		default:
 			if (f1_label.DS1FMTID > 0)
-				printf("'%d' is not supported!\n", 
+				printf("'%d' is not supported!\n",
 				       f1_label.DS1FMTID);
 		}
 		blk += anc->blksize;
 	}
-		
-	if (anc->verbose) printf("\n");
 
-	if ((f5_counter == 0) || (anc->big_disk)) 
+	if (anc->verbose)
+		printf("\n");
+
+	if (f5_counter == 0 || anc->big_disk)
 		vtoc_init_format5_label(anc->f5);
-		
-	if (f7_counter == 0) 
+
+	if (f7_counter == 0)
 		vtoc_init_format7_label(anc->f7);
 
 	fdasd_reorganize_FMT1s(anc);
 	fdasd_update_partition_info(anc);
 }
 
-
 /*
  * we have a valid VTOC pointer, let's go and read the VTOC labels
  */
-static int
-fdasd_valid_vtoc_pointer(fdasd_anchor_t *anc, unsigned long blk)
+static int fdasd_valid_vtoc_pointer(fdasd_anchor_t *anc, unsigned long blk)
 {
 	/* VOL1 label contains valid VTOC pointer */
 	if (!anc->silent)
@@ -1900,37 +1929,38 @@ fdasd_valid_vtoc_pointer(fdasd_anchor_t *anc, unsigned long blk)
 
 	vtoc_read_label(options.device, blk, NULL, anc->f4, NULL, NULL);
 
-	if (anc->f4->DS4IDFMT != 0xf4) { 
+	if (anc->f4->DS4IDFMT != 0xf4) {
 		if (anc->print_table) {
 			printf("Your VTOC is corrupted!\n");
 			return -1;
 		}
 		fdasd_process_invalid_vtoc(anc);
-	} else
+	} else {
 		fdasd_process_valid_vtoc(anc, blk);
+	}
 
 	return 0;
 }
 
-
 /*
  *
  */
-static void
-fdasd_invalid_vtoc_pointer(fdasd_anchor_t *anc)
+static void fdasd_invalid_vtoc_pointer(fdasd_anchor_t *anc)
 {
 	/* VOL1 label doesn't contain valid VTOC pointer */
 	if (yes_no("There is no VTOC yet, should I create one?") == 1) {
-		if (!anc->silent) printf("exiting...\n");
+		if (!anc->silent)
+			printf("exiting...\n");
 		fdasd_exit(anc, 0);
 	}
 
 	if (anc->hw_cylinders > LV_COMPAT_CYL) {
 		printf("Warning: Device has more then %u cylinders!\n",
-			       LV_COMPAT_CYL);
+		       LV_COMPAT_CYL);
 		if (yes_no("Are you sure it was completely"
 			   " formatted with dasdfmt?") == 1) {
-			if (!anc->silent) printf("exiting...\n");
+			if (!anc->silent)
+				printf("exiting...\n");
 			fdasd_exit(anc, 0);
 		}
 	}
@@ -1956,38 +1986,34 @@ fdasd_invalid_vtoc_pointer(fdasd_anchor_t *anc)
 	anc->vlabel_changed++;
 }
 
-
 /*
  * check the dasd for a volume label
  */
-static int
-fdasd_check_volume (fdasd_anchor_t *anc) 
+static int fdasd_check_volume(fdasd_anchor_t *anc)
 {
 	volume_label_t *vlabel = anc->vlabel;
-	long long blk = -1;
-	char str[LINE_LENGTH];
 	char inp_buf[INPUT_BUF_SIZE];
+	char str[LINE_LENGTH];
+	long long blk = -1;
 	int rc = 1;
 
 	if (!anc->silent)
 		printf("reading volume label ..:");
 
-        vtoc_read_volume_label(options.device, anc->label_pos, vlabel);
+	vtoc_read_volume_label(options.device, anc->label_pos, vlabel);
 
-	if (strncmp(vlabel->vollbl, vtoc_ebcdic_enc("VOL1",str,4),4) == 0) {
-	        /* found VOL1 volume label */
+	if (strncmp(vlabel->vollbl, vtoc_ebcdic_enc("VOL1", str, 4), 4) == 0) {
+		/* found VOL1 volume label */
 		if (!anc->silent)
 			printf(" VOL1\n");
 
 		blk = (cchhb2blk(&vlabel->vtoc, &geo) - 1) * anc->blksize;
 		if (blk > 0) {
-			int rc;
 			rc = fdasd_valid_vtoc_pointer(anc, blk);
 
 			if (anc->print_table && (rc < 0))
 				return -1;
-		}
-		else {
+		} else {
 			if (anc->print_table) {
 				printf("\nFound invalid VTOC pointer.\n");
 				return -1;
@@ -1995,19 +2021,19 @@ fdasd_check_volume (fdasd_anchor_t *anc)
 			fdasd_invalid_vtoc_pointer(anc);
 		}
 	} else {
-	        /* didn't find VOL1 volume label */
+		/* didn't find VOL1 volume label */
 
- 		if (anc->print_table || anc->print_volser) {
+		if (anc->print_table || anc->print_volser) {
 			printf("\nCannot show requested information because "
 			       "the disk label block is invalid\n");
 			return -1;
 		}
 
-	        if (strncmp(vlabel->vollbl, 
-			    vtoc_ebcdic_enc("LNX1",str,4),4) == 0) {
+		if (strncmp(vlabel->vollbl,
+			    vtoc_ebcdic_enc("LNX1", str, 4), 4) == 0) {
 			if (!anc->silent)
 				printf(" LNX1\n");
-			strcpy(inp_buf,"Overwrite inapplicable label?");
+			strcpy(inp_buf, "Overwrite inapplicable label?");
 		} else {
 			if (!anc->silent)
 				printf(" no known label\n");
@@ -2016,11 +2042,11 @@ fdasd_check_volume (fdasd_anchor_t *anc)
 			else
 				rc = 0;
 		}
-                if ((!anc->print_volser) && (!anc->print_table) && (rc == 1)) {
+		if (!anc->print_volser && !anc->print_table && rc == 1) {
 			printf("Disc does not contain a VOL1 label, cannot "
-			       "create partitions.\nexiting... \n");
+			       "create partitions.\nexiting...\n");
 			fdasd_exit(anc, -1);
-                }
+		}
 
 		if (anc->hw_cylinders > LV_COMPAT_CYL) {
 			printf("Warning: Device has more than %u cylinders!\n",
@@ -2028,13 +2054,14 @@ fdasd_check_volume (fdasd_anchor_t *anc)
 			if (!anc->auto_partition && !options.conffile &&
 			    yes_no("Are you sure it was completely"
 				   " formatted with dasdfmt?") == 1) {
-				if (!anc->silent) printf("exiting...\n");
+				if (!anc->silent)
+					printf("exiting...\n");
 				fdasd_exit(anc, 0);
 			}
 		}
 		anc->formatted_cylinders = anc->hw_cylinders;
-		anc->fspace_trk = anc->formatted_cylinders * geo.heads
-				  - FIRST_USABLE_TRK;
+		anc->fspace_trk =
+			anc->formatted_cylinders * geo.heads - FIRST_USABLE_TRK;
 
 		fdasd_init_volume_label(anc);
 
@@ -2060,61 +2087,60 @@ fdasd_check_volume (fdasd_anchor_t *anc)
 	return 0;
 }
 
-
 /*
  * check disk access
  */
-static void
-fdasd_check_disk_access (fdasd_anchor_t *anc)
+static void fdasd_check_disk_access(fdasd_anchor_t *anc)
 {
 	char err_str[ERROR_STRING_SIZE];
 	format1_label_t f1;
 	int fd, pos, ro;
 
-        if ((fd = open(options.device, O_RDONLY)) == -1) {
+	fd = open(options.device, O_RDONLY);
+	if (fd == -1) {
 		snprintf(err_str, ERROR_STRING_SIZE,
-			"Could not open device '%s' " \
-			"in read-only mode!\n", options.device);
+			 "Could not open device '%s' "
+			 "in read-only mode!\n", options.device);
 		fdasd_error(anc, unable_to_open_disk, err_str);
 	}
 
 	pos = anc->blksize * (2 * geo.heads - 1);
 	/* last block in the second track */
-        if (lseek(fd, pos, SEEK_SET) == -1) {
-	        close(fd);
-		snprintf(err_str, ERROR_STRING_SIZE, 
-			"Could not seek device '%s'.", options.device);
-		fdasd_error(anc, unable_to_seek_disk, err_str);
-        }
-
-	if (read(fd, &f1, sizeof(format1_label_t)) != 
-	    sizeof(format1_label_t)) {
+	if (lseek(fd, pos, SEEK_SET) == -1) {
 		close(fd);
 		snprintf(err_str, ERROR_STRING_SIZE,
-			"Could not read from device '%s'.", options.device);
+			 "Could not seek device '%s'.", options.device);
+		fdasd_error(anc, unable_to_seek_disk, err_str);
+	}
+
+	if (read(fd, &f1, sizeof(format1_label_t)) != sizeof(format1_label_t)) {
+		close(fd);
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "Could not read from device '%s'.", options.device);
 		fdasd_error(anc, unable_to_read_disk, err_str);
 	}
 
-        if (lseek(fd, pos, SEEK_SET) == -1) {
-	        close(fd);
-		snprintf(err_str, ERROR_STRING_SIZE, 
-			"Could not seek device '%s'.", options.device);
+	if (lseek(fd, pos, SEEK_SET) == -1) {
+		close(fd);
+		snprintf(err_str, ERROR_STRING_SIZE,
+			 "Could not seek device '%s'.", options.device);
 		fdasd_error(anc, unable_to_seek_disk, err_str);
-        }
-	
+	}
+
 	if (ioctl(fd, BLKROGET, &ro) != 0) {
-		snprintf(err_str, ERROR_STRING_SIZE, 
+		snprintf(err_str, ERROR_STRING_SIZE,
 			 "Could not get read-only status for device '%s'.",
 			 options.device);
 		fdasd_error(anc, unable_to_ioctl, err_str);
 	}
-	if (ro && !anc->print_volser && !anc->print_table)
+	if (ro && !anc->print_volser && !anc->print_table) {
 		printf("\nWARNING: Device '%s' is a read-only device!\n"
 		       "You will not be able to save any changes.\n\n",
 		       options.device);
+	}
 
-        close(fd);
-}     
+	close(fd);
+}
 
 /*
  * The following two functions match those in the DASD ECKD device driver.
@@ -2169,29 +2195,33 @@ static int fdasd_verify_geometry(unsigned short dev_type, int blksize,
 				 struct hd_geometry *geometry)
 {
 	unsigned int expected_sectors;
+
 	if (geometry->heads != 15)
 		return 0;
+
 	expected_sectors = recs_per_track(dev_type, 0, blksize);
 	if (geometry->sectors == expected_sectors)
 		return 1;
+
 	return 0;
 }
 
 /*
  * reads dasd geometry data
  */
-static void fdasd_get_geometry (fdasd_anchor_t *anc)
+static void fdasd_get_geometry(fdasd_anchor_t *anc)
 {
-        int fd, blksize = 0;
-	dasd_information_t dasd_info;
-	char err_str[ERROR_STRING_SIZE];
 	struct dasd_eckd_characteristics *characteristics;
 	unsigned long long size_in_bytes;
+	char err_str[ERROR_STRING_SIZE];
+	dasd_information_t dasd_info;
+	int fd, blksize = 0;
 
-	if ((fd = open(options.device,O_RDONLY)) < 0) {
+	fd = open(options.device, O_RDONLY);
+	if (fd < 0) {
 		snprintf(err_str, ERROR_STRING_SIZE,
-			"Could not open device '%s' "
-			"in read-only mode!\n", options.device);
+			 "Could not open device '%s' "
+			 "in read-only mode!\n", options.device);
 		fdasd_error(anc, unable_to_open_disk, err_str);
 	}
 	if (ioctl(fd, BLKGETSIZE64, &size_in_bytes) != 0) {
@@ -2218,13 +2248,14 @@ static void fdasd_get_geometry (fdasd_anchor_t *anc)
 		anc->label_pos = 2 * anc->blksize;
 		anc->devno = 0;
 		close(fd);
-		if (anc->verbose)
+		if (anc->verbose) {
 			printf("The force option is active. "
 			       "The following geometry will be used:\n"
 			       "device type %x, block size %d, cylinders %d,"
-			       " heads %d, sectors %d \n",
+			       " heads %d, sectors %d\n",
 			       anc->dev_type, anc->blksize, anc->hw_cylinders,
 			       geo.heads, geo.sectors);
+		}
 		return;
 	}
 
@@ -2264,14 +2295,13 @@ static void fdasd_get_geometry (fdasd_anchor_t *anc)
 		 * a default volume serial, there is no serious conflict.
 		 */
 		anc->devno = 0;
-		if (anc->verbose)
+		if (anc->verbose) {
 			printf("The following device geometry will be used:\n"
 			       "device type %x, block size %d, cylinders %d,"
-			       " heads %d, sectors %d \n",
+			       " heads %d, sectors %d\n",
 			       anc->dev_type, anc->blksize, anc->hw_cylinders,
 			       geo.heads, geo.sectors);
-
-
+		}
 	} else {
 		characteristics = (struct dasd_eckd_characteristics *)
 			&dasd_info.characteristics;
@@ -2285,10 +2315,11 @@ static void fdasd_get_geometry (fdasd_anchor_t *anc)
 			snprintf(err_str, ERROR_STRING_SIZE,
 				 "%s is not an ECKD disk! This disk type "
 				 "is not supported!", options.device);
-			fdasd_error(anc,wrong_disk_type, err_str);
+			fdasd_error(anc, wrong_disk_type, err_str);
 		}
 
-		if (anc->verbose) printf("disk type check     : ok\n");
+		if (anc->verbose)
+			printf("disk type check     : ok\n");
 
 		if (dasd_info.FBA_layout != 0) {
 			snprintf(err_str, ERROR_STRING_SIZE,
@@ -2297,7 +2328,8 @@ static void fdasd_get_geometry (fdasd_anchor_t *anc)
 			fdasd_error(anc, wrong_disk_format, err_str);
 		}
 
-		if (anc->verbose) printf("disk layout check   : ok\n");
+		if (anc->verbose)
+			printf("disk layout check   : ok\n");
 
 		if (dasd_info.open_count > 1) {
 			if (anc->auto_partition) {
@@ -2316,70 +2348,69 @@ static void fdasd_get_geometry (fdasd_anchor_t *anc)
 			}
 		}
 
-		if (anc->verbose) printf("usage count check   : ok\n");
+		if (anc->verbose)
+			printf("usage count check   : ok\n");
 
-		anc->dev_type   = dasd_info.dev_type;
-		anc->blksize    = blksize;
-		anc->label_pos  = dasd_info.label_block * blksize;
-		anc->devno      = dasd_info.devno;
+		anc->dev_type	= dasd_info.dev_type;
+		anc->blksize	= blksize;
+		anc->label_pos	= dasd_info.label_block * blksize;
+		anc->devno	= dasd_info.devno;
 	}
 
 	close(fd);
 }
 
-
 /*
  * asks for partition boundaries
  */
 static unsigned long
-fdasd_read_int (unsigned long low, unsigned long dflt, unsigned long high, 
-		enum offset base, char *mesg, fdasd_anchor_t *anc) 
+fdasd_read_int(unsigned long low, unsigned long dflt, unsigned long high,
+	       enum offset base, char *mesg, fdasd_anchor_t *anc)
 {
-	unsigned long long trk = 0;
 	unsigned int use_default = 1;
+	unsigned long long trk = 0;
 	char msg_txt[70];
 
-	switch(base) {
+	switch (base) {
 	case lower:
-	        sprintf(msg_txt, "%s ([%ld]-%ld): ", mesg, low, high);
+		sprintf(msg_txt, "%s ([%ld]-%ld): ", mesg, low, high);
 		break;
 	case upper:
-	        sprintf(msg_txt, "%s (%ld-[%ld]): ", mesg, low, high);
+		sprintf(msg_txt, "%s (%ld-[%ld]): ", mesg, low, high);
 		break;
 	default:
-	        sprintf(msg_txt, "%s (%ld-%ld): ", mesg, low, high);
+		sprintf(msg_txt, "%s (%ld-%ld): ", mesg, low, high);
 		break;
 	}
 
 	while (1) {
-	        while (!isdigit(read_char(msg_txt))
-		       && (*line_ptr != '-' && 
+		while (!isdigit(read_char(msg_txt))
+		       && (*line_ptr != '-' &&
 			   *line_ptr != '+' &&
 			   *line_ptr != '\0'))
-		        continue;
-		if ((*line_ptr == '+' || *line_ptr == '-') &&
-			base != lower) {
-		        if (*line_ptr == '+')
-			        ++line_ptr;
+			continue;
+		if ((*line_ptr == '+' || *line_ptr == '-') && base != lower) {
+			if (*line_ptr == '+')
+				++line_ptr;
 			trk = atoi(line_ptr);
 			while (isdigit(*line_ptr)) {
-			        line_ptr++;
+				line_ptr++;
 				use_default = 0;
 			}
 
-                        switch (*line_ptr) {
+			switch (*line_ptr) {
 			case 'c':
-			case 'C': 
+			case 'C':
 				trk *= geo.heads;
 				break;
 			case 'k':
-			case 'K': 
+			case 'K':
 				trk *= 1024;
 				trk /= anc->blksize;
 				trk /= geo.sectors;
 				break;
 			case 'm':
-			case 'M': 
+			case 'M':
 				trk *= (1024*1024);
 				trk /= anc->blksize;
 				trk /= geo.sectors;
@@ -2392,34 +2423,36 @@ fdasd_read_int (unsigned long low, unsigned long dflt, unsigned long high,
 				break;
 			case 0x0a:
 				break;
-			default: 
+			default:
 				printf("WARNING: '%c' is not a "
 				       "valid appendix and probably "
-				       "not what you want!\n", 
+				       "not what you want!\n",
 				       *line_ptr);
 				break;
-                        }
-			
-			trk += (low - 1);
-			
-		}
-		else if (*line_ptr == '\0') {
-			switch(base) {
-			case lower: trk = low; break;
-			case upper: trk = high; break;
-			}
-		}
-		else {
-                        if (*line_ptr == '+' || *line_ptr == '-') {
-				printf("\nWARNING: '%c' is not valid in \n"
-				       "this case and will be ignored!\n",
-				       *line_ptr);
-                                ++line_ptr;
 			}
 
-		        trk = atoi(line_ptr);
+			trk += (low - 1);
+
+		} else if (*line_ptr == '\0') {
+			switch (base) {
+			case lower:
+				trk = low;
+				break;
+			case upper:
+				trk = high;
+				break;
+			}
+		} else {
+			if (*line_ptr == '+' || *line_ptr == '-') {
+				printf("\nWARNING: '%c' is not valid in\n"
+				       "this case and will be ignored!\n",
+				       *line_ptr);
+				++line_ptr;
+			}
+
+			trk = atoi(line_ptr);
 			while (isdigit(*line_ptr)) {
-			        line_ptr++;
+				line_ptr++;
 				use_default = 0;
 			}
 
@@ -2429,47 +2462,44 @@ fdasd_read_int (unsigned long low, unsigned long dflt, unsigned long high,
 				       "you want!\n", *line_ptr);
 		}
 		if (use_default)
-		        printf("Using default value %lld\n", trk = dflt);
+			printf("Using default value %lld\n", trk = dflt);
 		else
-		        printf("You have selected track %lld\n", trk);
+			printf("You have selected track %lld\n", trk);
 
 		if (trk >= low && trk <= high)
-		        break;
-                else
-		        printf("Value out of range.\n");
+			break;
+		else
+			printf("Value out of range.\n");
 	}
+
 	return trk;
 }
-
 
 /*
  * returns unused partition info pointer if there
  * is a free partition, otherwise NULL
  */
-static partition_info_t *
-fdasd_get_empty_f1_label (fdasd_anchor_t * anc) 
+static partition_info_t *fdasd_get_empty_f1_label(fdasd_anchor_t *anc)
 {
-	if (anc->used_partitions < USABLE_PARTITIONS)	  
-	        return anc->last;	      
+	if (anc->used_partitions < USABLE_PARTITIONS)
+		return anc->last;
 	else
-	        return NULL;
+		return NULL;
 }
-
 
 /*
  * asks for and sets some important partition data
  */
-static int 
-fdasd_get_partition_data (fdasd_anchor_t *anc, extent_t *part_extent,
-			  partition_info_t *part_info) 
+static int fdasd_get_partition_data(fdasd_anchor_t *anc, extent_t *part_extent,
+				    partition_info_t *part_info)
 {
 	unsigned long start, stop, limit;
-	u_int32_t cc, cyl;
-	u_int16_t hh, head;
-	cchh_t llimit,ulimit;
 	partition_info_t *part_tmp;
-        char mesg[48];
+	cchh_t llimit, ulimit;
+	u_int16_t hh, head;
+	u_int32_t cc, cyl;
 	u_int8_t b1, b2;
+	char mesg[48];
 
 	start = FIRST_USABLE_TRK;
 
@@ -2477,19 +2507,19 @@ fdasd_get_partition_data (fdasd_anchor_t *anc, extent_t *part_extent,
 	head = anc->f4->DS4DEVCT.DS4DSTRK;
 	limit = (head * cyl - 1);
 
-	sprintf(mesg, "First track (1 track = %d KByte)", 
+	sprintf(mesg, "First track (1 track = %d KByte)",
 		geo.sectors * anc->blksize / 1024);
 
 	/* find default start value */
 	for (part_tmp = anc->first; part_tmp->next != NULL;
 	     part_tmp = part_tmp->next) {
-		if ((start >= part_tmp->start_trk) && 
+		if ((start >= part_tmp->start_trk) &&
 		    (start <= part_tmp->end_trk))
 			start = part_tmp->end_trk + 1;
 	}
 
 	if (start > limit) {
-	        printf("Not that easy, no free tracks available.\n");
+		printf("Not that easy, no free tracks available.\n");
 		return -1;
 	}
 
@@ -2508,7 +2538,7 @@ fdasd_get_partition_data (fdasd_anchor_t *anc, extent_t *part_extent,
 				part_tmp = anc->first;
 			}
 
-			printf("value within another partition, " \
+			printf("value within another partition, "
 			       "using %ld instead\n", start);
 		}
 
@@ -2519,9 +2549,9 @@ fdasd_get_partition_data (fdasd_anchor_t *anc, extent_t *part_extent,
 
 	}
 
-	if (start == limit)
-	        stop = start;
-	else {
+	if (start == limit) {
+		stop = start;
+	} else {
 		sprintf(mesg, "Last track or +size[c|k|m|g]");
 		stop = fdasd_read_int(start, limit, limit, upper, mesg, anc);
 	}
@@ -2536,7 +2566,7 @@ fdasd_get_partition_data (fdasd_anchor_t *anc, extent_t *part_extent,
 	vtoc_set_cchh(&llimit, cc, hh);
 
 	/* check for cylinder boundary */
-	if (hh == 0)  
+	if (hh == 0)
 		b1 = 0x81;
 	else
 		b1 = 0x01;
@@ -2545,7 +2575,7 @@ fdasd_get_partition_data (fdasd_anchor_t *anc, extent_t *part_extent,
 	hh = stop - cc * geo.heads;
 	vtoc_set_cchh(&ulimit, cc, hh);
 
-        /* it is always the 1st extent */
+	/* it is always the 1st extent */
 	b2 = 0x00;
 
 	vtoc_set_extent(part_extent, b1, b2, &llimit, &ulimit);
@@ -2553,121 +2583,118 @@ fdasd_get_partition_data (fdasd_anchor_t *anc, extent_t *part_extent,
 	return 0;
 }
 
-
 /*
  *
  */
-static void
-fdasd_enqueue_new_partition (fdasd_anchor_t *anc) 
+static void fdasd_enqueue_new_partition(fdasd_anchor_t *anc)
 {
-        partition_info_t *part_tmp = anc->first, *part_info = anc->last;
-	int i, k = 0;
+	partition_info_t *part_tmp = anc->first, *part_info = anc->last;
+	int i, j, k = 0;
 
 	for (i = 1; i < USABLE_PARTITIONS; i++) {
-	        if ((part_tmp->end_trk == 0) || 
-		    (part_info->start_trk < part_tmp->start_trk))
-		        break;
-		else { 
-		        part_tmp = part_tmp->next;
+		if ((part_tmp->end_trk == 0) ||
+		    (part_info->start_trk < part_tmp->start_trk)) {
+			break;
+		} else {
+			part_tmp = part_tmp->next;
 			k++;
 		}
 	}
 
-	if (anc->first == part_tmp) anc->first = part_info;
-	
+	if (anc->first == part_tmp)
+		anc->first = part_info;
+
 	if (part_info != part_tmp) {
-	        anc->last->prev->next = NULL;
+		anc->last->prev->next = NULL;
 		anc->last = anc->last->prev;
 
-	        part_info->next = part_tmp;
+		part_info->next = part_tmp;
 		part_info->prev = part_tmp->prev;
 		part_tmp->prev = part_info;
-		
+
 		if (part_info->prev != NULL)
-		        part_info->prev->next = part_info;
+			part_info->prev->next = part_info;
 	}
 
-	part_info->used       = 0x01;
+	part_info->used = 0x01;
 
-	for (i=0; i<USABLE_PARTITIONS; i++) {
-		int j = getpos(anc, i);
-		if (j >= k) setpos(anc, i, j + 1);
+	for (i = 0; i < USABLE_PARTITIONS; i++) {
+		j = getpos(anc, i);
+		if (j >= k)
+			setpos(anc, i, j + 1);
 	}
 
 	/* update free-space counters */
 	if (anc->first == part_info) {
-	        /* partition is the first used partition */
-	        if (part_info->start_trk == FIRST_USABLE_TRK) {
-	               /* partition starts right behind VTOC */
-	               part_info->fspace_trk = anc->fspace_trk -
-			       part_info->len_trk;
-		       anc->fspace_trk = 0;
-		}
-		else {
-	               /* there is some space between VTOC and partition */
+		/* partition is the first used partition */
+		if (part_info->start_trk == FIRST_USABLE_TRK) {
+			/* partition starts right behind VTOC */
+			part_info->fspace_trk = anc->fspace_trk -
+				part_info->len_trk;
+			anc->fspace_trk = 0;
+		} else {
+			/* there is some space between VTOC and partition */
 
-	               part_info->fspace_trk = anc->fspace_trk -
-			       part_info->len_trk - part_info->start_trk +
-			       FIRST_USABLE_TRK;
-		       anc->fspace_trk = part_info->start_trk -
-			       FIRST_USABLE_TRK;
+			part_info->fspace_trk = anc->fspace_trk -
+				part_info->len_trk - part_info->start_trk +
+				FIRST_USABLE_TRK;
+			anc->fspace_trk = part_info->start_trk -
+				FIRST_USABLE_TRK;
 		}
-	}
-	else {
-	        /* there are partitons in front of the new one */
- 	        if (part_info->start_trk == part_info->prev->end_trk + 1) {
-		        /* new partition is right behind the previous one */
-		        part_info->fspace_trk = part_info->prev->fspace_trk -
+	} else {
+		/* there are partitons in front of the new one */
+		if (part_info->start_trk == part_info->prev->end_trk + 1) {
+			/* new partition is right behind the previous one */
+			part_info->fspace_trk = part_info->prev->fspace_trk -
 				part_info->len_trk;
 			part_info->prev->fspace_trk = 0;
-		}
-		else {
-		        /* there is some space between new and prev. part. */
-		        part_info->fspace_trk = part_info->prev->fspace_trk - 
+		} else {
+			/* there is some space between new and prev. part. */
+			part_info->fspace_trk = part_info->prev->fspace_trk -
 				part_info->len_trk - part_info->start_trk +
 				part_info->prev->end_trk + 1;
-			part_info->prev->fspace_trk = part_info->start_trk - 
+			part_info->prev->fspace_trk = part_info->start_trk -
 				part_info->prev->end_trk - 1;
 		}
 	}
 }
 
-
 /*
  *
  */
-static void
-fdasd_dequeue_old_partition (fdasd_anchor_t *anc, partition_info_t *part_info,
-			     int k) 
+static void fdasd_dequeue_old_partition(fdasd_anchor_t *anc,
+					partition_info_t *part_info, int k)
 {
-	int i;
+	int i, j;
 
 	if (part_info != anc->first && part_info != anc->last) {
-	        /* dequeue any non-special element */
-	        part_info->prev->next = part_info->next;
-	        part_info->next->prev = part_info->prev;
-	}        
-
-	if (part_info == anc->first) {
-	        /* dequeue first element */
-	        anc->first = part_info->next;
-		part_info->next->prev = NULL;
-	        anc->fspace_trk += (part_info->len_trk +
-				    part_info->fspace_trk);
-	} else
-		part_info->prev->fspace_trk += (part_info->len_trk +
-						part_info->fspace_trk);
-
-	if (part_info != anc->last) {
-	        part_info->prev = anc->last;
-	        part_info->next = NULL;
-		anc->last->next = part_info;
-		anc->last       = part_info;
+		/* dequeue any non-special element */
+		part_info->prev->next = part_info->next;
+		part_info->next->prev = part_info->prev;
 	}
 
-	for (i=0; i<USABLE_PARTITIONS; i++) {
-		int j = getpos(anc, i);
-		if (j >= k) setpos(anc, i, j - 1);
+	if (part_info == anc->first) {
+		/* dequeue first element */
+		anc->first = part_info->next;
+		part_info->next->prev = NULL;
+		anc->fspace_trk += (part_info->len_trk +
+				    part_info->fspace_trk);
+	} else {
+		part_info->prev->fspace_trk += (part_info->len_trk +
+						part_info->fspace_trk);
+	}
+
+	if (part_info != anc->last) {
+		part_info->prev = anc->last;
+		part_info->next = NULL;
+		anc->last->next = part_info;
+		anc->last	= part_info;
+	}
+
+	for (i = 0; i < USABLE_PARTITIONS; i++) {
+		j = getpos(anc, i);
+		if (j >= k)
+			setpos(anc, i, j - 1);
 	}
 
 	part_info->used       = 0x00;
@@ -2678,30 +2705,29 @@ fdasd_dequeue_old_partition (fdasd_anchor_t *anc, partition_info_t *part_info,
 	bzero(part_info->f1, sizeof(format1_label_t));
 }
 
-
 /*
  * adds a new partition to the 'partition table'
  */
-static void
-fdasd_add_partition (fdasd_anchor_t *anc) 
+static void fdasd_add_partition(fdasd_anchor_t *anc)
 {
-	cchhb_t hf1;
 	partition_info_t *part_info;
-	extent_t ext;
 	unsigned long start, stop;
+	extent_t ext;
+	cchhb_t hf1;
 
-	if ((part_info = fdasd_get_empty_f1_label(anc)) == NULL) {
-	        printf("No more free partitions left,\n"
+	part_info = fdasd_get_empty_f1_label(anc);
+	if (part_info == NULL) {
+		printf("No more free partitions left,\n"
 		       "you have to delete one first!");
 		return;
 	}
 
 	if (fdasd_get_partition_data(anc, &ext, part_info) != 0)
-	        return;
+		return;
 
-	if (anc->formatted_cylinders > LV_COMPAT_CYL) {
+	if (anc->formatted_cylinders > LV_COMPAT_CYL)
 		vtoc_init_format8_label(anc->blksize, &ext, part_info->f1);
-	} else
+	else
 		vtoc_init_format1_label(anc->blksize, &ext, part_info->f1);
 
 	fdasd_enqueue_new_partition(anc);
@@ -2719,17 +2745,15 @@ fdasd_add_partition (fdasd_anchor_t *anc)
 	anc->vtoc_changed++;
 }
 
-
 /*
  * removes a partition from the 'partition table'
  */
-static void
-fdasd_remove_partition (fdasd_anchor_t *anc) 
+static void fdasd_remove_partition(fdasd_anchor_t *anc)
 {
-	cchhb_t hf1;
-        unsigned int part_id, i;
-	unsigned long start, stop;
 	partition_info_t *part_info = anc->first;
+	unsigned long start, stop;
+	unsigned int part_id, i;
+	cchhb_t hf1;
 
 	fdasd_list_partition_table(anc);
 
@@ -2739,21 +2763,23 @@ fdasd_remove_partition (fdasd_anchor_t *anc)
 
 	printf("\n");
 	part_id -= 48;
-	if (part_id == 0) return;
-        if (part_id > anc->used_partitions) {
-                printf("'%d' is not a valid partition id!\n", part_id);
-                return;
-        }
+	if (part_id == 0)
+		return;
+	if (part_id > anc->used_partitions) {
+		printf("'%d' is not a valid partition id!\n", part_id);
+		return;
+	}
 
-	printf("deleting partition number '%d'...\n", part_id);	
+	printf("deleting partition number '%d'...\n", part_id);
 
-	setpos(anc, part_id-1, -1);
-	for (i=1; i<part_id; i++) part_info=part_info->next;
+	setpos(anc, part_id - 1, -1);
+	for (i = 1; i < part_id; i++)
+		part_info = part_info->next;
 
 	start = cchh2trk(&part_info->f1->DS1EXT1.llimit, &geo);
 	stop  = cchh2trk(&part_info->f1->DS1EXT1.ulimit, &geo);
 
-	fdasd_dequeue_old_partition (anc, part_info, part_id-1);
+	fdasd_dequeue_old_partition(anc, part_info, part_id - 1);
 	anc->used_partitions -= 1;
 
 	if (anc->used_partitions != 0)
@@ -2768,29 +2794,28 @@ fdasd_remove_partition (fdasd_anchor_t *anc)
 	anc->vtoc_changed++;
 }
 
-
 /*
  * writes a standard volume label and a standard VTOC with
- * only one partition to disc. With this function is it 
+ * only one partition to disc. With this function is it
  * possible to create one partiton in non-interactive mode,
  * which can be used within shell scripts
  */
-static void
-fdasd_auto_partition(fdasd_anchor_t *anc)
+static void fdasd_auto_partition(fdasd_anchor_t *anc)
 {
 	partition_info_t *part_info = anc->first;
-	cchh_t llimit,ulimit;
-	cchhb_t hf1;
-	extent_t ext;
-	u_int32_t cyl;
+	cchh_t llimit, ulimit;
 	u_int16_t head;
+	u_int32_t cyl;
+	extent_t ext;
+	cchhb_t hf1;
 
 	if (!anc->silent)
 		printf("auto-creating one partition for the whole disk...\n");
 
 	fdasd_init_volume_label(anc);
 
-	if (anc->verbose) printf("initializing labels...\n");
+	if (anc->verbose)
+		printf("initializing labels...\n");
 	vtoc_init_format4_label(anc->f4, geo.cylinders,
 				anc->formatted_cylinders,
 				geo.heads, geo.sectors,
@@ -2803,7 +2828,7 @@ fdasd_auto_partition(fdasd_anchor_t *anc)
 	head = anc->f4->DS4DEVCT.DS4DSTRK;
 
 	part_info->used       = 0x01;
-        part_info->fspace_trk = 0;
+	part_info->fspace_trk = 0;
 	part_info->len_trk    = head * cyl - FIRST_USABLE_TRK;
 	part_info->start_trk  = FIRST_USABLE_TRK;
 	part_info->end_trk    = head * cyl - 1;
@@ -2813,11 +2838,12 @@ fdasd_auto_partition(fdasd_anchor_t *anc)
 
 	vtoc_set_extent(&ext, 0x01, 0x00, &llimit, &ulimit);
 
-	if (anc->formatted_cylinders > LV_COMPAT_CYL) {
+	if (anc->formatted_cylinders > LV_COMPAT_CYL)
 		vtoc_init_format8_label(anc->blksize, &ext, part_info->f1);
-	} else
+	else
 		vtoc_init_format1_label(anc->blksize, &ext, part_info->f1);
-        anc->fspace_trk      = 0;
+
+	anc->fspace_trk      = 0;
 	anc->used_partitions = 1;
 
 	get_addr_of_highest_f1_f8_label(anc, &hf1);
@@ -2829,23 +2855,23 @@ fdasd_auto_partition(fdasd_anchor_t *anc)
 	fdasd_exit(anc, 0);
 }
 
-
 /*
  * does the partitioning regarding to the config file
  */
-static void
-fdasd_auto_partition_conffile(fdasd_anchor_t *anc)
+static void fdasd_auto_partition_conffile(fdasd_anchor_t *anc)
 {
 	partition_info_t *part_info = anc->first;
-	cchh_t llimit,ulimit;
 	unsigned long start, stop;
+	cchh_t llimit, ulimit;
+	char *dsname = NULL;
 	extent_t ext;
 	cchhb_t hf1;
 	char *type;
 
 	fdasd_init_volume_label(anc);
 
-	if (anc->verbose) printf("initializing labels...\n");
+	if (anc->verbose)
+		printf("initializing labels...\n");
 	vtoc_init_format4_label(anc->f4, geo.cylinders,
 				anc->formatted_cylinders,
 				geo.heads, geo.sectors,
@@ -2878,23 +2904,23 @@ fdasd_auto_partition_conffile(fdasd_anchor_t *anc)
 				       ? 0x81 : 0x01),
 				0x00, &llimit, &ulimit);
 
-		if (anc->formatted_cylinders > LV_COMPAT_CYL) {
+		if (anc->formatted_cylinders > LV_COMPAT_CYL)
 			vtoc_init_format8_label(anc->blksize, &ext,
 						part_info->f1);
-		} else
+		else
 			vtoc_init_format1_label(anc->blksize, &ext,
 						part_info->f1);
 		anc->used_partitions += 1;
 
 		get_addr_of_highest_f1_f8_label(anc, &hf1);
-		vtoc_update_format4_label(anc->f4, &hf1,anc->f4->DS4DSREC - 1);
+		vtoc_update_format4_label(anc->f4, &hf1, anc->f4->DS4DSREC - 1);
 
 		/* update free space labels */
 		if (part_info->fspace_trk != 0) {
 			start = part_info->end_trk + 1;
-			stop  = start + part_info->fspace_trk -1;
+			stop  = start + part_info->fspace_trk - 1;
 
-			vtoc_set_freespace(anc->f4, anc->f5, anc->f7, '+', 
+			vtoc_set_freespace(anc->f4, anc->f5, anc->f7, '+',
 					   anc->verbose, start, stop,
 					   anc->formatted_cylinders, geo.heads);
 		}
@@ -2903,16 +2929,9 @@ fdasd_auto_partition_conffile(fdasd_anchor_t *anc)
 		vtoc_ebcdic_dec(part_info->f1->DS1DSNAM,
 				part_info->f1->DS1DSNAM, 44);
 		type = strstr(part_info->f1->DS1DSNAM, ".NEW");
-		if (part_info->type == PARTITION_SWAP)
-			strncpy(type, ".SWAP", 5);
-		else if (part_info->type == PARTITION_RAID)
-			strncpy(type, ".RAID", 5);
-		else if (part_info->type == PARTITION_LVM)
-			strncpy(type, ".LVM", 4);
-		else if (part_info->type == PARTITION_GPFS)
-			strncpy(type, ".GPFS", 5);
-		else
-			strncpy(type, ".NATIVE", 7);
+		get_part_dsname_by_type(part_info->type, &dsname);
+		sprintf(type, ".%s", dsname);
+
 		vtoc_ebcdic_enc(part_info->f1->DS1DSNAM,
 				part_info->f1->DS1DSNAM, 44);
 	} while ((part_info = part_info->next) != NULL);
@@ -2926,23 +2945,23 @@ fdasd_auto_partition_conffile(fdasd_anchor_t *anc)
 /*
  * quits fdasd without saving
  */
-static void
-fdasd_quit(fdasd_anchor_t *anc)
+static void fdasd_quit(fdasd_anchor_t *anc)
 {
 	char str[INPUT_BUF_SIZE];
 
-	if ((anc->vtoc_changed)||(anc->vlabel_changed)) {
+	if (anc->vtoc_changed || anc->vlabel_changed) {
 		snprintf(str, INPUT_BUF_SIZE,
-			"All changes will be lost! "
-			"Do you really want to quit?");
+			 "All changes will be lost! "
+			 "Do you really want to quit?");
 
-                if (yes_no(str) == 1)
+		if (yes_no(str) == 1)
 			return;
 
 		printf("exiting without saving...\n");
+	} else {
+		if (!anc->silent)
+			printf("exiting...\n");
 	}
-	else
-		if (!anc->silent) printf("exiting...\n");
 
 	fdasd_exit(anc, 0);
 }
@@ -2950,24 +2969,23 @@ fdasd_quit(fdasd_anchor_t *anc)
 /*
  *
  */
-int
-main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
-        fdasd_anchor_t anchor;
-	int rc=0;
+	fdasd_anchor_t anchor;
+	int rc = 0;
 
-        fdasd_initialize_anchor(&anchor);
+	fdasd_initialize_anchor(&anchor);
 
-        fdasd_parse_options (&anchor, &options, argc, argv);
-	fdasd_verify_device (&anchor, options.device);
-	fdasd_verify_options (&anchor);
+	fdasd_parse_options(&anchor, &options, argc, argv);
+	fdasd_verify_device(&anchor, options.device);
+	fdasd_verify_options(&anchor);
 	fdasd_get_geometry(&anchor);
 	fdasd_check_disk_access(&anchor);
 
 	/* check dasd for labels and vtoc */
 	rc = fdasd_check_volume(&anchor);
 
-	if ((anchor.formatted_cylinders * geo.heads) > BIG_DISK_SIZE)
+	if (anchor.formatted_cylinders * geo.heads > BIG_DISK_SIZE)
 		anchor.big_disk++;
 
 	if (anchor.auto_partition) {
@@ -2996,22 +3014,26 @@ main(int argc, char *argv[])
 	fdasd_menu();
 
 	while (1) {
-	        putchar('\n');
+		putchar('\n');
 		switch (tolower(read_char("Command (m for help): "))) {
 		case 'd':
-		        fdasd_remove_partition(&anchor);
+			fdasd_remove_partition(&anchor);
 			break;
 		case 'n':
-		        fdasd_add_partition(&anchor);
+			fdasd_add_partition(&anchor);
 			break;
-                case 'v':
-                        fdasd_change_volser(&anchor);
-                        break;
-                case 't':
-                        fdasd_change_part_type(&anchor);
-                        break;
+		case 'v':
+			fdasd_change_volser(&anchor);
+			break;
+		case 't':
+			fdasd_change_part_type(&anchor);
+			break;
 		case 'p':
-		        fdasd_list_partition_table(&anchor);
+			fdasd_list_partition_table(&anchor);
+			break;
+		case 'l':
+			printf("\n");
+			fdasd_list_known_partitions();
 			break;
 		case 's':
 			fdasd_show_mapping(&anchor);
@@ -3023,16 +3045,16 @@ main(int argc, char *argv[])
 			anchor.option_recreate++;
 			break;
 		case 'm':
-		        fdasd_menu();		  
+			fdasd_menu();
 			break;
 		case 'q':
 			fdasd_quit(&anchor);
 			break;
 		case 'w':
-		        fdasd_write_labels(&anchor);
-			fdasd_exit(&anchor, 0);		    
+			fdasd_write_labels(&anchor);
+			fdasd_exit(&anchor, 0);
 		default:
-		        printf("please use one of the following commands:\n");
+			printf("please use one of the following commands:\n");
 			fdasd_menu();
 		}
 
@@ -3046,17 +3068,7 @@ main(int argc, char *argv[])
 			anchor.option_recreate = 0;
 		}
 
-	}		
+	}
 
 	return -1;
 }
-
-
-
-
-
-
-
-
-
-

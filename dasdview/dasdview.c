@@ -178,8 +178,7 @@ dasdview_get_info(dasdview_info_t *info)
 	{
 		zt_error_print("dasdview: open error\n" \
 			"Could not open device '%s'.\n"
-			"Maybe you are using the -n option without devfs or \n"
-			"you have specified an unknown device or \n"
+			"Maybe you have specified an unknown device or \n"
 			"you are not authorized to do that.\n",
 			info->device);
 		exit(-1);

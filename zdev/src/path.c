@@ -150,8 +150,10 @@ exit_code_t path_create(const char *path)
 	copy = misc_strdup(path);
 	curr = (*copy == '/') ? copy + 1 : copy;
 	curr = strchr(curr, '/');
-	if (!curr)
+	if (!curr) {
+		free(copy);
 		return EXIT_OK;
+	}
 
 	do {
 		next = strchr(curr + 1, '/');
@@ -324,9 +326,8 @@ exit_code_t path_for_each(const char *path,
 						  void *), void *data)
 {
 	DIR *dir;
-	struct dirent de, *dep;
+	struct dirent *de;
 	char *p;
-	int err;
 	exit_code_t rc = EXIT_OK;
 
 	dir = opendir(path);
@@ -335,21 +336,14 @@ exit_code_t path_for_each(const char *path,
 		     strerror(errno));
 		return EXIT_RUNTIME_ERROR;
 	}
-	do {
-		err = readdir_r(dir, &de, &dep);
-		if (err) {
-			warn("Could not read directory %s: %s\n", dir,
-			     strerror(err));
-			rc = EXIT_RUNTIME_ERROR;
-		} else if (dep) {
-			if (strcmp(de.d_name, ".") == 0 ||
-			    strcmp(de.d_name, "..") == 0)
-				continue;
-			p = path_get("%s/%s", path, de.d_name);
-			rc = callback(p, de.d_name, data);
-			free(p);
-		}
-	} while (dep && rc == EXIT_OK);
+	while (rc == EXIT_OK && (de = readdir(dir))) {
+		if (strcmp(de->d_name, ".") == 0 ||
+		    strcmp(de->d_name, "..") == 0)
+			continue;
+		p = path_get("%s/%s", path, de->d_name);
+		rc = callback(p, de->d_name, data);
+		free(p);
+	}
 
 	closedir(dir);
 

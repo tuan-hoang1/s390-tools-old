@@ -82,13 +82,22 @@ Unconditional reserve device.
 .B Note: 
 Use with care, this breaks an existing reserve.
 .TP   
+.BR "\-\-enable-stats"
+Enable performance statistics globally.
+.br
+\fBNote:\fR Same as "echo 'set on' > /proc/dasd/statistics"
+.TP
+.BR "\-\-disable-stats"
+Disable performance statistics globally.
+.br
+\fBNote:\fR Same as "echo 'set off' > /proc/dasd/statistics"
+.TP
 .BR "\-P" " or " "\-\-profile"
 Print profile info of device.
 .br
 .B Note: 
-Profile info must be available and enabled 
-('echo set on > /proc/dasd/statistics') 
-in the kernel to get valid results out of the profile commands.
+Profile info must be available and enabled in the kernel to get valid results
+out of the profile commands. Enable statistics via \fB--enable-stats\fR.
 .TP   
 .BR "\-Q" " or " "\-\-query_reserve"
 Query the current reserve status of the device.

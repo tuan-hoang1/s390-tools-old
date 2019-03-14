@@ -525,24 +525,23 @@ bool misc_read_dir(const char *path, struct util_list *list,
 		   bool (*filter)(const char *, void *), void *data)
 {
 	DIR *dir;
-	struct dirent de;
-	struct dirent *de_ptr;
+	struct dirent *de;
 
 	debug("Reading contents of directory %s\n", path);
 	dir = opendir(path);
 	if (!dir)
 		return false;
 
-	while (!readdir_r(dir, &de, &de_ptr) && de_ptr) {
-		if (de.d_name[0] == '.') {
-			if (de.d_name[1] == 0)
+	while ((de = readdir(dir))) {
+		if (de->d_name[0] == '.') {
+			if (de->d_name[1] == 0)
 				continue;
-			if (de.d_name[1] == '.' && de.d_name[2] == 0)
+			if (de->d_name[1] == '.' && de->d_name[2] == 0)
 				continue;
 		}
-		if (filter && !filter(de.d_name, data))
+		if (filter && !filter(de->d_name, data))
 			continue;
-		strlist_add(list, de.d_name);
+		strlist_add(list, de->d_name);
 	}
 
 	closedir(dir);

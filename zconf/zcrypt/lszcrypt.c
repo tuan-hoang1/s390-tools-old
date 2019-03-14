@@ -97,7 +97,11 @@ static void show_bus(void)
 	const char *poll_thread, *ap_interrupts;
 	char *ap;
 
+	/* check if ap driver is available */
 	ap = util_path_sysfs("bus/ap");
+	if (!util_path_is_dir(ap))
+		errx(EXIT_FAILURE, "Crypto device driver not available.");
+
 	util_file_read_l(&domain, 10, "%s/ap_domain", ap);
 	util_file_read_l(&max_domain, 10, "%s/ap_max_domain_id", ap);
 	util_file_read_l(&config_time, 10, "%s/config_time", ap);
@@ -151,7 +155,7 @@ static void show_domains_util_rec(char *domain_array[])
 	}
 	util_rec_free(rec);
 	printf("------------------------------------------------------\n");
-	printf("C: Control domain \n");
+	printf("C: Control domain\n");
 	printf("U: Usage domain\n");
 	printf("B: Both (Control + Usage domain)\n");
 }
@@ -167,7 +171,11 @@ static void show_domains(void)
 	int i, x, n;
 	uint8_t dom_mask_bit;
 
+	/* check if ap driver is available */
 	ap = util_path_sysfs("bus/ap");
+	if (!util_path_is_dir(ap))
+		errx(EXIT_FAILURE, "Crypto device driver not available.");
+
 	util_file_read_line(ctrl_domain_mask, sizeof(ctrl_domain_mask),
 			    "%s/ap_control_domain_mask", ap);
 	util_file_read_line(usag_domain_mask, sizeof(usag_domain_mask),
@@ -202,7 +210,6 @@ static void show_domains(void)
 		domain_array[n++] = "";
 
 	show_domains_util_rec(domain_array);
-	return;
 }
 
 /*
@@ -212,21 +219,26 @@ static void show_capability(const char *id_str)
 {
 	unsigned long func_val;
 	long hwtype, id;
-	char *p, *dev, card[7];
+	char *p, *ap, *dev, card[7];
+
+	/* check if ap driver is available */
+	ap = util_path_sysfs("bus/ap");
+	if (!util_path_is_dir(ap))
+		errx(EXIT_FAILURE, "Crypto device driver not available.");
 
 	id = strtol(id_str, &p, 0);
 	if (id < 0 || id > 255 || p == id_str || *p != '\0')
-		errx(EXIT_FAILURE, "error - '%s' is an invalid cryptographic device id!", id_str);
+		errx(EXIT_FAILURE, "Error - '%s' is an invalid cryptographic device id.", id_str);
 	snprintf(card, sizeof(card), "card%02lx", id);
 	dev = util_path_sysfs("devices/ap/%s", card);
 	if (!util_path_is_dir(dev))
-		errx(EXIT_FAILURE, "error - cryptographic device %s does not exist!", card);
+		errx(EXIT_FAILURE, "Error - cryptographic device %s does not exist.", card);
 	util_file_read_l(&hwtype, 10, "%s/hwtype", dev);
 	/* If sysfs attribute is missing, set functions to 0 */
 	if (util_file_read_ul(&func_val, 16, "%s/ap_functions", dev))
 		func_val = 0x00000000;
 	/* Skip devices, which are not supported by zcrypt layer */
-	if (!util_path_is_readable("%s/type", dev) &&
+	if (!util_path_is_readable("%s/type", dev) ||
 	    !util_path_is_readable("%s/online", dev)) {
 		printf("Detailed capability information for %s (hardware type %ld) is not available.\n", card, hwtype);
 		return;
@@ -342,10 +354,10 @@ static void show_subdevice(struct util_rec *rec, const char *grp_dev,
 			   const char *sub_dev)
 {
 	if (!util_path_is_dir("%s/%s", grp_dev, sub_dev))
-		errx(EXIT_FAILURE, "error - cryptographic device %s/%s does not exist!", grp_dev, sub_dev);
+		errx(EXIT_FAILURE, "Error - cryptographic device %s/%s does not exist.", grp_dev, sub_dev);
 
 	/* Skip devices, which are not supported by zcrypt layer */
-	if (!util_path_is_readable("%s/type", grp_dev) &&
+	if (!util_path_is_readable("%s/type", grp_dev) ||
 	    !util_path_is_readable("%s/%s/online", grp_dev, sub_dev))
 		return;
 
@@ -364,12 +376,11 @@ static void show_subdevices(struct util_rec *rec, const char *grp_dev)
 	struct dirent **dev_vec;
 	int i, count;
 
-	count = util_scandir(&dev_vec, alphasort, "%s/..\\....", grp_dev);
-	if (count == -1)
-		errx(EXIT_FAILURE, "error - cryptographic device driver zcrypt is not loaded!");
-	for (i = 0; i < count; i++) {
+	count = util_scandir(&dev_vec, alphasort, grp_dev, "..\\....");
+	if (count < 1)
+		errx(EXIT_FAILURE, "Error - no subdevices found for %s.\n", grp_dev);
+	for (i = 0; i < count; i++)
 		show_subdevice(rec, grp_dev, dev_vec[i]->d_name);
-	}
 }
 
 /*
@@ -442,12 +453,10 @@ static void show_device(struct util_rec *rec, const char *device)
 
 	strcpy(card, &device[4]);
 	grp_dev = util_path_sysfs("devices/ap/%s", device);
-	if (!util_path_is_dir(grp_dev)) {
-		errx(EXIT_FAILURE, "error - cryptographic device %s does not exist!",
-			 card);
-	}
+	if (!util_path_is_dir(grp_dev))
+		errx(EXIT_FAILURE, "Error - cryptographic device %s does not exist.", device);
 	/* Skip devices, which are not supported by zcrypt layer */
-	if (!util_path_is_readable("%s/type", grp_dev) &&
+	if (!util_path_is_readable("%s/type", grp_dev) ||
 	    !util_path_is_readable("%s/online", grp_dev)) {
 		goto out_free;
 	}
@@ -499,7 +508,12 @@ static void show_devices_all(void)
 	struct util_rec *rec = util_rec_new_wide("-");
 	struct dirent **dev_vec;
 	int i, count;
-	char *path;
+	char *ap, *path;
+
+	/* check if ap driver is available */
+	ap = util_path_sysfs("bus/ap");
+	if (!util_path_is_dir(ap))
+		errx(EXIT_FAILURE, "Crypto device driver not available.");
 
 	/* Define the record */
 	define_rec_default(rec);
@@ -507,13 +521,12 @@ static void show_devices_all(void)
 
 	/* Scan the devices */
 	path = util_path_sysfs("devices/ap/");
-	count = util_scandir(&dev_vec, alphasort, "%s/card[0-9a-fA-F]+", path);
-	if (count == -1)
-		errx(EXIT_FAILURE, "error - cryptographic device driver zcrypt is not loaded!");
+	count = util_scandir(&dev_vec, alphasort, path, "card[0-9a-fA-F]+");
+	if (count < 1)
+		errx(EXIT_FAILURE, "No crypto card devices found.");
 	util_rec_print_hdr(rec);
-	for (i = 0; i < count; i++) {
+	for (i = 0; i < count; i++)
 		show_device(rec, dev_vec[i]->d_name);
-	}
 	free(path);
 }
 
@@ -524,8 +537,13 @@ static void show_devices_argv(char *argv[])
 {
 	struct util_rec *rec = util_rec_new_wide("-");
 	struct dirent **dev_vec, **subdev_vec;
-	char *grp_dev, *path, card[7], sub_dev[7];
+	char *ap, *grp_dev, *path, card[7], sub_dev[7];
 	int id, dom, i, n, dev_cnt, sub_cnt;
+
+	/* check if ap driver is available */
+	ap = util_path_sysfs("bus/ap");
+	if (!util_path_is_dir(ap))
+		errx(EXIT_FAILURE, "Crypto device driver not available.");
 
 	/* Define the record */
 	define_rec_default(rec);
@@ -535,24 +553,37 @@ static void show_devices_argv(char *argv[])
 	for (i = 0; argv[i] != NULL; i++) {
 		id = -1;
 		dom = -1;
-		if (!sscanf(argv[i], "%x.%x", &id, &dom)) {
-			if (!sscanf(argv[i], ".%x", &dom)) {
-				printf("Invalid adpater id!\n");
-				return;
+		if (sscanf(argv[i], "%x.%x", &id, &dom) >= 1) {
+			/* at least the id field was valid */
+			if (id >= 0 && dom >= 0) {	/* single subdevice */
+				sprintf(sub_dev, "%02x.%04x", id, dom);
+				grp_dev = util_path_sysfs("devices/ap/card%02x",
+							  id);
+				show_subdevice(rec, grp_dev, sub_dev);
+				free(grp_dev);
+			} else {			/* group device */
+				sprintf(card, "card%02x", id);
+				show_device(rec, card);
 			}
+			return;
+		}
+		if (sscanf(argv[i]+1, "%x", &dom) == 1) {
 			/* list specific domains of all adapters */
 			path = util_path_sysfs("devices/ap/");
-			dev_cnt = util_scandir(&dev_vec, alphasort,
-					       "%s/card[0-9a-fA-F]+/", path);
+			dev_cnt = util_scandir(&dev_vec, alphasort, path,
+					       "card[0-9a-fA-F]+");
+			if (dev_cnt < 1)
+				errx(EXIT_FAILURE, "No crypto card devices found.");
 			free(path);
-			if (dev_cnt == -1)
-				errx(EXIT_FAILURE, "error - cryptographic device driver zcrypt is not loaded!");
 			for (i = 0; i < dev_cnt; i++) {
 				path = util_path_sysfs("devices/ap/%s",
 						       dev_vec[i]->d_name);
 				sub_cnt = util_scandir(&subdev_vec, alphasort,
-						       "%s/[0-9a-fA-F]+.%04x/", path,
+						       path,
+						       "[0-9a-fA-F]+.%04x",
 						       dom);
+				if (sub_cnt < 1)
+					errx(EXIT_FAILURE, "No queue devices with given domain value found.");
 				for (n = 0; n < sub_cnt; n++) {
 					show_subdevice(rec, path,
 						       subdev_vec[n]->d_name);
@@ -561,16 +592,7 @@ static void show_devices_argv(char *argv[])
 			}
 			return;
 		}
-		/* at least the id field was valid */
-		if (id >= 0 && dom >= 0) {	/* single subdevice */
-			sprintf(sub_dev, "%02x.%04x", id, dom);
-			grp_dev = util_path_sysfs("devices/ap/card%02x", id);
-			show_subdevice(rec, grp_dev, sub_dev);
-			free(grp_dev);
-		} else {			/* group device */
-			sprintf(card, "card%02x", id);
-			show_device(rec, card);
-		}
+		printf("Invalid adpater id!\n");
 	}
 }
 
@@ -586,14 +608,14 @@ void print_adapter_id_help(void)
 	printf("  '<card-id>.<domain-id>'). To filter all devices according to a dedicated\n");
 	printf("  domain just provide '.<domain-id>'.\n");
 	printf("  If no ids are given, all available devices are displayed.\n");
-	printf("  \n");
+	printf("\n");
 	printf("EXAMPLE:\n");
 	printf("  List all cryptographic devices with card id '02'.\n");
 	printf("  #>lszcrypt 02\n");
-	printf("  \n");
+	printf("\n");
 	printf("  List cryptographic devices with card id '02' and domain id '0005'.\n");
 	printf("  #>lszcrypt 02.0005\n");
-	printf("  \n");
+	printf("\n");
 }
 
 /*

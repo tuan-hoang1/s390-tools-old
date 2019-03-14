@@ -16,7 +16,7 @@ check_dep:
 	$(call check_dep, \
 		"cmsfs-fuse", \
 		"fuse.h", \
-		"fuse-devel", \
+		"fuse-devel or libfuse-dev", \
 		"HAVE_FUSE=0")
 
 all: check_dep cmsfs-fuse

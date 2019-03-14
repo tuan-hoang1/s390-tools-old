@@ -55,6 +55,7 @@ struct qeth_qoat_physical {
 #define OAT_OSA_GEN_OSAE3 0x01
 #define OAT_OSA_GEN_OSAE4S 0x02
 #define OAT_OSA_GEN_OSAE5S 0x03
+#define OAT_OSA_GEN_OSAE6S 0x04
 	__u8 osa_gen;
 #define OAT_PORT_SPEED_UNKNOWN      0x00
 #define OAT_PORT_SPEED_10mbs_half   0x01

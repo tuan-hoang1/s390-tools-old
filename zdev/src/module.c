@@ -98,7 +98,6 @@ static exit_code_t do_load(const char *mod, char *params, err_t err)
 		remove_file(empty_file);
 		free(empty_file);
 	} else {
-		mp = path_get_modprobe();
 		if (misc_system(err, "%s %s %s", mp, mod,
 				err == err_ignore ? " 2>/dev/null" : ""))
 			rc = EXIT_MOD_LOAD_FAILED;

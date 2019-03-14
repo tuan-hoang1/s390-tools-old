@@ -162,7 +162,7 @@ static void print_css(const char *css_dir, struct util_rec *rec)
 		err(EXIT_FAILURE, "Invalid directory: %s", css_dir);
 
 	path = util_path_sysfs("devices/css%d", css_id);
-	count = util_scandir(&de_vec, chpsort, "%s/chp%x.*", path, css_id);
+	count = util_scandir(&de_vec, chpsort, path, "chp%x.*", css_id);
 	for (i = 0; i < count; i++)
 		print_chpid(de_vec[i]->d_name, css_id, rec);
 	util_scandir_free(de_vec, count);
@@ -193,7 +193,7 @@ static void cmd_lschp(void)
 	 * Iterate over each "/sys/devices/css.*"
 	 */
 	path = util_path_sysfs("devices");
-	count = util_scandir(&de_vec, alphasort, "%s/css.*", path);
+	count = util_scandir(&de_vec, alphasort, path, "^css[[:xdigit:]]{1,2}$");
 	for (i = 0; i < count; i++)
 		print_css(de_vec[i]->d_name, rec);
 	util_ptr_vec_free((void **) de_vec, count);

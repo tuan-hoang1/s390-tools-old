@@ -15,12 +15,7 @@
 
 # chkconfig: 012356 01 99
 
-# source function library
-if [ -r /lib/lsb/init-functions ]; then
-	. /lib/lsb/init-functions
-elif [ -r /etc/init.d/functions ]; then
-	. /etc/init.d/functions
-fi
+# This script can be either used stand-alone or as System V init script.
 
 DUMPCONF_BIN=/etc/init.d/dumpconf
 DUMP_CONFIG_FILE=/etc/sysconfig/dumpconf
@@ -493,7 +488,9 @@ start()
 stop()
 {
 	if [ -f $PIDFILE ]; then
-		killproc -p $PIDFILE -TERM $DUMPCONF_BIN
+		PID=$(cat $PIDFILE)
+		kill -TERM $PID 2> /dev/null
+		rm -f $PIDFILE
 	fi
 	echo none > $DUMP_CONFIG_DIR/dump_type || RETVAL=1
 	if [ -f $ON_RESTART_CONFIG_FILE ]; then

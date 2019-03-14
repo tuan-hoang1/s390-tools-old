@@ -3,10 +3,13 @@
  *
  * General helper functions
  *
- * Copyright IBM Corp. 2013
+ * Copyright IBM Corp. 2013, 2017
  */
 
+#include <string.h>
+
 #include "lib/util_base.h"
+#include "lib/util_libc.h"
 
 /*
  * Print hexdump for buffer with variable group parameter
@@ -41,4 +44,47 @@ void util_hexdump_grp(FILE *fh, const char *tag, const void *data, int grp,
 void util_hexdump(FILE *fh, const char *tag, const void *data, int count)
 {
 	util_hexdump_grp(fh, tag, data, sizeof(long), count, 0);
+}
+
+#define MAX_CHARS_PER_LINE 80
+
+/*
+ * Print string with indentation
+ *
+ * Print a string while accounting for a given indent value, characters per line
+ * limit, and line breaks ('\n') within the string. The first line has to be
+ * indented manually.
+ *
+ * @param[in] str    String that should be printed
+ * @param[in] indent Indentation for printing
+ */
+void util_print_indented(const char *str, int indent)
+{
+	char *word, *line, *desc, *desc_ptr;
+	int word_len, pos = indent;
+
+	desc = desc_ptr = util_strdup(str);
+	line = strsep(&desc, "\n");
+	while (line) {
+		word = strsep(&line, " ");
+		pos = indent;
+		while (word) {
+			word_len = strlen(word);
+			if (pos + word_len + 1 > MAX_CHARS_PER_LINE) {
+				printf("\n%*s", indent, "");
+				pos = indent;
+			}
+			if (pos == indent)
+				printf("%s", word);
+			else
+				printf(" %s", word);
+			pos += word_len + 1;
+			word = strsep(&line, " ");
+		}
+		if (desc)
+			printf("\n%*s", indent, "");
+		line =  strsep(&desc, "\n");
+	}
+	printf("\n");
+	free(desc_ptr);
 }

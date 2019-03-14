@@ -8,6 +8,7 @@
 
 #include <argz.h>
 #include <libgen.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,8 +18,6 @@
 #include "lib/util_opt.h"
 #include "lib/util_panic.h"
 #include "lib/util_prg.h"
-
-#include "misc.h"
 
 /*
  * Private data
@@ -33,9 +32,12 @@ static struct util_opt_l {
 	struct util_opt *opt_vec;
 	/* Length of longest option string */
 	int opt_max;
+	/* Command used for parsing */
+	const char *command;
 } l;
 
 struct util_opt_l *util_opt_l = &l;
+
 /// @endcond
 
 #define util_opt_iterate(opt) \
@@ -108,8 +110,26 @@ void util_opt_init(struct util_opt *opt_vec, const char *opt_prefix)
 	/* Add end marker to option array and short option string */
 	memset(&l.option_vec[j], 0, sizeof(struct option));
 	*str = '\0';
+}
 
-	l.opt_max = opt_max_len();
+/**
+ * Set the current command for command line option processing
+ *
+ * @param[in] command  The current command or NULL for no command
+ */
+void util_opt_set_command(const char *command)
+{
+	l.command = command;
+}
+
+/*
+ * Return true, if option belongs to current command setting
+ */
+static bool opt_is_active(struct util_opt *opt)
+{
+	if (!opt->command || !l.command)
+		return true;
+	return (strcmp(opt->command, l.command) == 0);
 }
 
 /**
@@ -120,7 +140,33 @@ void util_opt_init(struct util_opt *opt_vec, const char *opt_prefix)
  */
 int util_opt_getopt_long(int argc, char *argv[])
 {
-	return getopt_long(argc, argv, l.opt_str, l.option_vec, NULL);
+	struct util_opt *opt;
+	int val;
+
+	val = getopt_long(argc, argv, l.opt_str, l.option_vec, NULL);
+
+	switch (val) {
+	case ':':
+	case '?':
+	case -1:
+		break;
+	default:
+		if (!l.command)
+			break;
+		util_opt_iterate(opt) {
+			if (!opt_is_active(opt))
+				continue;
+			if (opt->option.val == val)
+				goto out;
+		}
+		/* No valid option found for command */
+		val = '?';
+		if (optarg)
+			optind--;
+		break;
+	}
+out:
+	return val;
 }
 
 /*
@@ -162,6 +208,20 @@ static void format_opt(char *buf, size_t maxlen, const struct util_opt *opt)
 }
 
 /*
+ * Return true, if option is to be printed for the current command setting
+ */
+static bool should_print_opt(const struct util_opt *opt)
+{
+	if (l.command) {
+		/* Print only options that belong to command */
+		return opt->command ? !strcmp(opt->command, l.command) : false;
+	} else {
+		/* Print only common options (standard for non-command tools) */
+		return opt->command ? false : true;
+	}
+}
+
+/*
  * Return size of the longest formatted option
  */
 static int opt_max_len(void)
@@ -172,6 +232,8 @@ static int opt_max_len(void)
 
 	util_opt_iterate(opt) {
 		if (opt->flags & UTIL_OPT_FLAG_SECTION)
+			continue;
+		if (!should_print_opt(opt))
 			continue;
 		format_opt(opt_str, MAX_OPTLEN, opt);
 		max = MAX(max, strlen(opt_str));
@@ -185,8 +247,8 @@ static int opt_max_len(void)
  */
 void util_opt_print_indented(const char *opt, const char *desc)
 {
-	printf(" %-*s ", l.opt_max, opt);
-	misc_print_formatted(desc, 2 + l.opt_max);
+	printf(" %-*s ", l.opt_max + 1, opt);
+	util_print_indented(desc, 3 + l.opt_max);
 }
 
 /**
@@ -205,7 +267,11 @@ void util_opt_print_help(void)
 	 *
 	 *   -p, --print STRING   Print STRING to console
 	 */
+	l.opt_max = opt_max_len();
+
 	util_opt_iterate(opt) {
+		if (!should_print_opt(opt))
+			continue;
 		if (opt->flags & UTIL_OPT_FLAG_SECTION) {
 			printf("%s%s\n", first ? "" : "\n", opt->desc);
 			first = 0;

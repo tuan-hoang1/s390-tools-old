@@ -104,7 +104,8 @@ void print_scm(const char *addr, struct util_rec *rec)
 	int count;
 
 	path = util_path_sysfs("bus/scm/devices/%s/block", addr);
-	count = util_scandir(&de_vec, NULL, "%s/scm.*", path);
+	/* Match scma..scmzz */
+	count = util_scandir(&de_vec, NULL, path, "^scm[[:lower:]]{1,2}$");
 	if (count < 0) {
 		/* If scm_block not loaded */
 		print_scm_attrs(NULL, addr, rec);
@@ -140,7 +141,7 @@ static void cmd_lsscm(void)
 	/* Call print_scm() for each "/sys/bus/scm/devices/[%16x]" softlink */
 	path = util_path_sysfs("bus/scm/devices");
 	count = util_scandir(&de_vec, util_scandir_hexsort,
-			     "%s/[0-9,a-f]+", path);
+			     path, "^[[:xdigit:]]{16}$");
 	if (count < 0)
 		errx(EXIT_FAILURE, "Could not read directory: %s", path);
 	for (i = 0; i < count; i++) {

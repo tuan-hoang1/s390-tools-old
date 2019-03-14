@@ -14,6 +14,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "lib/util_file.h"
 #include "lib/util_opt.h"
 #include "lib/util_prg.h"
 #include "lib/zt_common.h"
@@ -38,6 +39,8 @@ static const struct util_prg prg = {
 
 /* Defines for options with no short command */
 #define OPT_PATH_RESET_ALL	128
+#define OPT_ENABLE_STATS	129
+#define OPT_DISABLE_STATS	130
 
 static struct util_opt opt_vec[] = {
 	UTIL_OPT_SECTION("CACHING MODES (ECKD ONLY)"),
@@ -76,6 +79,20 @@ static struct util_opt opt_vec[] = {
 	},
 	UTIL_OPT_SECTION("PERFORMANCE STATISTICS"),
 	{
+		.option = {
+			"enable-stats", no_argument, NULL, OPT_ENABLE_STATS
+		},
+		.desc = "Enable performance statistics globally",
+		.flags = UTIL_OPT_FLAG_NOSHORT,
+	},
+	{
+		.option = {
+			"disable-stats", no_argument, NULL, OPT_DISABLE_STATS
+		},
+		.desc = "Disable performance statistics globally",
+		.flags = UTIL_OPT_FLAG_NOSHORT,
+	},
+	{
 		.option = { "prof_item", required_argument, NULL, 'I' },
 		.argument = "ROW",
 		.desc = "Print single profile item: reqs, sects, sizes, total, "
@@ -107,24 +124,26 @@ static struct util_opt opt_vec[] = {
 	UTIL_OPT_END
 };
 
-#define CMD_KEYWORD_NUM		14
+#define CMD_KEYWORD_NUM		16
 #define DEVICES_NUM		256
 
 enum cmd_keyword_id {
-	cmd_keyword_help           =  0,
-	cmd_keyword_version        =  1,
-	cmd_keyword_get_cache      =  2,
-	cmd_keyword_cache          =  3,
-	cmd_keyword_no_cyl         =  4,
-	cmd_keyword_reserve        =  5,
-	cmd_keyword_release        =  6,
-	cmd_keyword_slock          =  7,
-	cmd_keyword_profile        =  8,
-	cmd_keyword_prof_item      =  9,
-	cmd_keyword_reset_prof     = 10,
-	cmd_keyword_query_reserve  = 11,
-	cmd_keyword_path           = 12,
-	cmd_keyword_path_all       = 13,
+	cmd_keyword_help,
+	cmd_keyword_version,
+	cmd_keyword_get_cache,
+	cmd_keyword_cache,
+	cmd_keyword_no_cyl,
+	cmd_keyword_reserve,
+	cmd_keyword_release,
+	cmd_keyword_slock,
+	cmd_keyword_profile,
+	cmd_keyword_prof_item,
+	cmd_keyword_reset_prof,
+	cmd_keyword_query_reserve,
+	cmd_keyword_path,
+	cmd_keyword_path_all,
+	cmd_keyword_enable_stats,
+	cmd_keyword_disable_stats,
 };
 
 
@@ -146,7 +165,9 @@ static const struct {
 	{ "reset_prof",     cmd_keyword_reset_prof },
 	{ "query_reserve",  cmd_keyword_query_reserve },
 	{ "path_reset",     cmd_keyword_path },
-	{ "path_reset_all", cmd_keyword_path_all }
+	{ "path_reset_all", cmd_keyword_path_all },
+	{ "enable-stats",   cmd_keyword_enable_stats },
+	{ "disable-stats",  cmd_keyword_disable_stats }
 };	
 
 
@@ -163,20 +184,22 @@ static enum cmd_key_state cmd_key_table[CMD_KEYWORD_NUM][CMD_KEYWORD_NUM] = {
 	 *		           ion  cach e    yl   rve  ase  k    ile  _ite t_pr y_re      _all
 	 *		               	e                                  m    of  serv
 	 */
-	/* help  	 */ { req, opt, opt, opt, opt, opt, opt, opt, opt, opt, opt, inv, inv, inv },
-	/* version	 */ { inv, req, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv },
-	/* get_cache	 */ { opt, opt, req, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv },
-	/* cache 	 */ { opt, opt, inv, req, opt, inv, inv, inv, inv, inv, inv, inv, inv, inv },
-	/* no_cyl	 */ { opt, opt, inv, req, req, inv, inv, inv, inv, inv, inv, inv, inv, inv },
-	/* reserve	 */ { opt, opt, inv, inv, inv, req, inv, inv, inv, inv, inv, inv, inv, inv },
-	/* release	 */ { opt, opt, inv, inv, inv, inv, req, inv, inv, inv, inv, inv, inv, inv },
-	/* slock 	 */ { opt, opt, inv, inv, inv, inv, inv, req, inv, inv, inv, inv, inv, inv },
-	/* profile	 */ { opt, opt, inv, inv, inv, inv, inv, inv, req, opt, inv, inv, inv, inv },
-	/* prof_item	 */ { opt, opt, inv, inv, inv, inv, inv, inv, req, req, inv, inv, inv, inv },
-	/* reset_prof	 */ { opt, opt, inv, inv, inv, inv, inv, inv, inv, inv, req, inv, inv, inv },
-	/* query_reserve */ { inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, req, inv, inv },
-	/* path          */ { inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, req, inv },
-	/* path_all      */ { inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, req },
+	/* help  	 */ { req, opt, opt, opt, opt, opt, opt, opt, opt, opt, opt, inv, inv, inv, inv, inv },
+	/* version	 */ { inv, req, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv },
+	/* get_cache	 */ { opt, opt, req, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv },
+	/* cache 	 */ { opt, opt, inv, req, opt, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv },
+	/* no_cyl	 */ { opt, opt, inv, req, req, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv },
+	/* reserve	 */ { opt, opt, inv, inv, inv, req, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv },
+	/* release	 */ { opt, opt, inv, inv, inv, inv, req, inv, inv, inv, inv, inv, inv, inv, inv, inv },
+	/* slock 	 */ { opt, opt, inv, inv, inv, inv, inv, req, inv, inv, inv, inv, inv, inv, inv, inv },
+	/* profile	 */ { opt, opt, inv, inv, inv, inv, inv, inv, req, opt, inv, inv, inv, inv, inv, inv },
+	/* prof_item	 */ { opt, opt, inv, inv, inv, inv, inv, inv, req, req, inv, inv, inv, inv, inv, inv },
+	/* reset_prof	 */ { opt, opt, inv, inv, inv, inv, inv, inv, inv, inv, req, inv, inv, inv, inv, inv },
+	/* query_reserve */ { inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, req, inv, inv, inv, inv },
+	/* path          */ { inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, req, inv, inv, inv },
+	/* path_all      */ { inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, req, inv, inv },
+	/* enable-stats  */ { inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, req, inv },
+	/* disable-stats */ { inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, inv, req },
 };
 
 struct parameter {
@@ -388,6 +411,14 @@ static int get_command_line(int argc, char *argv[], struct command_line *line)
 			rc = store_option (&cmdline, cmd_keyword_slock,
 					   optarg);
 			break;
+		case OPT_ENABLE_STATS:
+			rc = store_option(&cmdline, cmd_keyword_enable_stats,
+					  optarg);
+			break;
+		case OPT_DISABLE_STATS:
+			rc = store_option(&cmdline, cmd_keyword_disable_stats,
+					  optarg);
+			break;
 		case 'P':
 			rc = store_option (&cmdline, cmd_keyword_profile,
 					   optarg);
@@ -486,6 +517,27 @@ static int do_command(char *device, struct command_line cmdline)
 	return rc;
 }
 
+/*
+ * Enable/Disable DASD performance statistics globally by writing
+ * 'set on' or 'set off' to /proc/dasd/statistics.
+ */
+static int tunedasd_set_global_stats(int val)
+{
+	const char *path = "/proc/dasd/statistics";
+	int rc = 0;
+
+	if (val)
+		rc = util_file_write_s("set on", path);
+	else
+		rc = util_file_write_s("set off", path);
+
+	if (rc)
+		error_print("Could not enable/disable performance statistics");
+	else
+		printf("Performance statistics %sabled\n", val ? "en" : "dis");
+
+	return rc;
+}
 
 /*
  * Main. 
@@ -520,6 +572,12 @@ main (int argc, char* argv[])
 	if (check_for_root ()) {
 		return 1;
 	}
+
+	/* Enable/Disable performance statistics */
+	if (cmdline.parm[cmd_keyword_enable_stats].kw_given)
+		return tunedasd_set_global_stats(1);
+	if (cmdline.parm[cmd_keyword_disable_stats].kw_given)
+		return tunedasd_set_global_stats(0);
 
 	/* Do each of the commands on each of the devices 
 	 * and don't care about the return codes           */

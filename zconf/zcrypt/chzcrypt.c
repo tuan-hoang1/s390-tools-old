@@ -129,11 +129,12 @@ static void poll_thread_set(const char *mode_str)
 		verbose("Disabling poll thread.\n");
 	attr = util_path_sysfs("bus/ap/poll_thread");
 	if (!util_path_is_writable(attr))
-		errx(EXIT_FAILURE, "error - unsupported version of zcrypt or driver not loaded!");
+		errx(EXIT_FAILURE, "Error - can't write to %s.\n Wrong permissions"
+		     " or wrong tools version.", attr);
 	util_file_write_l(mode, 10, attr);
 	util_file_read_l(&mode_read, 10, attr);
 	if (mode != mode_read)
-		errx(EXIT_FAILURE, "error - unable change poll thread settings!");
+		errx(EXIT_FAILURE, "Error - unable to change poll thread setting.");
 	free(attr);
 }
 
@@ -146,17 +147,17 @@ static void config_time_set(const char *timeout_str)
 	char *attr;
 
 	if (sscanf(timeout_str, "%ld", &timeout) != 1) {
-		errx(EXIT_FAILURE, "error - invalid configuration timeout '%s'!",
-			 timeout_str);
+		errx(EXIT_FAILURE, "Error - invalid configuration timeout '%s'.", timeout_str);
 	}
 	attr = util_path_sysfs("bus/ap/config_time");
 	verbose("Setting configuration timer to %ld seconds.\n", timeout);
 	if (!util_path_is_writable(attr))
-		errx(EXIT_FAILURE, "error - unsupported version of zcrypt or driver not loaded!");
+		errx(EXIT_FAILURE, "Error - can't write to %s.\n Wrong permissions"
+		     " or wrong tools version.", attr);
 	util_file_write_l(timeout, 10, attr);
 	util_file_read_l(&timeout_read, 10, attr);
 	if (timeout != timeout_read)
-		errx(EXIT_FAILURE, "error - unable to change configuration timer to %ld seconds!", timeout);
+		errx(EXIT_FAILURE, "Error - unable to change configuration timer setting.");
 	free(attr);
 }
 
@@ -168,18 +169,17 @@ static void poll_timeout_set(const char *poll_timeout_str)
 	long poll_timeout, poll_timeout_read;
 	char *attr;
 
-	if (sscanf(poll_timeout_str, "%ld", &poll_timeout) != 1) {
-		errx(EXIT_FAILURE, "error - invalid poll timeout '%s'!",
-			 poll_timeout_str);
-	}
+	if (sscanf(poll_timeout_str, "%ld", &poll_timeout) != 1)
+		errx(EXIT_FAILURE, "Error - invalid poll timeout '%s'.", poll_timeout_str);
 	attr = util_path_sysfs("bus/ap/poll_timeout");
 	verbose("Setting poll timeout to %ld seconds.\n", poll_timeout);
 	if (!util_path_is_writable(attr))
-		errx(EXIT_FAILURE, "error - unsupported version of zcrypt or driver not loaded!");
+		errx(EXIT_FAILURE, "Error - can't write to %s.\n Wrong permissions"
+		     " or wrong tools version.", attr);
 	util_file_write_l(poll_timeout, 10, attr);
 	util_file_read_l(&poll_timeout_read, 10, attr);
 	if (poll_timeout != poll_timeout_read)
-		errx(EXIT_FAILURE, "error - unable to change poll_timeout to %ld seconds!", poll_timeout);
+		errx(EXIT_FAILURE, "Error - unable to change poll timeout setting.");
 	free(attr);
 }
 
@@ -194,18 +194,17 @@ static void default_domain_set(const char *default_domain_str)
 	sscanf(default_domain_str, "%li", &default_domain);
 	ap_max_domain_id = util_path_sysfs("bus/ap/ap_max_domain_id");
 	util_file_read_l(&max_dom, 10, ap_max_domain_id);
-	if (default_domain < 0 || default_domain > max_dom) {
-		errx(EXIT_FAILURE, "error - invalid default domain '%s'!",
-			 default_domain_str);
-	}
+	if (default_domain < 0 || default_domain > max_dom)
+		errx(EXIT_FAILURE, "Error - invalid default domain '%s'.", default_domain_str);
 	attr = util_path_sysfs("bus/ap/ap_domain");
-	verbose("Setting default domain to %ld.\n", default_domain);
 	if (!util_path_is_writable(attr))
-		errx(EXIT_FAILURE, "error - unsupported version of zcrypt or driver not loaded!");
+		errx(EXIT_FAILURE, "Error - can't write to %s.\n Wrong permissions"
+		     " or wrong tools version.", attr);
+	verbose("Setting default domain to %ld.\n", default_domain);
 	util_file_write_l(default_domain, 10, attr);
 	util_file_read_l(&default_domain_read, 10, attr);
 	if (default_domain != default_domain_read)
-		errx(EXIT_FAILURE, "error - unable to change default domain to %ld!", default_domain);
+		errx(EXIT_FAILURE, "Error - unable to change default domain.");
 	free(ap_max_domain_id);
 	free(attr);
 }
@@ -231,9 +230,9 @@ static void dev_list_all(char **argz, size_t *len)
 	char *path;
 
 	path = util_path_sysfs("bus/ap/devices/");
-	count = util_scandir(&de_vec, NULL, "%s/card.*", path);
+	count = util_scandir(&de_vec, NULL, path, "card.*");
 	if (count < 0)
-		errx(EXIT_FAILURE, "Could not read directory: %s", path);
+		errx(EXIT_FAILURE, "Error - Could not read directory %s.", path);
 	*argz = NULL;
 	*len = 0;
 	for (i = 0; i < count; i++)
@@ -249,7 +248,7 @@ static void dev_list_all(char **argz, size_t *len)
 static void dev_list_argv(char **argz, size_t *len, char * const argv[])
 {
 	if (argv[0] == NULL)
-		errx(EXIT_FAILURE, "Need to specify at least one device ID");
+		errx(EXIT_FAILURE, "Need to specify at least one device ID.");
 
 	util_assert(argz_create(argv, argz, len) == 0, "Out of memory\n");
 }
@@ -352,10 +351,10 @@ int main(int argc, char *argv[])
 		}
 	}
 	if (!actionset)
-		invalid_cmdline_exit("error - missing argument!\n");
+		invalid_cmdline_exit("Error - missing argument.\n");
 	path = util_path_sysfs("bus/ap");
 	if (!util_path_is_dir(path))
-		errx(EXIT_FAILURE, "error - cryptographic device driver zcrypt is not loaded!");
+		errx(EXIT_FAILURE, "Crypto device driver not available.");
 	free(path);
 	if (poll_thread) {
 		poll_thread_set(poll_thread);
@@ -379,7 +378,7 @@ int main(int argc, char *argv[])
 		dev_list_argv(&dev_list, &len, &argv[optind]);
 
 	if (online && len == 0)
-		errx(EXIT_FAILURE, "error - missing cryptographic device id(s)!");
+		errx(EXIT_FAILURE, "Error - missing cryptographic device id(s).");
 
 	for (dev = dev_list; dev != NULL; dev = argz_next(dev_list, len, dev)) {
 		if (strncmp(dev, "card", 4) == 0) {
@@ -397,19 +396,19 @@ int main(int argc, char *argv[])
 		} else {
 			/* Form: 01.0003 ? */
 			if (sscanf(dev, "%02x.%04x", &id, &dom) != 2)
-				errx(EXIT_FAILURE, "error - cryptographic device %s malformed!\n", dev);
+				errx(EXIT_FAILURE, "Error - cryptographic device %s malformed.", dev);
 			sprintf(device, "card%02x/%02x.%04x", id, id, dom);
 		}
 		dev_path = util_path_sysfs("bus/ap/devices/%s", device);
 		if (!util_path_is_dir(dev_path))
-			errx(EXIT_FAILURE, "error - cryptographic device %s does not exist!", device);
+			errx(EXIT_FAILURE, "Error - cryptographic device %s does not exist.", device);
 		if (!util_path_is_writable("%s/online", dev_path))
 			continue;
 		verbose("Setting cryptographic device %s %s\n", device, online_text);
 		util_file_write_s(online, "%s/online", dev_path);
 		util_file_read_line(online_read, sizeof(online_read), "%s/online", dev_path);
 		if (strcmp(online, online_read) != 0)
-			errx(EXIT_FAILURE, "error - unable to set cryptographic device %s %s", device, online_text);
+			errx(EXIT_FAILURE, "Error - unable to set cryptographic device %s %s.", device, online_text);
 		free(dev_path);
 	}
 	free(dev_list);

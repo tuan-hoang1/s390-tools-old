@@ -92,9 +92,6 @@ install: chzdev
 ifeq ($(HAVE_DRACUT),1)
 	$(INSTALL) -m 755 zdev-root-update.dracut \
 		$(DESTDIR)$(TOOLS_LIBDIR)/zdev-root-update
-else
-	$(INSTALL) -m 755 zdev-root-update.zipl \
-		$(DESTDIR)$(TOOLS_LIBDIR)/zdev-root-update
 endif
 
 clean:

@@ -19,7 +19,7 @@ check_dep:
 	$(call check_dep, \
 		"zdsfs", \
 		"fuse.h", \
-		"fuse-devel", \
+		"fuse-devel or libfuse-dev", \
 		"HAVE_FUSE=0")
 
 ifneq ($(shell sh -c 'command -v pkg-config'),)

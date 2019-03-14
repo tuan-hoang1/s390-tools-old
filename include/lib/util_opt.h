@@ -33,6 +33,8 @@ struct util_opt {
 	char *desc;
 	/** Flags for this option */
 	int flags;
+	/** Command to which this option belongs. NULL means all commands */
+	char *command;
 };
 
 /**
@@ -74,6 +76,7 @@ struct util_opt {
  * Option functions
  */
 void util_opt_init(struct util_opt *opt_vec, const char *opt_prefix);
+void util_opt_set_command(const char *command);
 int util_opt_getopt_long(int argc, char *argv[]);
 void util_opt_print_help(void);
 void util_opt_print_indented(const char *opt, const char *desc);

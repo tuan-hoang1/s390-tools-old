@@ -195,6 +195,7 @@ struct value_map {
  * @defval:     Default attribue value (optional)
  * @accept:     List of acceptable settings (optional)
  * @map:        List of values read in the active config that should be replaced
+ * @st_data:    Subtype specific attribute data (optional)
  */
 struct attrib {
 	const char *name;
@@ -220,6 +221,7 @@ struct attrib {
 	const char *defval;
 	struct accept_def *accept;
 	struct value_map *map;
+	void *st_data;
 };
 
 bool attrib_check_value(struct attrib *, const char *);

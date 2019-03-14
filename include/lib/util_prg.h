@@ -38,6 +38,8 @@ struct util_prg_copyright {
 struct util_prg {
 	/** Description for help  */
 	const char *desc;
+	/** Command arguments in front of other options */
+	const char *command_args;
 	/** Positional arguments  */
 	const char *args;
 	/** Copyright list */
@@ -45,6 +47,7 @@ struct util_prg {
 };
 
 void util_prg_init(const struct util_prg *prg);
+void util_prg_set_command(const char *command);
 void util_prg_print_parse_error(void);
 void util_prg_print_required_arg(const char *option);
 void util_prg_print_invalid_option(const char *option);

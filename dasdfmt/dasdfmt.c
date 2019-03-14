@@ -10,6 +10,7 @@
  */
 
 #include <linux/version.h>
+#include <sys/sysmacros.h>
 #include <sys/time.h>
 #include <sys/utsname.h>
 
@@ -1526,7 +1527,7 @@ int main(int argc, char *argv[])
 			info.force = 1;
 			break;
 		case 'd':
-			if (strncmp(optarg, "cdl", 3) == 0) {
+			if (strcasecmp(optarg, "cdl") == 0) {
 				format_params.intensity |= DASD_FMT_INT_COMPAT;
 				if (info.writenolabel) {
 					printf("WARNING: using the cdl "
@@ -1535,7 +1536,7 @@ int main(int argc, char *argv[])
 					       "sense!\n");
 					exit(1);
 				}
-			} else if (strncmp(optarg, "ldl", 3) == 0) {
+			} else if (strcasecmp(optarg, "ldl") == 0) {
 				format_params.intensity &= ~DASD_FMT_INT_COMPAT;
 			} else {
 				printf("%s is not a valid option!\n", optarg);
