@@ -1,0 +1,19 @@
+#
+# Systemd unit for starting cpacfstatsd daemon for Linux on System z
+#
+# Copyright IBM Corp. 2015
+#
+
+[Unit]
+Description=CPACF statistics collection daemon process for Linux on System z
+Documentation=man:cpacfstatsd(8)
+
+[Service]
+Type=forking
+ExecStart=@usrsbin_path@/cpacfstatsd
+PIDFile=/var/run/cpacfstatsd.pid
+KillMode=process
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
